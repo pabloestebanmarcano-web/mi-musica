@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
+<meta name="app-version" content="2026.10.29-3">
+<link rel="apple-touch-icon" href="icono.png">
 <title>Mi música</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
@@ -126,6 +128,8 @@ nav.tabs button.hover{color:var(--accent)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-size:14px;max-width:calc(100% - 40px);z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.18)}
 .sheet-wrap{position:fixed;inset:0;z-index:40;background:rgba(10,10,14,.35);display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--bg);width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:20px 22px calc(24px + env(safe-area-inset-bottom,0px));max-height:85%;overflow-y:auto}
+.pickrow.up{flex-direction:column;align-items:flex-start;justify-content:center;gap:0;padding:8px 0}
+.pickhint{display:block;margin-top:2px;font-size:13px;font-weight:400;color:var(--muted);line-height:1.35}
 .sheet h3{font-size:20px;margin-bottom:14px}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
 .field label{font-size:13px;color:var(--muted)}
@@ -333,7 +337,8 @@ main section{margin-bottom:32px}
   <button class="round glass" id="dockSearch" aria-label="Buscar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
   </div>
 </div>
-<input type="file" id="fileIn" accept="audio/*,video/mp4,.mp3,.m4a,.aac,.mp4,.wav" multiple class="sr" aria-label="Elegir canciones">
+<input type="file" id="fileIn" accept="audio/*,video/mp4,.mp3,.m4a,.aac,.mp4,.wav,.zip,application/zip" multiple class="sr" aria-label="Elegir canciones">
+<input type="file" id="dirIn" webkitdirectory multiple class="sr" aria-label="Elegir carpeta">
 <audio id="audio" preload="metadata" playsinline></audio>
 <div id="overlay"></div>
 
@@ -341,6 +346,8 @@ main section{margin-bottom:32px}
 (function(){
 "use strict";
 const $=s=>document.querySelector(s);
+const APP_VER=(document.querySelector('meta[name="app-version"]')||{}).content||"";
+const UPD={checking:false,last:0,offered:""};
 
 /* ---------- Almacenamiento local (IndexedDB) ---------- */
 const BU=new Map();
@@ -628,6 +635,9 @@ function renderSettings(){
     ${u?`<div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}" aria-label="Espacio usado"><div style="width:${Math.max(pct,1)}%"></div></div><p style="margin:0 0 6px;font-size:14px"><strong>${mb(u.bytes)}</strong> <span style="color:var(--muted)">usados de ${mb(u.maxBytes)} · ${S.songs.length} ${S.songs.length===1?"canción":"canciones"}</span></p>`:`<p style="color:var(--muted);margin:0 0 6px;font-size:14px">${S.assets?"Calculando espacio…":"Abre la app con tu cuenta de Claude para ver el espacio."}</p>`}
     <button class="setrow setbtn" id="openManage"><span class="lab">Gestionar canciones<small>Selecciona varias y bórralas a la vez</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
     <button class="setrow setbtn" id="cleanOrphans"><span class="lab">Limpiar archivos sueltos<small>Borra archivos guardados que ya no usa ninguna canción</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
+  </div
+  <div class="setgroup"><h2>App</h2>
+    <button class="setrow setbtn" id="checkUpd"><span class="lab">Buscar actualizaciones<small>Versión ${esc(APP_VER)}${UPD.checking?" · comprobando…":""}</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
   </div>`;
 }
 function renderManage(){
@@ -1239,13 +1249,86 @@ async function tryUpload(file){
   }
   throw last||{code:"unsupported_type"};
 }
+
+/* ---------- Carpetas y .zip ---------- */
+const IMG_EXT={jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp"};
+const extOf=n=>(String(n).split(".").pop()||"").toLowerCase();
+const isJunk=p=>/(^|\/)(__MACOSX|\.)/.test(p);
+function natCmp(a,b){return a.localeCompare(b,"es",{numeric:true,sensitivity:"base"})}
+function pickCover(imgs){
+  if(!imgs.length)return null;
+  const pref=imgs.find(x=>/(^|\/)(cover|folder|front|portada|album)\.[a-z]+$/i.test(x.path));
+  return pref||imgs.sort((a,b)=>b.size-a.size)[0];
+}
+async function prepareUploads(list){
+  const items=[];
+  for(const f of list){
+    const ext=extOf(f.name);
+    if(ext==="zip"){
+      S.uploading={done:0,total:1,name:"Abriendo "+f.name};render();
+      try{items.push(...await zipItems(f))}catch(e){toast(e&&e.message==="nodecomp"?"Este navegador no puede abrir .zip. Actualiza iOS e inténtalo otra vez.":"No se ha podido abrir «"+f.name+"».")}
+      S.uploading=null;render();
+    }else{
+      const p=f.webkitRelativePath||f.name;
+      if(isJunk(p))continue;
+      items.push({path:p,name:f.name,size:f.size,get:async()=>f});
+    }
+  }
+  const byDir=new Map();
+  for(const it of items){const d=it.path.includes("/")?it.path.slice(0,it.path.lastIndexOf("/")):"";if(!byDir.has(d))byDir.set(d,{audio:[],img:[]});const g=byDir.get(d),ext=extOf(it.name);if(IMG_EXT[ext])g.img.push(it);else if(AUDIO_EXT[ext]||!list.some(x=>x.webkitRelativePath))g.audio.push(it)}
+  const out=[];
+  for(const d of [...byDir.keys()].sort(natCmp)){
+    const g=byDir.get(d), cov=pickCover(g.img);
+    for(const a of g.audio.sort((x,y)=>natCmp(x.path,y.path))){if(cov)a.cover={key:d,item:cov};out.push(a)}
+  }
+  if(items.length&&!out.length)toast("No hay canciones en lo que has elegido.");
+  return out;
+}
+async function zipItems(file){
+  if(typeof DecompressionStream==="undefined")throw new Error("nodecomp");
+  const rd=async(a,b)=>new DataView(await file.slice(a,b).arrayBuffer());
+  const tailLen=Math.min(file.size,65557), tail=await rd(file.size-tailLen,file.size);
+  let e=-1;for(let i=tailLen-22;i>=0;i--)if(tail.getUint32(i,true)===0x06054b50){e=i;break}
+  if(e<0)throw new Error("zip");
+  let count=tail.getUint16(e+10,true), cdSize=tail.getUint32(e+12,true), cdOff=tail.getUint32(e+16,true);
+  if(cdOff===0xFFFFFFFF||count===0xFFFF){
+    const lo=e-20; if(lo>=0&&tail.getUint32(lo,true)===0x07064b50){
+      const z=Number(tail.getBigUint64(lo+8,true)), zd=await rd(z,z+56);
+      count=Number(zd.getBigUint64(32,true)); cdSize=Number(zd.getBigUint64(40,true)); cdOff=Number(zd.getBigUint64(48,true));
+    }
+  }
+  const cd=await rd(cdOff,cdOff+cdSize), dec=new TextDecoder(), out=[];
+  for(let p=0,n=0;n<count&&p+46<=cd.byteLength;n++){
+    if(cd.getUint32(p,true)!==0x02014b50)break;
+    const method=cd.getUint16(p+10,true);
+    let csize=cd.getUint32(p+20,true), usize=cd.getUint32(p+24,true), off=cd.getUint32(p+42,true);
+    const nl=cd.getUint16(p+28,true), xl=cd.getUint16(p+30,true), cl=cd.getUint16(p+32,true);
+    const path=dec.decode(new Uint8Array(cd.buffer,cd.byteOffset+p+46,nl));
+    let x=p+46+nl; const xe=x+xl;
+    while(x+4<=xe){const id=cd.getUint16(x,true),sz=cd.getUint16(x+2,true);if(id===1){let q=x+4;if(usize===0xFFFFFFFF){usize=Number(cd.getBigUint64(q,true));q+=8}if(csize===0xFFFFFFFF){csize=Number(cd.getBigUint64(q,true));q+=8}if(off===0xFFFFFFFF){off=Number(cd.getBigUint64(q,true))}}x+=4+sz}
+    p=xe+cl;
+    if(path.endsWith("/")||isJunk(path))continue;
+    const name=path.split("/").pop(), ext=extOf(name), type=AUDIO_EXT[ext]||IMG_EXT[ext];
+    if(!type||(method!==0&&method!==8))continue;
+    out.push({path,name,size:usize,get:async()=>{
+      const lh=await rd(off,off+30);
+      const start=off+30+lh.getUint16(26,true)+lh.getUint16(28,true);
+      const raw=file.slice(start,start+csize);
+      const blob=method===0?raw:await new Response(raw.stream().pipeThrough(new DecompressionStream("deflate-raw"))).blob();
+      return new File([blob],name,{type});
+    }});
+  }
+  return out;
+}
+const LIMIT_MB=100;
 async function uploadFiles(files){
   if(!S.assets||!S.db){toast("La biblioteca aún se está abriendo. Prueba de nuevo en un momento.");return}
   files=[...files]; if(!files.length)return;
-  const fails=[],dups=[],seen=new Set(S.songs.map(x=>norm(x.title)+"|"+norm(x.artist)));
+  const dirCov=new Map(),fails=[],dups=[],seen=new Set(S.songs.map(x=>norm(x.title)+"|"+norm(x.artist)));
   for(let i=0;i<files.length;i++){
-    const f=files[i]; S.uploading={done:i,total:files.length,name:f.name}; render();
-    if(f.size>100*1024*1024){fails.push(f.name+" (pesa más de 100 MB)");continue}
+    const it=files[i]; S.uploading={done:i,total:files.length,name:it.name}; render();
+    if(it.size>LIMIT_MB*1024*1024){fails.push(it.name+" (pesa más de "+LIMIT_MB+" MB)");continue}
+    let f; try{f=it.get?await it.get():it}catch(e){fails.push(it.name+" (no se ha podido leer)");continue}
     try{
       const tags=await readTags(f);
       const fromName=cleanName(f.name);
@@ -1258,6 +1341,7 @@ async function uploadFiles(files){
       const [r,dur,af]=await Promise.all([tryUpload(f),getDuration(f),fileAf(f)]);
       let coverId="",coverType="";
       if(tags.pic){try{const c=await S.assets.upload(new Blob([tags.pic.data],{type:tags.pic.mime}),{type:tags.pic.mime});coverId=c.id;coverType=c.contentType}catch(e){}}
+      else if(it.cover){try{let c=dirCov.get(it.cover.key);if(!c){const img=await it.cover.item.get();c=await S.assets.upload(img,{type:img.type});dirCov.set(it.cover.key,c)}coverId=c.id;coverType=c.contentType}catch(e){}}
       await S.db.collection("songs").add({title,artist,album,coverId,coverType,lyrics:tags.lyrics||"",assetId:r.id,duration:dur,size:r.sizeBytes,createdAt:Date.now(),file:f.name,...(af?{af}:{})});
     }catch(e){
       const c=e&&e.code;
@@ -1617,7 +1701,11 @@ document.addEventListener("click",async e=>{
   if(t.id==="miniNext"){next(false);return}
   if(d.tab){S.wrapPage=false;S.moodOpen=null;S.tab=d.tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0;return}
   if(d.goto){S.tab=d.goto;S.openList=null;render();return}
-  if(t.id==="addSongs"||t.id==="addSongs2"){$("#fileIn").click();return}
+  if(t.id==="addSongs"||t.id==="addSongs2"){showSheet(`<h3>Subir canciones</h3><button class="pickrow up" id="pickFiles">Elegir canciones<span class="pickhint">Una o varias a la vez</span></button><button class="pickrow up" id="pickDir">Elegir una carpeta<span class="pickhint">Sube todas las canciones que tenga dentro, también las de sus subcarpetas</span></button><button class="pickrow up" id="pickZip">Elegir una carpeta comprimida (.zip)<span class="pickhint">Si el iPhone no te deja elegir la carpeta: en Archivos, mantenla pulsada, toca «Comprimir» y elige el .zip que se crea</span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button></div>`);return}
+  if(t.id==="checkUpd"){checkUpdate(true);return}
+  if(t.id==="doUpd"){const v=t.dataset.ver;closeSheet();doUpdate(v);return}
+  if(t.id==="pickFiles"||t.id==="pickZip"){closeSheet();$("#fileIn").click();return}
+  if(t.id==="pickDir"){closeSheet();$("#dirIn").click();return}
   if(d.play){playId(d.play,d.ctx);return}
   if(d.view){S.view=d.view;render();return}
   if(d.cfg){setCfg(d.cfg,d.val);return}
@@ -1705,7 +1793,7 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("change",e=>{
   if(e.target.id==="seek"){const d=tDur()||0;if(d)seekTo(d*e.target.value/1000);delete e.target.dataset.drag}
-  if(e.target.id==="fileIn"){uploadFiles(e.target.files);e.target.value=""}
+  if(e.target.id==="fileIn"||e.target.id==="dirIn"){const fl=[...e.target.files];e.target.value="";prepareUploads(fl).then(uploadFiles)}
 });
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){if(document.querySelector(".sheet-wrap"))closeSheet();else if(S.playerOpen){S.playerOpen=false;renderPlayer()}}
@@ -1974,6 +2062,31 @@ document.addEventListener("click",e=>{
   }
 });
 
+
+/* ---------- Actualizaciones ---------- */
+async function checkUpdate(manual){
+  if(UPD.checking||!APP_VER)return; UPD.checking=true; if(manual)render();
+  try{
+    const r=await fetch(location.pathname,{cache:"reload"});
+    if(!r.ok)throw new Error("http");
+    const m=(await r.text()).match(/<meta name="app-version" content="([^"]+)"/);
+    UPD.last=Date.now();
+    const v=m&&m[1];
+    if(v&&v!==APP_VER){if(manual||UPD.offered!==v){UPD.offered=v;offerUpdate(v)}}
+    else if(manual)toast("Ya tienes la última versión");
+  }catch(e){if(manual)toast("No se ha podido comprobar. Revisa tu conexión.")}
+  UPD.checking=false; if(manual)render();
+}
+function offerUpdate(v){
+  if(document.querySelector(".sheet-wrap"))return;
+  showSheet(`<h3>Hay una versión nueva</h3><p style="color:var(--muted);margin:0 0 16px">Se recargará la app. Tus canciones, listas y escuchas se quedan como están${audio&&!audio.paused?". La canción que suena se parará un momento":""}.</p><div class="actions"><button class="btn ghost" data-closesheet>Más tarde</button><button class="btn" id="doUpd" data-ver="${esc(v)}">Actualizar</button></div>`);
+}
+function doUpdate(v){
+  try{saveSession()}catch(e){}
+  try{flushPlays()}catch(e){}
+  setTimeout(()=>location.replace(location.pathname+"?v="+encodeURIComponent(v)),300);
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-UPD.last>30*60000)checkUpdate(false)});
 /* ---------- Arranque local ---------- */
 render();
 (async()=>{
@@ -1985,6 +2098,7 @@ render();
     if(!db){S.ready=true;render();return}
     flushPlays();
     loadLoop();
+    setTimeout(()=>checkUpdate(false),4000);
     refreshUsage();
     db.doc("state/settings").get().then(d=>{if(d.exists){CFG={...CFG_DEF,...d.data()};try{localStorage.setItem("cfg",JSON.stringify(CFG))}catch(e){}applyCfg();render();renderPlayer()}}).catch(()=>{});
     let gotS=false,gotP=false;
