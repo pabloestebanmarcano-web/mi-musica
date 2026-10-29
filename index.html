@@ -7,13 +7,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
-  <link rel="apple-touch-icon" href="icono.png"><title>Mi música</title>
+<title>Mi música</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#FFFFFF; --ink:#16141F; --muted:#6B6878; --surface:#F4F3F7; --line:#E7E5ED;
   --accent:#2F6B4F; --on-accent:#FFFFFF; --tint:#DCEBE2; --danger:#B3261E;
+  --glass:rgba(255,255,255,.58); --glass-edge:rgba(255,255,255,.75); --glass-hi:rgba(22,20,31,.07); --glass-sh:0 10px 30px rgba(20,18,30,.14),0 1px 3px rgba(20,18,30,.08);
   color-scheme: light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -23,11 +24,13 @@
   :root:not([data-theme="light"]){
     --bg:#121114; --ink:#F2F1F5; --muted:#A6A3B2; --surface:#1E1D23; --line:#2C2A33;
     --accent:#6FBF93; --on-accent:#0E1F16; --tint:#1F3A2C; --danger:#FF8A80; color-scheme:dark;
+  --glass:rgba(44,42,52,.55); --glass-edge:rgba(255,255,255,.12); --glass-hi:rgba(255,255,255,.12); --glass-sh:0 10px 30px rgba(0,0,0,.45);
   }
 }
 :root[data-theme="dark"]{
   --bg:#121114; --ink:#F2F1F5; --muted:#A6A3B2; --surface:#1E1D23; --line:#2C2A33;
   --accent:#6FBF93; --on-accent:#0E1F16; --tint:#1F3A2C; --danger:#FF8A80; color-scheme:dark;
+  --glass:rgba(44,42,52,.55); --glass-edge:rgba(255,255,255,.12); --glass-hi:rgba(255,255,255,.12); --glass-sh:0 10px 30px rgba(0,0,0,.45);
 }
 *,*::before,*::after{box-sizing:border-box}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -38,8 +41,8 @@ button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 h1,h2,h3{font-family:'Bricolage Grotesque',system-ui,sans-serif;margin:0}
-.app{max-width:560px;margin:0 auto;height:100%;display:flex;flex-direction:column}
-main{flex:1;overflow-y:auto;padding:24px 22px 24px;-webkit-overflow-scrolling:touch}
+.app{position:relative;max-width:560px;margin:0 auto;height:100%;display:flex;flex-direction:column}
+main{flex:1;overflow-y:auto;padding:24px 22px 170px;-webkit-overflow-scrolling:touch}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;gap:12px}
 .top h1{font-size:34px;font-weight:700;letter-spacing:-.8px;line-height:1}
 .iconbtn{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -81,12 +84,45 @@ section{margin-bottom:30px}
 .btn{height:46px;padding:0 20px;border-radius:23px;border:none;background:var(--accent);color:var(--on-accent);font-weight:600}
 .btn.ghost{background:var(--surface);color:var(--ink)}
 .btn.danger{background:transparent;color:var(--danger);border:1px solid var(--line)}
-.mini{margin:0 12px 8px;display:flex;align-items:center;gap:12px;height:64px;padding:0 6px 0 8px;border-radius:16px;background:var(--surface)}
-.mini .open{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:none;text-align:left;padding:0;height:100%}
-.mini .bar{position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--line);border-radius:1px;overflow:hidden}
-nav.tabs{display:flex;justify-content:space-around;padding:2px 0 10px;background:var(--bg)}
-nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px;padding-top:8px;background:none;border:none;color:var(--muted);font-size:12px;font-weight:500}
+/* Barra inferior estilo cristal (Liquid Glass) */
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--glass-edge);box-shadow:var(--glass-sh)}
+.dock{position:absolute;left:0;right:0;bottom:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:0 12px 6px;pointer-events:none}
+.dock>*{pointer-events:auto}
+#miniSlot{order:0;flex:1 0 100%;min-width:0}
+#miniSlot:empty{display:none}
+.mini{position:relative;display:flex;align-items:center;gap:10px;height:56px;padding:0 4px 0 8px;border-radius:28px;overflow:hidden}
+.mini .open{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:none;text-align:left;padding:0;height:100%}
+.mini .iconbtn{border:none;background:transparent;width:42px;height:42px}
+.mini .bar{position:absolute;left:22px;right:22px;bottom:0;height:2px;background:transparent;border-radius:1px;overflow:hidden}
+nav.tabs{order:1;flex:1;min-width:0;display:flex;justify-content:space-between;height:62px;padding:4px;border-radius:31px;position:relative;touch-action:none;-webkit-user-select:none;user-select:none}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;padding:0;border:none;border-radius:27px;background:transparent;color:var(--ink);font-size:11px;font-weight:500;transition:background .25s,color .25s}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
+nav.tabs button{position:relative;z-index:1;-webkit-touch-callout:none}
+.tabpill{position:absolute;left:0;top:4px;bottom:4px;width:0;border-radius:27px;background:var(--glass-hi);opacity:0;pointer-events:none;z-index:0;transition:transform .42s cubic-bezier(.3,1.35,.5,1),width .3s ease,opacity .2s ease,background .2s ease,box-shadow .2s ease}
+nav.tabs.dragging .tabpill{z-index:2;overflow:hidden;background:var(--bg);box-shadow:0 8px 24px rgba(20,18,30,.20),0 1px 3px rgba(20,18,30,.12),inset 0 0 0 1px var(--line)}
+.tabpill .lens{position:absolute;top:-4px;height:62px;display:flex;justify-content:space-between;padding:4px;opacity:0;transition:opacity .15s ease}
+nav.tabs.dragging .tabpill .lens{opacity:1}
+.tabpill .lens span{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;color:var(--ink);font-size:11px;font-weight:500}
+.tabpill .lens span.on{color:var(--accent);font-weight:600}
+.tabpill::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .15s ease;background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.55),rgba(255,255,255,0) 55%),radial-gradient(120% 90% at 50% 100%,rgba(20,18,30,.10),rgba(20,18,30,0) 60%);box-shadow:inset 0 1px 1px rgba(255,255,255,.7),inset 0 -1px 2px rgba(20,18,30,.10)}
+nav.tabs.dragging .tabpill::after{opacity:1}
+:root[data-theme="dark"] .tabpill::after{background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.14),rgba(255,255,255,0) 55%);box-shadow:inset 0 1px 1px rgba(255,255,255,.18)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tabpill::after{background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.14),rgba(255,255,255,0) 55%);box-shadow:inset 0 1px 1px rgba(255,255,255,.18)}}
+nav.tabs.dragging button[aria-current="page"]:not(.hover){color:var(--ink);font-weight:500}
+nav.tabs button.hover{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){.tabpill{transition:opacity .2s ease}}
+.dock .round{order:2;width:62px;height:62px;flex:0 0 auto;border-radius:31px;display:flex;align-items:center;justify-content:center;color:var(--ink);padding:0}
+/* Compacta: pestaña activa · mini reproductor · buscar */
+.dock.compact{flex-wrap:nowrap}
+.dock.compact nav.tabs{order:0;flex:0 0 52px;height:52px;padding:0;border-radius:26px}
+.dock.compact nav.tabs button:not([aria-current="page"]){display:none}
+.dock.compact nav.tabs button{font-size:0;gap:0;background:transparent}
+.dock.compact #miniSlot{order:1;flex:1 1 auto}
+.dock.compact .mini{height:52px;gap:8px}
+.dock.compact .mini .cover{width:36px!important;height:36px!important}
+.dock.compact #miniNext{display:none}
+.dock.compact .round{width:52px;height:52px;margin-left:auto}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:var(--surface)}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-size:14px;max-width:calc(100% - 40px);z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.18)}
 .sheet-wrap{position:fixed;inset:0;z-index:40;background:rgba(10,10,14,.35);display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--bg);width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:20px 22px calc(24px + env(safe-area-inset-bottom,0px));max-height:85%;overflow-y:auto}
@@ -183,18 +219,119 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:none;border-ra
 .lyr .ln.gap{font-size:20px;letter-spacing:4px}
 .lyr.plain p{white-space:pre-line;font-size:18px;line-height:1.65;margin:0;color:var(--ink)}
 @media (prefers-reduced-motion: reduce){.lyr .ln{transition:none}.lyr .ln.on{transform:none}}
+.moodnow{display:flex;align-items:center;gap:14px;width:100%;padding:12px 16px 12px 12px;margin-bottom:16px;border:none;border-radius:20px;background:var(--surface);text-align:left;color:var(--ink)}
+.moodnow .meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.moodnow .t{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.3px}
+.moodnow .s{font-size:13px;color:var(--muted)}
+.moodnow>svg{color:var(--accent);flex-shrink:0}
+.mosaic{display:grid!important;grid-template-columns:1fr 1fr;background:var(--surface)}
+.mosaic img{display:block;object-fit:cover}
+.gx svg circle:not([fill="none"]),.gx svg rect:not([fill="none"]),.gx svg path{stroke:none}
+.gx .spin,.gx .spinr,.gx .ripple,.gx .beat,.gx .beat-s{transform-box:view-box;transform-origin:50px 50px}
+.gx .spin{animation:gxSpin 24s linear infinite}
+.gx .spinr{animation:gxSpin 18s linear infinite reverse}
+.gx .fall{animation:gxFall 2.6s linear infinite}
+.gx .ripple{animation:gxRipple 6s ease-out infinite}
+.gx .bar{transform-box:fill-box;transform-origin:50% 100%;animation:gxBar .8s ease-in-out infinite alternate}
+.gx .beat{animation:gxBeat 1.8s ease-in-out infinite}
+.gx .beat-s{animation:gxBeat 3.2s ease-in-out infinite}
+@keyframes gxSpin{to{transform:rotate(360deg)}}
+@keyframes gxFall{from{transform:translateY(0);opacity:0}15%{opacity:1}to{transform:translateY(100px);opacity:.2}}
+@keyframes gxRipple{from{transform:scale(.25);opacity:1}to{transform:scale(1.35);opacity:0}}
+@keyframes gxBar{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+@keyframes gxBeat{0%,100%{transform:scale(1)}15%{transform:scale(1.1)}30%{transform:scale(.97)}45%{transform:scale(1.06)}}
+.noanim .gx *{animation:none!important}
+@media (prefers-reduced-motion: reduce){.gx *{animation:none!important}}
+.foldercall{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--surface)}
+.foldercall p{flex:1;margin:0;font-size:14px;color:var(--muted);line-height:1.35}
+.foldercall .btn{height:40px;padding:0 16px;font-size:14px;flex-shrink:0}
+.wcard.slim{flex-direction:row;align-items:center;justify-content:space-between;min-height:84px;padding:16px 18px;gap:12px}
+.wcard.slim .wt{font-size:22px;letter-spacing:-.4px}
+.wcard.slim .ws2{margin-top:3px;font-size:13px}
+.wcard.slim .wb{width:120px;height:120px;right:-24px;top:-30px}
+.wcard.slim>svg{position:relative;flex-shrink:0}
+main section{margin-bottom:32px}
+/* ---------- Wrapped ---------- */
+.wcard{position:relative;display:flex;flex-direction:column;justify-content:flex-end;width:100%;min-height:136px;padding:18px 20px;border:none;border-radius:22px;background:var(--accent);color:var(--on-accent);text-align:left;overflow:hidden}
+.wcard .wb{position:absolute;right:-34px;top:-46px;width:180px;height:180px;background:var(--on-accent);opacity:.16;border-radius:42% 58% 63% 37%/45% 41% 59% 55%;animation:morph 12s ease-in-out infinite alternate}
+.wcard .wt{position:relative;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:32px;font-weight:700;letter-spacing:-.9px;line-height:1}
+.wcard .ws2{position:relative;margin-top:6px;font-size:14px;opacity:.85}
+.wcard.year{min-height:170px}
+.wcard.year .wt{font-size:48px;letter-spacing:-1.6px}
+.wmonth{display:flex;align-items:center;gap:14px;width:100%;min-height:72px;padding:10px 0;border:none;border-bottom:1px solid var(--line);background:none;text-align:left}
+.wmonth:last-child{border-bottom:none}
+.wmonth .meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.wmonth .mt{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:22px;font-weight:700;letter-spacing:-.4px}
+.wmonth .mt small{font-family:'Figtree',system-ui,sans-serif;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:6px}
+.wmonth .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wnote{font-size:13px;color:var(--muted);margin:22px 0 0;line-height:1.45}
+.ws-wrap{position:fixed;inset:0;z-index:45;display:flex;justify-content:center;background:var(--ink)}
+.ws{position:relative;width:100%;max-width:560px;height:100%;overflow:hidden;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 12px) 24px calc(env(safe-area-inset-bottom,0px) + 22px);cursor:pointer;-webkit-user-select:none;user-select:none}
+.ws.k-a{background:var(--accent);color:var(--on-accent)}
+.ws.k-b{background:var(--ink);color:var(--bg)}
+.ws.k-c{background:var(--tint);color:var(--ink)}
+.ws-bars{display:flex;gap:4px;position:relative;z-index:2}
+.ws-bars i{flex:1;height:3px;border-radius:2px;background:currentColor;opacity:.25}
+.ws-bars i.on{opacity:1}
+.ws-top{display:flex;justify-content:space-between;align-items:center;margin-top:6px;position:relative;z-index:2;font-size:13px;font-weight:600;opacity:.85}
+.ws-x{width:44px;height:44px;border:none;background:none;color:inherit;display:flex;align-items:center;justify-content:center;margin-right:-12px}
+.ws-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+.ws-body::-webkit-scrollbar{display:none}
+.ws-big{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;letter-spacing:-.045em;line-height:.9;font-size:clamp(64px,23vw,128px);margin:0;overflow-wrap:anywhere}
+.ws-big.mid{font-size:clamp(46px,15vw,88px);line-height:.95}
+.ws-h{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:clamp(28px,8.5vw,42px);line-height:1.02;letter-spacing:-.03em;margin:0 0 20px;overflow-wrap:anywhere}
+.ws-lead{font-size:17px;font-weight:600;margin:0 0 14px;opacity:.8}
+.ws-p{font-size:17px;line-height:1.45;margin:20px 0 0;max-width:34ch}
+.ws-art{margin:0 0 24px}
+.ws-art .cover{box-shadow:0 18px 40px rgba(0,0,0,.22)}
+.ws-blob{position:absolute;width:118vw;max-width:660px;aspect-ratio:1/1;background:currentColor;opacity:.07;border-radius:42% 58% 63% 37%/45% 41% 59% 55%;animation:morph 16s ease-in-out infinite alternate;z-index:0;pointer-events:none}
+.ws-rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.ws-rank li{display:flex;align-items:center;gap:14px;min-width:0}
+.ws-rank .n{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:26px;width:26px;flex-shrink:0;text-align:right}
+.ws-rank .m{flex:1;min-width:0;display:flex;flex-direction:column}
+.ws-rank .t{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws-rank .s{font-size:13px;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws-rank .c{font-size:13px;opacity:.72;flex-shrink:0}
+.ws-chart{display:flex;align-items:flex-end;gap:3px;height:120px;margin-top:26px}
+.ws-chart span{flex:1;background:currentColor;opacity:.28;border-radius:3px 3px 1px 1px;min-height:3px}
+.ws-chart span.on{opacity:1}
+.ws-axis{display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin-top:8px}
+.ws-axis.m span{flex:1;text-align:center}
+.ws-facts{display:flex;flex-direction:column;gap:26px}
+.ws-facts .ws-big{font-size:clamp(56px,19vw,104px)}
+.ws-facts p{margin:4px 0 0;font-size:17px;line-height:1.4}
+.ws-sum{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px 18px}
+.ws-sum h3{font-family:'Figtree',system-ui,sans-serif;font-size:13px;font-weight:600;opacity:.75;margin:0 0 6px}
+.ws-sum ol{margin:0;padding:0;list-style:none;counter-reset:r;font-weight:600;font-size:15px;line-height:1.45}
+.ws-sum ol li{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-sum ol li::before{counter-increment:r;content:counter(r) "  ";opacity:.65}
+.ws-sum .v{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.5px;line-height:1.05}
+.ws-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+.ws-btn{height:50px;padding:0 22px;border-radius:25px;border:none;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:8px}
+.k-a .ws-btn{background:var(--on-accent);color:var(--accent)}
+.k-b .ws-btn{background:var(--bg);color:var(--ink)}
+.k-c .ws-btn{background:var(--ink);color:var(--bg)}
+.ws-btn.ghost{background:transparent;color:inherit;border:1.5px solid currentColor}
+.ws-hint{position:relative;z-index:2;margin:0;font-size:13px;opacity:.7;text-align:center}
+.ws-in{animation:wsIn .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes wsIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.noanim .ws-in,.noanim .ws-blob,.noanim .wcard .wb{animation:none}
+@media (prefers-reduced-motion: reduce){.ws-in,.ws-blob,.wcard .wb{animation:none}}
 </style>
 </head>
 <body>
 <div class="app">
   <main id="main" tabindex="-1"></main>
+  <div class="dock" id="dock">
   <div id="miniSlot"></div>
-  <nav class="tabs" aria-label="Secciones">
+  <nav class="tabs glass" aria-label="Secciones">
     <button data-tab="inicio" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>Inicio</button>
     <button data-tab="canciones"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Canciones</button>
     <button data-tab="listas"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8M19 15v6M16 18h6"/></svg>Listas</button>
       <button data-tab="ajustes"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</button>
   </nav>
+  <button class="round glass" id="dockSearch" aria-label="Buscar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+  </div>
 </div>
 <input type="file" id="fileIn" accept="audio/*,video/mp4,.mp3,.m4a,.aac,.mp4,.wav" multiple class="sr" aria-label="Elegir canciones">
 <audio id="audio" preload="metadata" playsinline></audio>
@@ -204,6 +341,82 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:none;border-ra
 (function(){
 "use strict";
 const $=s=>document.querySelector(s);
+
+/* ---------- Almacenamiento local (IndexedDB) ---------- */
+const BU=new Map();
+function bu(id){if(!id)return "";const u=BU.get(id);if(u)return u;loadUrl(id);return ""}
+const idb={
+  db:null,
+  init(){return new Promise((res,rej)=>{
+    const req=indexedDB.open("MiMusicaDB",2);
+    req.onupgradeneeded=e=>{const db=e.target.result;for(const st of ["songs","playlists","assets","state","plays"])if(!db.objectStoreNames.contains(st))db.createObjectStore(st,{keyPath:"id"})};
+    req.onsuccess=e=>{this.db=e.target.result;res()};
+    req.onerror=()=>rej(req.error);
+    req.onblocked=()=>rej(new Error("blocked"));
+  })},
+  get(st,id){return new Promise((res,rej)=>{const r=this.db.transaction(st).objectStore(st).get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  getAll(st){return new Promise((res,rej)=>{const r=this.db.transaction(st).objectStore(st).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})},
+  put(st,data){return new Promise((res,rej)=>{const tx=this.db.transaction(st,"readwrite");tx.objectStore(st).put(data);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)})},
+  del(st,id){return new Promise((res,rej)=>{const tx=this.db.transaction(st,"readwrite");tx.objectStore(st).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+};
+async function loadUrl(id){
+  if(!id||BU.has(id)||!idb.db)return BU.get(id)||"";
+  try{const a=await idb.get("assets",id);if(a&&a.data&&!BU.has(id))BU.set(id,URL.createObjectURL(a.data))}catch(e){}
+  return BU.get(id)||"";
+}
+async function blobFetch(id){
+  try{const a=await idb.get("assets",id);if(a&&a.data)return new Response(a.data)}catch(e){}
+  return {ok:false,status:404,arrayBuffer:async()=>new ArrayBuffer(0)};
+}
+const clean=o=>{if(!o)return o;const {id,coverBlobUrl,...r}=o;return r};
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+const LISTEN={};
+async function notify(col){
+  const L=LISTEN[col];if(!L||!L.length)return;
+  let all=await idb.getAll(col);
+  if(col==="songs")await Promise.all(all.flatMap(s=>[loadUrl(s.assetId),loadUrl(s.coverId)]));
+  for(const l of L){
+    let rows=all;
+    if(l.ord){const [f,dir]=l.ord;rows=[...rows].sort((a,b)=>((a[f]??0)>(b[f]??0)?1:(a[f]??0)<(b[f]??0)?-1:0)*(dir==="desc"?-1:1))}
+    try{l.cb({docs:rows.map(r=>({id:r.id,exists:true,data:()=>clean(r)})),metadata:{fromCache:false}})}catch(e){console.error(e)}
+  }
+}
+function query(col,conds=[],ord=null,lim=0){
+  const match=r=>conds.every(([f,op,v])=>op==="=="?r[f]===v:op==="in"?v.includes(r[f]):op===">="?r[f]>=v:op==="<="?r[f]<=v:op===">"?r[f]>v:op==="<"?r[f]<v:true);
+  return{
+    where:(f,op,v)=>query(col,[...conds,[f,op,v]],ord,lim),
+    orderBy:(f,dir)=>query(col,conds,[f,dir||"asc"],lim),
+    limit:n=>query(col,conds,ord,n),
+    async get(){let rows=(await idb.getAll(col)).filter(match);if(ord){const [f,dir]=ord;rows.sort((a,b)=>((a[f]??0)>(b[f]??0)?1:-1)*(dir==="desc"?-1:1))}if(lim)rows=rows.slice(0,lim);const docs=rows.map(r=>({id:r.id,exists:true,data:()=>clean(r)}));return{docs,empty:!docs.length,size:docs.length}},
+    onSnapshot(cb,err){(LISTEN[col]=LISTEN[col]||[]).push({cb,ord});notify(col).catch(e=>err&&err(e));return()=>{LISTEN[col]=LISTEN[col].filter(l=>l.cb!==cb)}},
+    async add(data){const id=newId();await idb.put(col,{...clean(data),id});notify(col);return{id}},
+    doc(id){return{
+      id,
+      async get(){const d=await idb.get(col,id);return{id,exists:!!d,data:()=>clean(d)}},
+      async set(data){await idb.put(col,{...clean(data),id});notify(col)},
+      async update(data){const o=await idb.get(col,id);if(!o)throw new Error("not-found");await idb.put(col,{...o,...clean(data),id});notify(col)},
+      async delete(){await idb.del(col,id);notify(col)}
+    }}
+  };
+}
+const localDb={collection:c=>query(c),doc:p=>{const [c,id]=p.split("/");return query(c).doc(id)}};
+const localAssets={
+  async upload(file,opts){
+    const type=(opts&&opts.type)||file.type||"application/octet-stream";
+    const data=file.type===type?file:new Blob([file],{type});
+    const id=newId();
+    try{await idb.put("assets",{id,data,sizeBytes:file.size,contentType:type,createdAt:Date.now()})}
+    catch(e){throw {code:e&&e.name==="QuotaExceededError"?"quota_exceeded":"upload_failed"}}
+    return{id,sizeBytes:file.size,contentType:type};
+  },
+  async delete(id){await idb.del("assets",id);const u=BU.get(id);if(u){URL.revokeObjectURL(u);BU.delete(id)}},
+  async list(){
+    const all=await idb.getAll("assets");
+    let bytes=all.reduce((n,a)=>n+(a.sizeBytes||0),0),maxBytes=10*1073741824;
+    try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();if(e.quota)maxBytes=e.quota;if(e.usage&&e.usage>bytes)bytes=e.usage}}catch(e){}
+    return{usage:{bytes,maxBytes,maxFiles:100000},assets:all.map(a=>({id:a.id,sizeBytes:a.sizeBytes,contentType:a.contentType}))};
+  }
+};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const mb=b=>b>=1073741824?(b/1073741824).toFixed(1).replace(".",",")+" GB":Math.round(b/1048576)+" MB";
 async function refreshUsage(){try{if(S.assets){const r=await S.assets.list();S.usage=r.usage;render()}}catch(e){}}
@@ -234,7 +447,7 @@ const ICON={
 function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 function art(song,size,radius){
   const r=radius??Math.max(8,Math.round(size*0.12));
-  if(song&&song.coverId&&song.coverBlobUrl) return `<span class="cover" aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${r}px;background:var(--surface);display:block"><img src="${esc(song.coverBlobUrl)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></span>`;
+  if(song&&song.coverId) return `<span class="cover" aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${r}px;background:var(--surface);display:block"><img src="${esc(bu(song.coverId))}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"></span>`;
   const ic=Math.round(size*0.3), delay=-(hash(song?song.id:"x")%9000)/1000;
   return `<span class="cover gen" aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${r}px;background:var(--tint);display:flex;align-items:center;justify-content:center"><span class="blob" style="animation-delay:${delay}s"></span><svg width="${ic}" height="${ic}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="position:relative;color:var(--on-accent)"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span>`;
 }
@@ -338,15 +551,18 @@ function filtered(){
 function render(){
   const m=$("#main");
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
+  syncPill();
   let h="";
   const titles={inicio:"Tu música",canciones:"Canciones",listas:"Listas",ajustes:"Ajustes"};
   if(S.tab==="ajustes"){m.innerHTML=S.setView==="manage"?renderManage():renderSettings();renderMini();return}
   if(S.tab==="listas"&&S.openList){h+=renderList();m.innerHTML=h;renderMini();return}
+  if(S.tab==="inicio"&&S.wrapPage&&S.db){m.innerHTML=renderWrapPage();renderMini();return}
+  if(S.tab==="inicio"&&S.moodOpen&&S.db&&S.ready){m.innerHTML=renderMoodPage();renderMini();return}
   if(S.tab==="canciones"&&S.group){const gh=renderGroup();if(gh){m.innerHTML=gh;renderMini();return}}
   h+=`<div class="top"><h1>${titles[S.tab]}</h1>${S.tab==="listas"?`<button class="iconbtn" id="newList" aria-label="Nueva lista">${ICON.plus}</button>`:`<button class="iconbtn" id="addSongs" aria-label="Subir canciones">${ICON.plus}</button>`}</div>`;
   if(S.uploading) h+=`<p class="status" role="status">Subiendo ${S.uploading.done+1} de ${S.uploading.total}: ${esc(S.uploading.name)}<span class="progress" style="display:block"><span style="display:block;height:100%;background:var(--accent);width:${Math.round(S.uploading.done/S.uploading.total*100)}%"></span></span></p>`;
   if(!S.ready){h+=`<p class="status">Cargando tu biblioteca…</p>`;m.innerHTML=h;renderMini();return}
-  if(!S.db){h+=`<div class="empty"><h3>No se puede conectar con tu nube</h3><p>Abre la app con tu cuenta de Claude iniciada para ver y guardar tus canciones.</p></div>`;m.innerHTML=h;renderMini();return}
+  if(!S.db){h+=`<div class="empty"><h3>No se puede abrir tu biblioteca</h3><p>Este navegador no deja guardar archivos. Abre la app en Safari (no en modo privado) o desde su icono en la pantalla de inicio.</p></div>`;m.innerHTML=h;renderMini();return}
 
   if(S.tab==="inicio"){
     h+=`<label class="search"><span class="sr">Buscar en tu música</span>${ICON.search}<input id="q" type="search" placeholder="Buscar" value="${esc(S.q)}" autocomplete="off"></label>`;
@@ -354,13 +570,16 @@ function render(){
       const r=filtered();
       h+=`<section><div class="sechead"><h2>Resultados</h2></div>${r.length?r.map(s=>songRow(s,"search")).join(""):`<p style="color:var(--muted)">No hay canciones que coincidan con «${esc(S.q)}».</p>`}</section>`;
     } else if(!S.songs.length){
-      h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en tu nube.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
+      h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en este iPhone.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
     } else {
+      h+=nowCard();
       const rec=S.recent.map(byId).filter(Boolean).slice(0,10);
       if(rec.length) h+=`<section><div class="sechead"><h2>Escuchado hace poco</h2></div><div class="recent">${rec.map(s=>`<button class="card" data-play="${esc(s.id)}" data-ctx="recent">${art(s,132,16)}<span><span class="t" style="display:block">${esc(s.title)}</span><span class="s" style="display:block">${esc(s.artist||"Artista desconocido")}</span></span></button>`).join("")}</div></section>`;
-      h+=`<section><div class="sechead"><h2>Tus listas</h2><button class="link" data-goto="listas">Ver todas</button></div>${S.playlists.length?S.playlists.slice(0,4).map(listRow).join(""):`<button class="row" id="newList2">${`<span class="cover" style="width:44px;height:44px;border:1px dashed var(--line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted)">${ICON.plus}</span>`}<span class="meta"><span class="t">Crear tu primera lista</span></span></button>`}</section>`;
-      const latest=[...S.songs].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,5);
+      h+=moodSection();
+      h+=`<section><div class="sechead"><h2>Tus listas</h2><button class="link" data-goto="listas">Ver todas</button></div>${S.playlists.length?S.playlists.slice(0,3).map(listRow).join(""):`<button class="row" id="newList2">${`<span class="cover" style="width:44px;height:44px;border:1px dashed var(--line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted)">${ICON.plus}</span>`}<span class="meta"><span class="t">Crear tu primera lista</span></span></button>`}</section>`;
+      const latest=[...S.songs].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,4);
       h+=`<section><div class="sechead"><h2>Añadidas hace poco</h2><button class="link" data-goto="canciones">Ver todas</button></div>${latest.map(s=>songRow(s,"latest")).join("")}</section>`;
+      h+=wrapCard();
     }
   } else if(S.tab==="canciones"){
     h+=`<label class="search"><span class="sr">Buscar en tu biblioteca</span>${ICON.search}<input id="q" type="search" placeholder="Buscar" value="${esc(S.q)}" autocomplete="off"></label>`;
@@ -405,10 +624,10 @@ function renderSettings(){
     <div class="setrow"><span class="lab">Mostrar «Sencillo»<small>En canciones sin álbum</small></span>${sw("single","Mostrar Sencillo en canciones sin álbum")}</div>
     <div class="setrow"><span class="lab">Escuchado hace poco<small>${S.recent.length} ${S.recent.length===1?"canción":"canciones"} en el historial</small></span><button class="btn ghost" id="clearRecent" ${S.recent.length?"":"disabled"} style="height:40px">Borrar historial</button></div>
   </div>
-  <div class="setgroup"><h2>Almacenamiento Local</h2>
-    ${u?`<div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}" aria-label="Espacio usado"><div style="width:${Math.max(pct,1)}%"></div></div><p style="margin:0 0 6px;font-size:14px"><strong>${mb(u.bytes)}</strong> <span style="color:var(--muted)">usados de ${mb(u.maxBytes)} · ${S.songs.length} ${S.songs.length===1?"canción":"canciones"}</span></p>`:`<p style="color:var(--muted);margin:0 0 6px;font-size:14px">${S.assets?"Calculando espacio…":"Calculando espacio..."}</p>`}
+  <div class="setgroup"><h2>Almacenamiento</h2>
+    ${u?`<div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}" aria-label="Espacio usado"><div style="width:${Math.max(pct,1)}%"></div></div><p style="margin:0 0 6px;font-size:14px"><strong>${mb(u.bytes)}</strong> <span style="color:var(--muted)">usados de ${mb(u.maxBytes)} · ${S.songs.length} ${S.songs.length===1?"canción":"canciones"}</span></p>`:`<p style="color:var(--muted);margin:0 0 6px;font-size:14px">${S.assets?"Calculando espacio…":"Abre la app con tu cuenta de Claude para ver el espacio."}</p>`}
     <button class="setrow setbtn" id="openManage"><span class="lab">Gestionar canciones<small>Selecciona varias y bórralas a la vez</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
-    <button class="setrow setbtn" id="cleanOrphans"><span class="lab">Limpiar archivos sueltos<small>Borra archivos locales que ya no usa ninguna canción</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
+    <button class="setrow setbtn" id="cleanOrphans"><span class="lab">Limpiar archivos sueltos<small>Borra archivos guardados que ya no usa ninguna canción</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
   </div>`;
 }
 function renderManage(){
@@ -468,7 +687,7 @@ function renderMini(){
   const s=current(), slot=$("#miniSlot");
   if(!s){slot.innerHTML="";return}
   const p=tDur()?tNow()/tDur()*100:0;
-  slot.innerHTML=`<div class="mini" style="position:relative"><button class="open" id="openPlayer" aria-label="Abrir reproductor: ${esc(s.title)}">${art(s,48,10)}<span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}</span><span style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.artist||"Artista desconocido")}</span></span></button><button class="iconbtn plain" id="miniToggle" aria-label="${audio.paused?"Reproducir":"Pausar"}">${audio.paused?ICON.play:ICON.pause}</button><span class="bar"><span id="miniBar" style="display:block;height:100%;width:${p}%;background:var(--accent)"></span></span></div>`;
+  slot.innerHTML=`<div class="mini glass"><button class="open" id="openPlayer" aria-label="Abrir reproductor: ${esc(s.title)}">${art(s,40,8)}<span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}</span><span style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.artist||"Artista desconocido")}</span></span></button><button class="iconbtn plain" id="miniToggle" aria-label="${audio.paused?"Reproducir":"Pausar"}">${audio.paused?ICON.play:ICON.pause}</button><button class="iconbtn plain" id="miniNext" aria-label="Siguiente">${ICON.next}</button><span class="bar"><span id="miniBar" style="display:block;height:100%;width:${p}%;background:var(--accent)"></span></span></div>`;
 }
 function renderPlayer(){
   const ov=$("#overlay");
@@ -537,6 +756,7 @@ function setQueue(ids,start,name){
 function ctxList(ctx){
   if(ctx==="all"||ctx==="search"||ctx==="latest") return {ids:filtered().map(s=>s.id),name:"Todas las canciones"};
   if(ctx==="group"&&S.group) return {ids:groupSongs(S.group).map(x=>x.id),name:S.group.name};
+  if(ctx==="mood"&&S.moodOpen) return {ids:moodSongs(S.moodOpen).map(x=>x.id),name:moodOf(S.moodOpen).name};
   if(ctx==="recent") return {ids:S.recent.filter(byId),name:"Escuchado hace poco"};
   if(ctx&&ctx.startsWith("list:")){const p=S.playlists.find(x=>x.id===ctx.slice(5));return {ids:(p?.songIds||[]).filter(byId),name:p?p.name:"Lista"}}
   return {ids:S.songs.map(s=>s.id),name:"Tu música"};
@@ -545,7 +765,9 @@ function playId(id,ctx){
   const {ids,name}=ctxList(ctx); let i=ids.indexOf(id); if(i<0){ids.unshift(id);i=0}
   setQueue(ids,i,name); load(true);
 }
-/* ===== Reproducción continua ===== */
+/* ===== Reproducción continua: encadena las canciones en una sola pista ===== */
+/* Se envía el audio a trozos pequeños y solo un poco por delante, porque el iPhone
+   reserva muy poca memoria para este tipo de pista. */
 const MMS=window.ManagedMediaSource||window.MediaSource||null;
 let ST=null, stGen=0, stFailed=false, stStep="";
 const CHUNK=128*1024, AHEAD=1200, NEXT_AHEAD=30;
@@ -561,14 +783,13 @@ function stripTags(buf){
 }
 async function getBytes(song){
   if(bufCache.has(song.id))return bufCache.get(song.id);
-  const asset = await idb.get("assets", song.assetId);
-  if(!asset) throw new Error("descarga 404");
-  const data=stripTags(await asset.data.arrayBuffer());
+  const r=await blobFetch(song.assetId); if(!r.ok)throw new Error("descarga "+r.status);
+  const data=stripTags(await r.arrayBuffer());
   bufCache.set(song.id,data); while(bufCache.size>3)bufCache.delete(bufCache.keys().next().value);
   return data;
 }
-function bufEnd(sb){try{return sb.buffered.length?sb.buffered.end(sb.buffered.length-1):0}catch(e){return 0}}
-function bufStart(sb){try{return sb.buffered.length?sb.buffered.start(0):0}catch(e){return 0}}
+function bufEnd(sb){try{const b=sb.buffered;return b.length?b.end(b.length-1):0}catch(e){return 0}}
+function bufStart(sb){try{const b=sb.buffered;return b.length?b.start(0):0}catch(e){return 0}}
 function sbDo(fn){
   const st=ST; if(!st||!st.sb)return Promise.reject(new Error("stale"));
   const run=()=>new Promise((res,rej)=>{
@@ -629,14 +850,8 @@ function streamFail(err){
   const t=tNow(); stopStream();
   try{audio.disableRemotePlayback=false}catch(e){}
   const s=current(); if(!s)return;
-  idb.get("assets", s.assetId).then(asset => {
-    if(asset) {
-      if(audio.src && audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
-      audio.src = URL.createObjectURL(asset.data);
-      try{audio.load()}catch(e){}
-      S.resumeAt=t; audio.play().catch(()=>{S.needsTap=true;renderMini();renderPlayer()});
-    }
-  });
+  audio.src=bu(s.assetId); try{audio.load()}catch(e){}
+  S.resumeAt=t; audio.play().catch(()=>{S.needsTap=true;renderMini();renderPlayer()});
   render();
   toast("La reproducción continua ha fallado ("+S.stErr+"). Se usa el modo normal.",7000);
 }
@@ -674,6 +889,7 @@ async function pump(){
       }
       const now=audio.currentTime||0, ahead=bufEnd(st.sb)-now;
       if(item.seg&&ahead>AHEAD)break;
+      // De la siguiente canción solo se preparan los primeros 30 segundos
       if(item.seg&&st.cur&&item.seg!==st.cur&&bufEnd(st.sb)-item.seg.start>NEXT_AHEAD)break;
       if(!item.seg){
         const last=st.segs[st.segs.length-1];
@@ -716,6 +932,7 @@ async function ensureNext(){
     const nextIds=[...afterSegs.map(g=>g.id),...pendItems.filter(f=>!f.seg).map(f=>f.id)];
     if(nextIds.length===1&&nextIds[0]===wantId){afterSegs.forEach(g=>g.qi=want);pendItems.forEach(f=>f.qi=want);if(afterSegs[0]&&pendItems[0])pendItems[0].seg.qi=want;return}
     if(!nextIds.length&&!wantId){st.wantEnd=true;pump();return}
+    // Quitar la siguiente que estaba preparada y poner la correcta
     st.feed=st.feed.filter(f=>f.seg===cur);
     if(afterSegs.length&&cur.end!=null){await sbDo(sb=>sb.remove(cur.end,Infinity));st.segs=st.segs.filter(g=>!afterSegs.includes(g))}
     if(ST!==st||token!==st.nextTok)return;
@@ -766,6 +983,7 @@ function onStreamTick(){
   pump();
   const g=segAt(audio.currentTime||0);
   if(!g||g===ST.cur)return;
+  // Ha empezado la siguiente canción dentro de la pista continua
   ST.cur=g; S.qi=g.qi;
   const s=current(); if(!s)return;
   S.recent=[s.id,...S.recent.filter(x=>x!==s.id)].slice(0,20);
@@ -782,17 +1000,13 @@ function streamJump(qi){
   audio.currentTime=g.start+0.02; if(audio.paused)audio.play().catch(()=>{});
   pump(); return true;
 }
-async function load(autoplay){
+function load(autoplay){
   const s=current(); if(!s)return;
   if(autoplay&&streamOK(s)){ startStream(0,true) }
   else{
-    stopStream();
-    const asset = await idb.get("assets", s.assetId);
-    if(asset) {
-      if(audio.src && audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
-      audio.src = URL.createObjectURL(asset.data);
-      try{audio.load()}catch(e){}
-    }
+  stopStream();
+  audio.src=bu(s.assetId);
+  try{audio.load()}catch(e){}
   }
   if(document.visibilityState==="hidden")S.bgSwitched=true;
   if(autoplay&&!ST) audio.play().catch(()=>{S.needsTap=true;try{navigator.mediaSession.playbackState="paused"}catch(e){}renderMini()});
@@ -825,14 +1039,7 @@ async function restoreSession(){
     const curId=x.queue[x.qi]; const q=x.queue.filter(byId); const qi=q.indexOf(curId);
     if(qi>=0){
       S.queue=q;S.qi=qi;S.queueName=x.name;S.shuffle=!!x.shuffle;S.repeat=!!x.repeat;S.resumeAt=x.t||0;
-      const cur=current(); 
-      idb.get("assets", cur.assetId).then(asset => {
-        if(asset) {
-          if(audio.src && audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
-          audio.src = URL.createObjectURL(asset.data);
-          mediaSession(cur);
-        }
-      });
+      const cur=current(); audio.src=bu(cur.assetId); mediaSession(cur);
     }
   }
   render(); renderPlayer();
@@ -855,7 +1062,7 @@ function toggle(){
 function mediaSession(s){
   if(!("mediaSession" in navigator))return;
   try{
-    navigator.mediaSession.metadata=new MediaMetadata({title:s.title,artist:s.artist||"",album:albumLabel(s),artwork:(s.coverId&&s.coverBlobUrl)?[{src:s.coverBlobUrl,sizes:"512x512",type:s.coverType||"image/jpeg"}]:[]});
+    navigator.mediaSession.metadata=new MediaMetadata({title:s.title,artist:s.artist||"",album:albumLabel(s),artwork:s.coverId?[{src:bu(s.coverId),sizes:"512x512",type:s.coverType||"image/jpeg"}]:[]});
     navigator.mediaSession.setActionHandler("play",()=>audio.play());
     navigator.mediaSession.setActionHandler("pause",()=>audio.pause());
     navigator.mediaSession.setActionHandler("previoustrack",prev);
@@ -865,16 +1072,18 @@ function mediaSession(s){
 }
 let lastSave=0;
 document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="hidden"){saveSession();return}
+  if(document.visibilityState==="hidden"){saveSession();recordPlay();flushPlays();return}
+  // Al volver a la app: si iOS cambió de canción en segundo plano y la dejó sin sonido, se reactiva
   if(S.bgSwitched&&!audio.paused&&!ST){const t=audio.currentTime;audio.pause();try{audio.currentTime=t}catch(e){}audio.play().catch(()=>{})}
   S.bgSwitched=false;
 });
-addEventListener("pagehide",()=>saveSession());
+addEventListener("pagehide",()=>{saveSession();recordPlay();flushPlays()});
 addEventListener("resize",()=>{if(S.showLyrics)syncLyrics(true)});
 document.addEventListener("wheel",e=>{if(e.target.closest&&e.target.closest("#lyr"))lyrHold=Date.now()+3500},{passive:true});
 document.addEventListener("touchmove",e=>{if(e.target.closest&&e.target.closest("#lyr"))lyrHold=Date.now()+3500},{passive:true});
 audio.addEventListener("timeupdate",()=>{
   onStreamTick();
+  trackTick();
   updateTime();
   if(Date.now()-lastSave>8000){lastSave=Date.now();saveSession()}
   if(S.sleepAt&&Date.now()>=S.sleepAt)sleepNow();
@@ -886,7 +1095,7 @@ audio.addEventListener("playing",()=>{S.needsTap=false;syncMediaState()});
 audio.addEventListener("durationchange",syncMediaState);
 audio.addEventListener("seeked",syncMediaState);
 audio.addEventListener("play",()=>{syncMediaState();renderMini();renderPlayer()});
-audio.addEventListener("pause",()=>{syncMediaState();renderMini();renderPlayer();saveSession()});
+audio.addEventListener("pause",()=>{syncMediaState();renderMini();renderPlayer();saveSession();recordPlay();flushSoon(800)});
 audio.addEventListener("ended",()=>{
   if(S.sleepEnd){S.sleepEnd=false;seekTo(0);renderPlayer();toast("Temporizador: música en pausa");return}
   if(S.repeat&&!ST){audio.currentTime=0;audio.play();return}
@@ -895,7 +1104,7 @@ audio.addEventListener("ended",()=>{
 });
 audio.addEventListener("error",()=>{ if(ST){const me=audio.error;streamFail(new Error("reproductor "+(me?me.code+" "+(me.message||""):"")));return} if(current()) toast("Esta canción no se puede reproducir en este dispositivo.") });
 
-/* ---------- Subida a local ---------- */
+/* ---------- Subida a la nube ---------- */
 const AUDIO_EXT={mp3:"audio/mpeg",m4a:"audio/mp4",aac:"audio/aac",mp4:"video/mp4",wav:"audio/wav",ogg:"audio/ogg",opus:"audio/ogg",flac:"audio/flac"};
 function cleanName(n){
   let base=n.replace(/\.[^.]+$/,"").replace(/_/g," ").replace(/\s+/g," ").trim();
@@ -907,6 +1116,7 @@ function cleanName(n){
 function getDuration(file){
   return new Promise(res=>{const a=document.createElement("audio");const u=URL.createObjectURL(file);a.preload="metadata";a.onloadedmetadata=()=>{const d=a.duration;URL.revokeObjectURL(u);res(isFinite(d)?Math.round(d):0)};a.onerror=()=>{URL.revokeObjectURL(u);res(0)};a.src=u;setTimeout(()=>res(0),6000)});
 }
+/* Lectura de etiquetas ID3v2 (v2.2, v2.3 y v2.4) */
 function syncsafe(b,i){return (b[i]&127)<<21|(b[i+1]&127)<<14|(b[i+2]&127)<<7|(b[i+3]&127)}
 function be32(b,i){return ((b[i]<<24)>>>0)+(b[i+1]<<16|b[i+2]<<8|b[i+3])}
 function unsync(b){const o=new Uint8Array(b.length);let j=0;for(let i=0;i<b.length;i++){o[j++]=b[i];if(b[i]===0xFF&&b[i+1]===0x00)i++}return o.subarray(0,j)}
@@ -1030,12 +1240,12 @@ async function tryUpload(file){
   throw last||{code:"unsupported_type"};
 }
 async function uploadFiles(files){
-  if(!S.assets||!S.db){toast("Inicializando base de datos local...");return}
+  if(!S.assets||!S.db){toast("La biblioteca aún se está abriendo. Prueba de nuevo en un momento.");return}
   files=[...files]; if(!files.length)return;
   const fails=[],dups=[],seen=new Set(S.songs.map(x=>norm(x.title)+"|"+norm(x.artist)));
   for(let i=0;i<files.length;i++){
     const f=files[i]; S.uploading={done:i,total:files.length,name:f.name}; render();
-    if(f.size>40*1024*1024){fails.push(f.name+" (pesa más de 40 MB)");continue}
+    if(f.size>100*1024*1024){fails.push(f.name+" (pesa más de 100 MB)");continue}
     try{
       const tags=await readTags(f);
       const fromName=cleanName(f.name);
@@ -1045,13 +1255,13 @@ async function uploadFiles(files){
       const key=norm(title)+"|"+norm(artist);
       if(seen.has(key)||S.songs.some(x=>x.file===f.name&&x.size===f.size)){dups.push(artist?artist+" – "+title:title);continue}
       seen.add(key);
-      const [r,dur]=await Promise.all([tryUpload(f),getDuration(f)]);
+      const [r,dur,af]=await Promise.all([tryUpload(f),getDuration(f),fileAf(f)]);
       let coverId="",coverType="";
       if(tags.pic){try{const c=await S.assets.upload(new Blob([tags.pic.data],{type:tags.pic.mime}),{type:tags.pic.mime});coverId=c.id;coverType=c.contentType}catch(e){}}
-      await S.db.collection("songs").add({title,artist,album,coverId,coverType,lyrics:tags.lyrics||"",assetId:r.id,duration:dur,size:r.sizeBytes,createdAt:Date.now(),file:f.name});
+      await S.db.collection("songs").add({title,artist,album,coverId,coverType,lyrics:tags.lyrics||"",assetId:r.id,duration:dur,size:r.sizeBytes,createdAt:Date.now(),file:f.name,...(af?{af}:{})});
     }catch(e){
       const c=e&&e.code;
-      fails.push(f.name+(c==="unsupported_type"?" (formato no admitido)":c==="quota_exceeded"?" (no queda espacio en tu dispositivo)":c==="too_large"?" (demasiado grande)":""));
+      fails.push(f.name+(c==="unsupported_type"?" (formato no admitido)":c==="quota_exceeded"?" (no queda espacio en el iPhone)":c==="too_large"?" (demasiado grande)":""));
     }
   }
   S.uploading=null; render(); refreshUsage();
@@ -1072,6 +1282,7 @@ function songMenu(id){
   <button class="pickrow" data-playnext="${esc(id)}">Reproducir a continuación</button>
   <button class="pickrow" data-addqueue="${esc(id)}">Añadir al final de la cola</button>
   <button class="pickrow" data-addto="${esc(id)}">Añadir a una lista</button>
+  <button class="pickrow" data-moodedit="${esc(id)}">Estado de ánimo</button>
   ${S.openList?`<button class="pickrow" data-removefrom="${esc(id)}">Quitar de esta lista</button>`:""}
   <button class="pickrow" data-edit="${esc(id)}">Editar título, artista y álbum</button>
   <button class="pickrow" data-delete="${esc(id)}" style="color:var(--danger)">Borrar de tu música</button>
@@ -1115,26 +1326,310 @@ function listMenu(id){
   showSheet(`<h3>${esc(p.name)}</h3><button class="pickrow" data-renamelist="${esc(id)}">Cambiar nombre</button><button class="pickrow" data-deletelist="${esc(id)}" style="color:var(--danger)">Borrar lista</button><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
 }
 
+/* ---------- Barra inferior: se compacta al bajar ---------- */
+let dockY=0;
+function setDock(c){
+  const dk=$("#dock"); if(!dk||dk.classList.contains("compact")===c)return;
+  const els=[...dk.children].filter(x=>x.offsetParent), first=els.map(x=>x.getBoundingClientRect());
+  dk.classList.toggle("compact",c);
+  syncPill(false);
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  els.forEach((x,i)=>{const a=first[i],b=x.getBoundingClientRect();if(!b.width)return;
+    try{x.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px) scale(${a.width/b.width},${a.height/b.height})`,transformOrigin:"top left"},{transform:"none",transformOrigin:"top left"}],{duration:420,easing:"cubic-bezier(.3,1.25,.4,1)"})}catch(e){}});
+}
+$("#main").addEventListener("scroll",e=>{
+  const y=e.target.scrollTop, dy=y-dockY;
+  if(y<40) setDock(false);
+  else if(dy>6) setDock(true);
+  else if(dy<-10) setDock(false);
+  dockY=y;
+},{passive:true});
+
+/* ---------- Carpetas por estado de ánimo ---------- */
+/* El propio iPhone escucha cada canción (tempo, energía, brillo, tono mayor o menor)
+   y a partir de eso decide la carpeta. No se usa Claude ni ningún servicio externo. */
+const MOODS=[
+  {k:"animo",name:"Para animarte",feel:"Si estás feliz",desc:"Alegres y con buen rollo"},
+  {k:"bajon",name:"Para el bajón",feel:"Si estás triste",desc:"Para cuando te apetece algo melancólico"},
+  {k:"calma",name:"Para relajarte",feel:"Si buscas calma",desc:"Suaves y sin prisa"},
+  {k:"energia",name:"Con energía",feel:"Si quieres moverte",desc:"Para entrenar, bailar o salir de fiesta"},
+  {k:"foco",name:"Para concentrarte",feel:"Si toca estudiar",desc:"Ritmo constante y sin sobresaltos"}
+];
+const MOODK=MOODS.map(m=>m.k);
+const moodOf=k=>k==="bucle"?LOOP:(MOODS.find(m=>m.k===k)||MOODS[0]);
+const clamp01=v=>Math.max(0,Math.min(1,v));
+const nrm=(v,a,b)=>clamp01((v-a)/(b-a));
+function moodsFromAf(a){
+  const E=nrm(a.db,-24,-9), P=nrm(a.pulse,.05,.4), B=nrm(a.cen,700,2200);
+  const T=.5+(nrm(a.bpm,80,150)-.5)*Math.min(1,P*2); // si no hay ritmo claro, el tempo cuenta poco
+  const maj=(Math.max(-1,Math.min(1,a.key/.2))+1)/2;
+  const sc={
+    energia:.45*E+.3*T+.25*P,
+    animo:(.4*maj+.3*T+.3*B)*(E>.3?1:.8),
+    bajon:.45*(1-maj)+.3*(1-T)+.25*(1-E),
+    calma:.5*(1-E)+.25*(1-T)+.25*(1-P),
+    foco:.5*(1-Math.abs(E-.45)*2)+.3*P+.2*(1-B)
+  };
+  const r=Object.entries(sc).sort((x,y)=>y[1]-x[1]);
+  const out=[r[0][0]], bad={animo:"bajon",bajon:"animo",calma:"energia",energia:"calma"};
+  if(r[1][1]>=r[0][1]-.06&&bad[r[0][0]]!==r[1][0])out.push(r[1][0]);
+  return out;
+}
+function moodsOf(s){
+  if(s.moodBy==="tú"&&Array.isArray(s.moods))return s.moods;
+  return s.af?moodsFromAf(s.af):[];
+}
+const anFailed=new Set();
+const needsAn=s=>!s.af&&s.moodBy!=="tú"&&!anFailed.has(s.id);
+function moodSongs(k){if(k==="bucle")return S.loop.map(x=>byId(x.id)).filter(Boolean);return S.songs.filter(s=>moodsOf(s).includes(k)).sort((a,b)=>a.title.localeCompare(b.title,"es"))}
+function moodNow(){const h=new Date().getHours();return h<7?"calma":h<11?"animo":h<17?"foco":h<21?"energia":"calma"}
+function moodArt(k,size,r){return moodCover(k,size,r)}
+/* ----- Carátulas animadas de las carpetas (figuras geométricas) ----- */
+const COVPAL={bucle:["var(--tint)","var(--ink)"],animo:["var(--accent)","var(--on-accent)"],bajon:["var(--ink)","var(--bg)"],calma:["var(--tint)","var(--accent)"],energia:["var(--ink)","var(--accent)"],foco:["var(--surface)","var(--ink)"],amor:["var(--accent)","var(--tint)"]};
+function moodCover(k,size,r){
+  const R=r??Math.round(size*.12), [bg,fg]=COVPAL[k]||COVPAL.calma;
+  let g="";
+  if(k==="animo"){
+    g=`<g class="spin">${Array.from({length:12},(_,i)=>`<rect x="48" y="9" width="4" height="15" rx="2" transform="rotate(${i*30} 50 50)"/>`).join("")}</g><circle cx="50" cy="50" r="17" class="beat-s"/>`;
+  }else if(k==="bajon"){
+    g=[18,34,50,66,82].map((x,i)=>`<rect class="fall" x="${x-1.5}" y="-14" width="3" height="12" rx="1.5" style="animation-delay:${-(i*0.53+(i%2)*0.9).toFixed(2)}s"/>`).join("")+`<path d="M8 84 Q29 76 50 84 T92 84 V100 H8Z" opacity=".9"/>`;
+  }else if(k==="calma"){
+    g=[0,1,2].map(i=>`<circle class="ripple" cx="50" cy="50" r="34" fill="none" stroke-width="2.5" style="animation-delay:${-i*2}s"/>`).join("")+`<circle cx="50" cy="50" r="6"/>`;
+  }else if(k==="energia"){
+    g=[20,35,50,65,80].map((x,i)=>`<rect class="bar" x="${x-5}" y="22" width="10" height="56" rx="5" style="animation-duration:${(.55+i%3*.17).toFixed(2)}s;animation-delay:${-(i*.21).toFixed(2)}s"/>`).join("");
+  }else if(k==="foco"){
+    g=`<g class="spin" style="animation-duration:30s"><rect x="22" y="22" width="56" height="56" rx="4" fill="none" stroke-width="2.5"/></g><g class="spinr"><rect x="32" y="32" width="36" height="36" rx="3" fill="none" stroke-width="2.5"/></g><rect x="44" y="44" width="12" height="12" rx="2"/>`;
+  }else if(k==="amor"){
+    g=`<g class="beat"><circle cx="40" cy="44" r="19"/><circle cx="60" cy="44" r="19"/><path d="M26.6 57.4 L40 44 L60 44 L73.4 57.4 L50 80.8Z"/></g><circle class="ripple" cx="50" cy="50" r="40" fill="none" stroke-width="1.5" style="animation-duration:3.6s"/>`;
+  }else{ // bucle
+    g=`<circle cx="50" cy="50" r="30" fill="none" stroke-width="7" opacity=".18"/><g class="spin" style="animation-duration:2.6s"><circle cx="50" cy="50" r="30" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="58 131"/></g><g class="spinr" style="animation-duration:7s"><circle cx="50" cy="12" r="4.5"/></g><path d="M44 40 L60 50 L44 60Z"/>`;
+  }
+  return `<span class="cover gx" aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${R}px;background:${bg};display:block"><svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block;fill:${fg};stroke:${fg}" preserveAspectRatio="xMidYMid slice">${g}</svg></span>`;
+}
+/* ----- Carpeta «En bucle»: lo que más has escuchado en los últimos 30 días ----- */
+const LOOP={k:"bucle",name:"En bucle",feel:"Lo que no paras de escuchar",desc:"Lo que más has escuchado en los últimos 30 días"};
+S.loop=[]; let loopLoading=false;
+async function loadLoop(){
+  if(!S.db||loopLoading)return; loopLoading=true;
+  try{
+    const now=new Date(), m0=now.getFullYear()+"-"+p2(now.getMonth()+1), pd=new Date(now.getFullYear(),now.getMonth()-1,1), m1=pd.getFullYear()+"-"+p2(pd.getMonth()+1);
+    const snap=await S.db.collection("plays").where("month","in",[m0,m1]).limit(100).get();
+    const mp=new Map();
+    for(const d of snap.docs)for(const e of (d.data().plays||[]))mp.set(e.t+"_"+e.s,e);
+    for(const k in pend)for(const key in pend[k])mp.set(key,pend[k][key]);
+    const from=Date.now()-30*864e5, cnt=new Map();
+    for(const e of mp.values())if(e.t>=from)cnt.set(e.s,(cnt.get(e.s)||0)+1);
+    S.loop=[...cnt.entries()].filter(([,n])=>n>=2).sort((a,b)=>b[1]-a[1]).slice(0,25).map(([id,n])=>({id,n}));
+  }catch(e){}
+  loopLoading=false; render();
+}
+
+/* ----- Análisis del sonido ----- */
+const AN_SR=16000, AN_N=1024, AN_HOP=256, AN_SECS=60;
+let FFTT=null;
+function fftTables(){
+  if(FFTT)return FFTT;
+  const N=AN_N,bits=Math.log2(N),rev=new Uint32Array(N),cos=new Float32Array(N/2),sin=new Float32Array(N/2),win=new Float32Array(N);
+  for(let i=0;i<N;i++){let r=0,x=i;for(let b=0;b<bits;b++){r=(r<<1)|(x&1);x>>=1}rev[i]=r;win[i]=.5-.5*Math.cos(2*Math.PI*i/(N-1))}
+  for(let i=0;i<N/2;i++){cos[i]=Math.cos(2*Math.PI*i/N);sin[i]=-Math.sin(2*Math.PI*i/N)}
+  return FFTT={rev,cos,sin,win};
+}
+function fftMag(src,off,re,im,mag){
+  const {rev,cos,sin,win}=fftTables(),N=AN_N;
+  for(let i=0;i<N;i++){const j=rev[i];re[j]=src[off+i]*win[i];im[j]=0}
+  for(let size=2;size<=N;size<<=1){const half=size>>1,step=N/size;
+    for(let i=0;i<N;i+=size)for(let j=0,k=0;j<half;j++,k+=step){const a=i+j,b=a+half,tr=re[b]*cos[k]-im[b]*sin[k],ti=re[b]*sin[k]+im[b]*cos[k];re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti}}
+  for(let k=0;k<N/2;k++)mag[k]=Math.hypot(re[k],im[k]);
+}
+function decodeAudio(buf){
+  const C=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  if(!C)return Promise.reject(new Error("sin Web Audio"));
+  let ctx=null; for(const sr of [AN_SR,22050,44100]){try{ctx=new C(1,sr,sr);break}catch(e){}}
+  if(!ctx)return Promise.reject(new Error("sin contexto"));
+  return new Promise((res,rej)=>{try{const p=ctx.decodeAudioData(buf,res,rej);if(p&&p.then)p.then(res,rej)}catch(e){rej(e)}});
+}
+function toMono(ab){
+  const sr=ab.sampleRate,ch=ab.numberOfChannels,len=ab.length,tot=len/sr;
+  const seg=Math.min(tot,AN_SECS),st=tot>AN_SECS+10?(tot-AN_SECS)*.45:0;
+  const s0=Math.floor(st*sr),ratio=sr/AN_SR,outN=Math.floor(seg*sr/ratio),out=new Float32Array(outN),cs=[];
+  for(let c=0;c<ch;c++)cs.push(ab.getChannelData(c));
+  for(let i=0;i<outN;i++){const a=s0+Math.floor(i*ratio),b=Math.min(len,Math.max(a+1,s0+Math.floor((i+1)*ratio)));let s=0,n=0;for(let j=a;j<b;j++){for(let c=0;c<ch;c++)s+=cs[c][j];n+=ch}out[i]=n?s/n:0}
+  return out;
+}
+const KMAJ=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88],KMIN=[6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+function pearson(a,b){const n=a.length;let ma=0,mb=0;for(let i=0;i<n;i++){ma+=a[i];mb+=b[i]}ma/=n;mb/=n;let num=0,da=0,db=0;for(let i=0;i<n;i++){const x=a[i]-ma,y=b[i]-mb;num+=x*y;da+=x*x;db+=y*y}return da&&db?num/Math.sqrt(da*db):0}
+function audioFeatures(x){
+  const N=AN_N,H=AN_HOP,F=Math.floor((x.length-N)/H);
+  if(F<300)throw new Error("muy corta");
+  const re=new Float32Array(N),im=new Float32Array(N),mag=new Float32Array(N/2),prev=new Float32Array(N/2),flux=new Float32Array(F),chroma=new Float64Array(12);
+  const pcT=new Int8Array(N/2).fill(-1);
+  for(let k=1;k<N/2;k++){const f=k*AN_SR/N;if(f>=110&&f<=3500)pcT[k]=((Math.round(12*Math.log2(f/440))+69)%12+12)%12}
+  let sq=0;for(let i=0;i<x.length;i++)sq+=x[i]*x[i];
+  let cenS=0,cenW=0;
+  for(let f=0;f<F;f++){
+    fftMag(x,f*H,re,im,mag);
+    let fl=0,e=0,cs=0;
+    for(let k=1;k<N/2;k++){const m=Math.log1p(100*mag[k]),d=m-prev[k];if(d>0)fl+=d;prev[k]=m;const p=mag[k]*mag[k];e+=p;cs+=p*k;if(pcT[k]>=0)chroma[pcT[k]]+=mag[k]}
+    flux[f]=f?fl:0; cenS+=cs; cenW+=e;
+  }
+  // Tempo: autocorrelación de la envolvente de ataques
+  const W=16,o=new Float32Array(F);let acc=0;
+  for(let i=0;i<F;i++){acc+=flux[i];if(i>=W)acc-=flux[i-W];o[i]=Math.max(0,flux[i]-acc/Math.min(i+1,W))}
+  const fps=AN_SR/H;let ac0=0;for(let i=0;i<F;i++)ac0+=o[i]*o[i];ac0/=F;
+  const lo=Math.floor(60*fps/200),hi=Math.ceil(60*fps/60),ac=new Float64Array(hi+2);
+  for(let l=lo;l<=hi+1;l++){let s=0;for(let i=0;i+l<F;i++)s+=o[i]*o[i+l];ac[l]=s/(F-l)}
+  let best=lo,bw=-1;
+  for(let l=lo;l<=hi;l++){const bpm=60*fps/l,w=Math.exp(-.5*Math.pow(Math.log2(bpm/120)/.9,2))*ac[l];if(w>bw){bw=w;best=l}}
+  let lag=best;const a0=ac[best-1]||0,a1=ac[best],a2=ac[best+1]||0,den=a0-2*a1+a2;if(den<0)lag=best+.5*(a0-a2)/den;
+  const keyMaj=Math.max(...Array.from({length:12},(_,r)=>pearson(Array.from({length:12},(_,i)=>chroma[(i+r)%12]),KMAJ)));
+  const keyMin=Math.max(...Array.from({length:12},(_,r)=>pearson(Array.from({length:12},(_,i)=>chroma[(i+r)%12]),KMIN)));
+  return {v:1,db:+(10*Math.log10(sq/x.length+1e-12)).toFixed(1),bpm:Math.round(60*fps/lag),cen:Math.round(cenW?cenS/cenW*AN_SR/N:0),key:+(keyMaj-keyMin).toFixed(3),pulse:+(ac0?ac[best]/ac0:0).toFixed(3)};
+}
+async function analyzeBytes(ab,mp3){
+  let buf=ab;
+  if(mp3&&ab.byteLength>1.2e6){
+    const len=Math.min(Math.round(ab.byteLength*.4),2600000),f=findFrame(new Uint8Array(ab),Math.round((ab.byteLength-len)/2));
+    if(f>0)buf=ab.slice(f,Math.min(ab.byteLength,f+len));
+  }
+  return audioFeatures(toMono(await decodeAudio(buf)));
+}
+function fileAf(f){return f.arrayBuffer().then(ab=>analyzeBytes(ab,/\.mp3$/i.test(f.name))).catch(()=>null)}
+async function analyzeLibrary(){
+  if(!S.db||S.anBusy)return;
+  const todo=S.songs.filter(needsAn); if(!todo.length)return;
+  S.anBusy={done:0,total:todo.length,stop:false,fail:0}; render();
+  for(const s of todo){
+    if(S.anBusy.stop)break;
+    try{
+      const r=await blobFetch(s.assetId); if(!r.ok)throw new Error("descarga");
+      const af=await analyzeBytes(await r.arrayBuffer(),isMp3(s));
+      await S.db.collection("songs").doc(s.id).update({af});
+    }catch(e){S.anBusy.fail++;anFailed.add(s.id)}
+    S.anBusy.done++;
+    const st=$("#anStatus"); if(st)st.textContent=anText(); 
+    await new Promise(r=>setTimeout(r,80));
+  }
+  const b=S.anBusy; S.anBusy=null; render();
+  if(b.stop)toast("Análisis en pausa. Puedes seguir cuando quieras.");
+  else if(b.fail)toast(b.fail===1?"Una canción no se ha podido analizar.":b.fail+" canciones no se han podido analizar.",4000);
+  else toast("Canciones colocadas en sus carpetas");
+}
+const anText=()=>`El iPhone está escuchando tus canciones: ${S.anBusy.done} de ${S.anBusy.total}…`;
+function moodSection(){
+  const todo=S.songs.filter(needsAn), any=S.songs.some(s=>moodsOf(s).length);
+  let h=`<section><div class="sechead"><h2>¿Cómo te sientes?</h2></div><div class="recent">${[LOOP,...MOODS].map(m=>{const n=moodSongs(m.k).length;return `<button class="card" data-mood="${m.k}">${moodCover(m.k,132,18)}<span><span class="t" style="display:block">${esc(m.name)}</span><span class="s" style="display:block">${n?n+(n===1?" canción":" canciones"):"Vacía"}</span></span></button>`}).join("")}</div>`;
+  if(S.anBusy)h+=`<div class="foldercall" role="status"><p id="anStatus">${anText()}</p><button class="btn ghost" data-anstop>Parar</button></div>`;
+  else if(!any&&todo.length){const mbt=todo.reduce((t,s)=>t+(s.size||0),0);h+=`<div class="foldercall"><p>El iPhone escucha tus canciones y las reparte en las carpetas. Tiene que descargarlas una vez${mbt?`, unos ${mb(mbt)}`:""}. Mejor con wifi.</p><button class="btn" data-analyze>Analizar</button></div>`}
+  else if(todo.length)h+=`<button class="link" data-analyze style="margin-top:2px">Analizar ${todo.length===1?"1 canción":todo.length+" canciones"} sin carpeta</button>`;
+  return h+`</section>`;
+}
+function nowCard(){
+  let k=moodNow(); if(!moodSongs(k).length)k=S.loop.length?"bucle":null; if(!k)return "";
+  const m=moodOf(k), n=moodSongs(k).length;
+  return `<section><button class="moodnow" data-mood="${k}" style="margin:0">${moodCover(k,64,14)}<span class="meta"><span class="s">Para ahora</span><span class="t">${esc(m.name)}</span><span class="s">${n} ${n===1?"canción":"canciones"}</span></span>${ICON.play}</button></section>`;
+}
+function renderMoodPage(){
+  const m=moodOf(S.moodOpen), list=moodSongs(m.k), n=list.length;
+  let h=`<div class="backline"><button class="iconbtn plain" data-moodback aria-label="Volver">${ICON.back}</button></div>`;
+  h+=`<div style="display:flex;gap:18px;align-items:flex-end;margin-bottom:22px">${moodArt(m.k,120,18)}<div style="min-width:0"><p style="margin:0 0 4px;font-size:13px;color:var(--muted)">${esc(m.feel)}</p><h1 style="font-size:28px;letter-spacing:-.5px;overflow-wrap:anywhere">${esc(m.name)}</h1><p style="color:var(--muted);margin:6px 0 0">${n} ${n===1?"canción":"canciones"}</p></div></div>`;
+  if(!n)return h+`<div class="empty"><h3>Aún no hay canciones aquí</h3><p style="margin:0">${m.k==="bucle"?"Aquí aparecen las canciones que más escuches en 30 días. Hace falta escuchar una canción al menos dos veces.":m.k==="amor"?"Por cómo suena, el iPhone no puede saber si una canción es romántica. Añádelas tú desde su menú, en «Estado de ánimo».":"Añade canciones desde su menú, en «Estado de ánimo»."}</p></div>`;
+  h+=`<div style="display:flex;gap:10px;margin-bottom:18px"><button class="btn" data-playall="mood">${ICON.play} <span style="vertical-align:middle">Reproducir</span></button><button class="btn ghost" data-shuffleall="mood">Aleatorio</button></div>`;
+  return h+list.map(x=>songRow(x,"mood")).join("");
+}
+function afText(a){
+  const E=nrm(a.db,-24,-9);
+  return `${a.bpm} pulsaciones por minuto, energía ${E>.66?"alta":E>.33?"media":"baja"} y suena a tono ${a.key>=0?"mayor (más alegre)":"menor (más triste)"}.`;
+}
+function moodSheet(id){
+  const s=byId(id); if(!s)return;
+  const manual=s.moodBy==="tú"&&Array.isArray(s.moods);
+  S.moodPick=new Set(moodsOf(s));
+  showSheet(`<h3 style="margin-bottom:4px">Estado de ánimo</h3><p style="color:var(--muted);margin:0 0 6px">${esc(s.title)}</p><p style="color:var(--muted);margin:0 0 14px;font-size:14px">${s.af?"El iPhone ha detectado "+afText(s.af):"Esta canción aún no se ha analizado."}${manual?" Las carpetas las has elegido tú.":""}</p>${MOODS.map(m=>{const on=S.moodPick.has(m.k);return `<button class="pickrow" data-moodpick="${m.k}" aria-pressed="${on}"><span class="check${on?" on":""}">${on?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">${esc(m.name)}</span><span style="font-size:13px;color:var(--muted)">${esc(m.desc)}</span></span></button>`}).join("")}${manual&&s.af?`<button class="pickrow" data-moodauto="${esc(id)}" style="color:var(--accent)">Volver a las carpetas automáticas</button>`:""}<div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" data-moodsave="${esc(id)}">Guardar</button></div>`);
+}
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button"); if(!t||t.closest("#wstory"))return;
+  const d=t.dataset;
+  if(d.mood){S.moodOpen=d.mood;if(d.mood==="bucle")loadLoop();render();$("#main").scrollTop=0;return}
+  if("moodback" in d){S.moodOpen=null;render();return}
+  if("analyze" in d){anFailed.clear();analyzeLibrary();return}
+  if("anstop" in d){if(S.anBusy)S.anBusy.stop=true;return}
+  if(d.moodedit){closeSheet();moodSheet(d.moodedit);return}
+  if(d.moodpick){const k=d.moodpick,on=!S.moodPick.has(k);if(on)S.moodPick.add(k);else S.moodPick.delete(k);t.setAttribute("aria-pressed",on);const c=t.querySelector(".check");c.classList.toggle("on",on);c.innerHTML=on?ICON.check:"";return}
+  if(d.moodsave){const v=MOODK.filter(k=>S.moodPick.has(k));closeSheet();try{await S.db.collection("songs").doc(d.moodsave).update({moods:v,moodBy:"tú"});toast(v.length?"Estado de ánimo guardado":"Quitada de las carpetas de ánimo")}catch(err){toast("No se ha podido guardar.")}return}
+  if(d.moodauto){closeSheet();try{await S.db.collection("songs").doc(d.moodauto).update({moods:[],moodBy:"auto"});toast("Vuelve a sus carpetas automáticas")}catch(err){toast("No se ha podido guardar.")}return}
+});
+
+/* ---------- Barra de pestañas deslizable, como en iOS ---------- */
+var TD=null, tabSwallow=false;
+function tabNav(){return document.querySelector("nav.tabs")}
+function tabBtns(){const n=tabNav();return n?[...n.querySelectorAll("button[data-tab]")]:[]}
+function tabPill(){const n=tabNav();if(!n)return null;let p=n.querySelector(".tabpill");if(!p){p=document.createElement("span");p.className="tabpill";p.setAttribute("aria-hidden","true");n.prepend(p)}return p}
+function placePill(x,w,anim,big){const p=tabPill();if(!p)return;p.style.transition=anim?"":"none";p.style.width=w+"px";p.style.transform=`translateX(${x}px)${big?" scale(1.12,1.04)":""}`;
+  const L=p.querySelector(".lens");if(big&&L){L.style.left=(-x)+"px";L.style.transformOrigin=`${x+w/2}px 50%`;L.style.transform="scale(1.16)"}}
+/* Lupa: copia ampliada de las pestañas dentro de la burbuja mientras se arrastra */
+function buildLens(){const n=tabNav(),p=tabPill();if(!n||!p)return;let L=p.querySelector(".lens");if(!L){L=document.createElement("div");L.className="lens";p.appendChild(L)}L.style.width=n.clientWidth+"px";L.innerHTML=tabBtns().map(b=>`<span>${b.innerHTML}</span>`).join("")}
+function lensOn(i){const p=tabPill();if(!p)return;p.querySelectorAll(".lens span").forEach((s,j)=>s.classList.toggle("on",j===i))}
+function syncPill(anim){
+  const p=tabPill(); if(!p||(TD&&TD.moved))return;
+  if($("#dock").classList.contains("compact")){p.style.opacity="0";return}
+  const b=tabBtns().find(x=>x.dataset.tab===S.tab); if(!b||!b.offsetWidth){p.style.opacity="0";return}
+  const first=!p.dataset.ready; p.dataset.ready="1";
+  placePill(b.offsetLeft,b.offsetWidth,anim!==false&&!first); p.style.opacity="1";
+}
+function nearestTab(cx){const bs=tabBtns();let bi=0,bd=1e9;bs.forEach((b,i)=>{const d=Math.abs(b.offsetLeft+b.offsetWidth/2-cx);if(d<bd){bd=d;bi=i}});return bi}
+function goTab(tab){S.wrapPage=false;S.moodOpen=null;S.tab=tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0}
+(function(){
+  const n=tabNav(); if(!n)return;
+  n.addEventListener("pointerdown",e=>{if(e.button>0||$("#dock").classList.contains("compact"))return;TD={x0:e.clientX,id:e.pointerId,moved:false}});
+  n.addEventListener("pointermove",e=>{
+    if(!TD||e.pointerId!==TD.id)return;
+    const bs=tabBtns(); if(!bs.length)return;
+    if(!TD.moved){if(Math.abs(e.clientX-TD.x0)<8)return;TD.moved=true;try{n.setPointerCapture(TD.id)}catch(_){}buildLens();n.classList.add("dragging")}
+    const r=n.getBoundingClientRect(), w=bs[0].offsetWidth, min=bs[0].offsetLeft, max=bs[bs.length-1].offsetLeft;
+    const x=Math.max(min-6,Math.min(max+6,e.clientX-r.left-w/2));
+    placePill(x,w,false,true);
+    const hi=nearestTab(x+w/2); bs.forEach((b,i)=>b.classList.toggle("hover",i===hi)); lensOn(hi);
+  });
+  const end=e=>{
+    if(!TD||e.pointerId!==TD.id)return; const t=TD; TD=null;
+    if(!t.moved)return;
+    tabSwallow=true; setTimeout(()=>{tabSwallow=false},400);
+    n.classList.remove("dragging");
+    const bs=tabBtns(), r=n.getBoundingClientRect(), i=nearestTab(e.clientX-r.left);
+    bs.forEach(b=>b.classList.remove("hover"));
+    const tab=bs[i]&&bs[i].dataset.tab;
+    if(e.type!=="pointercancel"&&tab&&tab!==S.tab)goTab(tab); else syncPill(true);
+  };
+  n.addEventListener("pointerup",end); n.addEventListener("pointercancel",end);
+  n.addEventListener("contextmenu",e=>e.preventDefault());
+})();
+window.addEventListener("click",e=>{if(tabSwallow&&e.target.closest&&e.target.closest("nav.tabs")){e.stopPropagation();e.preventDefault();tabSwallow=false}},true);
+addEventListener("resize",()=>syncPill(false));
+try{document.fonts&&document.fonts.ready.then(()=>syncPill(false))}catch(e){}
+
 /* ---------- Eventos ---------- */
 document.addEventListener("click",async e=>{
   const t=e.target.closest("button,[data-sheetbg]"); if(!t)return;
   if(t.matches("[data-sheetbg]")){ if(e.target===t) closeSheet(); return }
   const d=t.dataset;
-  if(d.tab){S.tab=d.tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0;return}
+  if(t.closest("#dock nav.tabs")&&$("#dock").classList.contains("compact")){setDock(false);return}
+  if(t.id==="dockSearch"){S.tab="canciones";S.openList=null;S.group=null;S.setView=null;render();$("#main").scrollTop=0;setDock(false);const q=$("#q");if(q)q.focus();return}
+  if(t.id==="miniNext"){next(false);return}
+  if(d.tab){S.wrapPage=false;S.moodOpen=null;S.tab=d.tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0;return}
   if(d.goto){S.tab=d.goto;S.openList=null;render();return}
   if(t.id==="addSongs"||t.id==="addSongs2"){$("#fileIn").click();return}
   if(d.play){playId(d.play,d.ctx);return}
   if(d.view){S.view=d.view;render();return}
   if(d.cfg){setCfg(d.cfg,d.val);return}
-  if(d.cfgsw){if(d.cfgsw==="continuous"&&!CFG.continuous){stFailed=false;S.stErr=""}setCfg(d.cfgsw,!CFG[d.cfgsw]);if(d.cfgsw==="continuous"&&current()){const t=tNow(),pl=!audio.paused;if(CFG.continuous&&streamOK(current())){startStream(t,pl)}else{stopStream();try{audio.disableRemotePlayback=false}catch(e){}idb.get("assets", current().assetId).then(asset => { if(asset) { if(audio.src && audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src); audio.src = URL.createObjectURL(asset.data); S.resumeAt=t; if(pl)audio.play().catch(()=>{}); } });}}return}
+  if(d.cfgsw){if(d.cfgsw==="continuous"&&!CFG.continuous){stFailed=false;S.stErr=""}setCfg(d.cfgsw,!CFG[d.cfgsw]);if(d.cfgsw==="continuous"&&current()){const t=tNow(),pl=!audio.paused;if(CFG.continuous&&streamOK(current())){startStream(t,pl)}else{stopStream();try{audio.disableRemotePlayback=false}catch(e){}audio.src=bu(current().assetId);S.resumeAt=t;if(pl)audio.play().catch(()=>{})}}return}
   if(t.id==="clearRecent"){S.recent=[];try{localStorage.setItem("recent","[]")}catch(e){}saveSession();render();toast("Historial borrado");return}
   if(t.id==="openManage"){S.setView="manage";S.sel=new Set();render();$("#main").scrollTop=0;return}
   if(t.id==="closeManage"){S.setView=null;S.sel=new Set();render();return}
   if(t.id==="selAll"){S.sel=S.sel.size===S.songs.length?new Set():new Set(S.songs.map(x=>x.id));const st=$("#main").scrollTop;render();$("#main").scrollTop=st;return}
   if(d.sel){const on=!S.sel.has(d.sel);if(on)S.sel.add(d.sel);else S.sel.delete(d.sel);t.setAttribute("aria-pressed",on);const c=t.querySelector(".check");c.classList.toggle("on",on);c.innerHTML=on?ICON.check:"";$("#selInfo").textContent=selInfo();const b=$("#bulkDelete");b.disabled=!S.sel.size;const sa=$("#selAll");if(sa)sa.textContent=S.sel.size===S.songs.length?"Quitar selección":"Seleccionar todas";return}
-  if(t.id==="bulkDelete"){const n=S.sel.size;if(!n)return;showSheet(`<h3>¿Borrar ${n===1?"1 canción":n+" canciones"}?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrarán de tu dispositivo y de todas tus listas. Esto no se puede deshacer.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" id="confirmBulk">Borrar ${n===1?"canción":n+" canciones"}</button></div>`);return}
+  if(t.id==="bulkDelete"){const n=S.sel.size;if(!n)return;showSheet(`<h3>¿Borrar ${n===1?"1 canción":n+" canciones"}?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrarán de este iPhone y de todas tus listas. Esto no se puede deshacer.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" id="confirmBulk">Borrar ${n===1?"canción":n+" canciones"}</button></div>`);return}
   if(t.id==="confirmBulk"){closeSheet();if(!S.db)return;deleteSongs([...S.sel]);return}
-  if(t.id==="cleanOrphans"){if(!S.assets){toast("Abre la app con tu cuenta para usar esto.");return}
+  if(t.id==="cleanOrphans"){if(!S.assets){toast("La biblioteca aún se está abriendo. Prueba de nuevo en un momento.");return}
     try{const o=await findOrphans();if(!o.length){toast("No hay archivos sueltos. Todo en orden.");return}
       const b=o.reduce((x,a)=>x+a.sizeBytes,0);S.orphans=o;
       showSheet(`<h3>${o.length===1?"1 archivo suelto":o.length+" archivos sueltos"}</h3><p style="color:var(--muted);margin:0 0 16px">Ocupan ${mbs(b)} y no pertenecen a ninguna canción. Tus canciones y listas no se tocan.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="confirmOrphans">Liberar ${mbs(b)}</button></div>`);
@@ -1161,7 +1656,7 @@ document.addEventListener("click",async e=>{
     renderPlayer();saveSession();ensureNext();return}
   if(d.menu){songMenu(d.menu);return}
   if(d.playall||d.shuffleall){
-    const which=d.playall||d.shuffleall; const ids=ctxList(which==="list"?"list:"+S.openList:which==="group"?"group":"all");
+    const which=d.playall||d.shuffleall; const ids=ctxList(which==="list"?"list:"+S.openList:which==="group"?"group":which==="mood"?"mood":"all");
     if(!ids.ids.length)return; S.shuffle=!!d.shuffleall; setQueue(ids.ids,S.shuffle?Math.floor(Math.random()*ids.ids.length):0,ids.name); load(true); return}
   if(t.id==="openPlayer"){S.playerOpen=true;renderPlayer();return}
   if(t.id==="closePlayer"){S.playerOpen=false;renderPlayer();return}
@@ -1174,7 +1669,7 @@ document.addEventListener("click",async e=>{
   if(d.closesheet!==undefined){closeSheet();return}
   if(d.edit){editSong(d.edit);return}
   if(d.saveedit){const title=$("#eT").value.trim()||"Sin título",artist=$("#eA").value.trim(),album=$("#eL").value.trim();closeSheet();try{await S.db.collection("songs").doc(d.saveedit).update({title,artist,album});toast("Cambios guardados")}catch(err){toast("No se han podido guardar los cambios.")}return}
-  if(d.delete){const s=byId(d.delete);closeSheet();showSheet(`<h3>¿Borrar «${esc(s.title)}»?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrará de tu dispositivo y de todas tus listas.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" data-confirmdelete="${esc(s.id)}">Borrar canción</button></div>`);return}
+  if(d.delete){const s=byId(d.delete);closeSheet();showSheet(`<h3>¿Borrar «${esc(s.title)}»?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrará de este iPhone y de todas tus listas.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" data-confirmdelete="${esc(s.id)}">Borrar canción</button></div>`);return}
   if(d.confirmdelete){const s=byId(d.confirmdelete);closeSheet();if(!s)return;
     try{
       if(current()&&current().id===s.id){audio.pause();stopStream();audio.removeAttribute("src");S.queue=S.queue.filter(x=>x!==s.id);S.qi=-1;S.playerOpen=false;renderPlayer()}
@@ -1241,146 +1736,261 @@ document.addEventListener("touchend",e=>{
   if(p){p.classList.remove("dragging");p.style.transform=""}
 },{passive:true});
 
-/* ---------- Conexión Local (IndexedDB) ---------- */
-const idb = {
-  db: null,
-  init() {
-    return new Promise((res, rej) => {
-      const req = indexedDB.open("MiMusicaDB", 1);
-      req.onupgradeneeded = e => {
-        const db = e.target.result;
-        if(!db.objectStoreNames.contains("songs")) db.createObjectStore("songs", {keyPath: "id"});
-        if(!db.objectStoreNames.contains("playlists")) db.createObjectStore("playlists", {keyPath: "id"});
-        if(!db.objectStoreNames.contains("assets")) db.createObjectStore("assets", {keyPath: "id"});
-        if(!db.objectStoreNames.contains("state")) db.createObjectStore("state", {keyPath: "id"});
-      };
-      req.onsuccess = e => { this.db = e.target.result; res(); };
-      req.onerror = () => rej(req.error);
-    });
-  },
-  get(st, id) { return new Promise(res => { const req = this.db.transaction(st).objectStore(st).get(id); req.onsuccess = () => res(req.result); req.onerror = () => res(null); }); },
-  getAll(st) { return new Promise(res => { const req = this.db.transaction(st).objectStore(st).getAll(); req.onsuccess = () => res(req.result); req.onerror = () => res([]); }); },
-  put(st, data) { return new Promise(res => { const req = this.db.transaction(st, "readwrite").objectStore(st).put(data); req.onsuccess = () => res(); }); },
-  delete(st, id) { return new Promise(res => { const req = this.db.transaction(st, "readwrite").objectStore(st).delete(id); req.onsuccess = () => res(); }); }
-};
-
-const coverCache = new Map();
-let songListeners = [], playlistListeners = [];
-
-const triggerSongs = async () => {
-  const all = await idb.getAll("songs");
-  for(const s of all) {
-     if(s.coverId) {
-        if(!coverCache.has(s.coverId)) {
-           const asset = await idb.get("assets", s.coverId);
-           if(asset) coverCache.set(s.coverId, URL.createObjectURL(asset.data));
-        }
-        s.coverBlobUrl = coverCache.get(s.coverId);
-     }
+/* ---------- Historial de escuchas (para el Wrapped) ---------- */
+/* Cuenta como escucha cada canción que suena al menos 30 s. Se guarda un documento por día
+   en la colección "plays" (plays/2026-11-05), con todas las escuchas de ese día. */
+const MIN_PLAY=30, FIRST_YEAR=2026;
+const MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DIAS=["los lunes","los martes","los miércoles","los jueves","los viernes","los sábados","los domingos"];
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const p2=n=>String(n).padStart(2,"0");
+const dayKey=ts=>{const d=new Date(ts);return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())};
+const fmtN=n=>Math.round(n).toLocaleString("es-ES");
+const hm=s=>{const m=Math.round(s/60);if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" h"+(r?" "+r+" min":"")};
+const dayTxt=k=>(+k.slice(8))+" de "+MES[+k.slice(5,7)-1];
+let PL=null, plTick=0, plPos=0;
+let pend={}; try{pend=JSON.parse(localStorage.getItem("playsPending")||"{}")||{}}catch(e){pend={}}
+function savePend(){try{localStorage.setItem("playsPending",JSON.stringify(pend))}catch(e){}}
+function recordPlay(){
+  if(!PL||PL.secs<MIN_PLAY)return;
+  const k=dayKey(PL.at);
+  (pend[k]=pend[k]||{})[PL.at+"_"+PL.id]={s:PL.id,t:PL.at,d:Math.round(PL.secs),ti:PL.ti,ar:PL.ar,al:PL.al};
+  savePend(); PL.rec=Date.now();
+}
+function trackTick(){
+  const now=Date.now(), s=current();
+  let dt=now-plTick; plTick=now;
+  if(!s){PL=null;return}
+  if(audio.paused||dt>2000||dt<0)dt=0;
+  const pos=tNow();
+  if(!PL||PL.id!==s.id||(pos<5&&plPos-pos>20)){
+    recordPlay(); flushSoon();
+    PL={id:s.id,at:now,secs:0,ti:s.title||"",ar:s.artist||"",al:s.album||"",rec:0};
   }
-  S.songs = all;
-  songListeners.forEach(cb => cb({docs: all.map(data => ({id: data.id, data: ()=>data})), metadata: {fromCache: false}}));
-};
-
-const triggerPlaylists = async () => {
-  const all = await idb.getAll("playlists");
-  all.sort((a,b)=>a.createdAt - b.createdAt);
-  S.playlists = all;
-  playlistListeners.forEach(cb => cb({docs: all.map(data => ({id: data.id, data: ()=>data}))}));
-};
-
-const mockDb = {
-  collection: (name) => ({
-    onSnapshot: (cb) => {
-      if(name === "songs") { songListeners.push(cb); triggerSongs(); }
-      if(name === "playlists") { playlistListeners.push(cb); triggerPlaylists(); }
-    },
-    orderBy: () => mockDb.collection(name),
-    add: async (data) => {
-      const id = Date.now().toString(36) + Math.random().toString(36).substring(2);
-      data.id = id;
-      await idb.put(name, data);
-      if(name === "songs") triggerSongs();
-      if(name === "playlists") triggerPlaylists();
-      return {id};
-    },
-    doc: (id) => ({
-      get: async () => {
-        const data = await idb.get(name, id);
-        return { exists: !!data, data: () => data };
-      },
-      set: async (data) => {
-        data.id = id;
-        await idb.put(name, data);
-        if(name === "songs") triggerSongs();
-        if(name === "playlists") triggerPlaylists();
-      },
-      update: async (data) => {
-        const existing = await idb.get(name, id) || {};
-        await idb.put(name, { ...existing, ...data, id });
-        if(name === "songs") triggerSongs();
-        if(name === "playlists") triggerPlaylists();
-      },
-      delete: async () => {
-        await idb.delete(name, id);
-        if(name === "songs") triggerSongs();
-        if(name === "playlists") triggerPlaylists();
-      }
-    })
-  }),
-  doc: (path) => {
-     const [col, id] = path.split("/");
-     return mockDb.collection(col).doc(id);
+  plPos=pos; PL.secs+=dt/1000;
+  if(PL.secs>=MIN_PLAY&&(!PL.rec||now-PL.rec>45000)){recordPlay();flushSoon()}
+}
+let flushing=false, flushT=0;
+function flushSoon(ms){clearTimeout(flushT);flushT=setTimeout(flushPlays,ms??2500)}
+async function flushPlays(){
+  if(!S.db||flushing)return;
+  const days=Object.keys(pend); if(!days.length)return;
+  flushing=true;
+  for(const k of days){
+    const batch={...pend[k]}, keys=Object.keys(batch); if(!keys.length){delete pend[k];continue}
+    try{
+      const ref=S.db.doc("plays/"+k), d=await ref.get();
+      const map=new Map(((d.exists&&d.data().plays)||[]).map(e=>[e.t+"_"+e.s,e]));
+      for(const key of keys){const e=batch[key],o=map.get(key);map.set(key,o&&o.d>e.d?o:e)}
+      await ref.set({day:k,month:k.slice(0,7),year:+k.slice(0,4),plays:[...map.values()].sort((a,b)=>a.t-b.t)});
+      for(const key of keys){if(pend[k]&&pend[k][key]===batch[key])delete pend[k][key]}
+      if(pend[k]&&!Object.keys(pend[k]).length)delete pend[k];
+      savePend();
+    }catch(e){break}
   }
-};
+  flushing=false;
+}
 
-const mockAssets = {
-  upload: async (file, opts) => {
-    const id = Date.now().toString(36) + Math.random().toString(36).substring(2);
-    await idb.put("assets", { id, data: file, sizeBytes: file.size, contentType: opts.type });
-    return { id, sizeBytes: file.size, contentType: opts.type };
-  },
-  delete: async (id) => {
-    await idb.delete("assets", id);
-  },
-  list: async () => {
-    const all = await idb.getAll("assets");
-    const bytes = all.reduce((acc, a) => acc + (a.sizeBytes || 0), 0);
-    // Asignamos 10GB de límite simulado para que la interfaz lo muestre bien
-    return { usage: { bytes, maxBytes: 10 * 1024 * 1024 * 1024, maxFiles: 5000 }, assets: all };
+/* ---------- Wrapped: datos ---------- */
+const WR={data:{},loading:{}};
+async function fetchYear(y){
+  const m=new Map();
+  if(S.db){
+    const snap=await S.db.collection("plays").where("year","==",y).limit(400).get();
+    for(const d of snap.docs)for(const e of (d.data().plays||[]))m.set(e.t+"_"+e.s,e);
   }
-};
+  for(const k in pend){if(+k.slice(0,4)!==y)continue;for(const key in pend[k]){const e=pend[k][key],o=m.get(key);if(!o||e.d>o.d)m.set(key,e)}}
+  return [...m.values()].sort((a,b)=>a.t-b.t);
+}
+async function loadWrap(y){
+  if(WR.loading[y])return; WR.loading[y]=true;
+  recordPlay();
+  try{await flushPlays();WR.data[y]={list:await fetchYear(y)}}
+  catch(e){if(!WR.data[y])WR.data[y]={list:[],err:true}}
+  WR.loading[y]=false;
+  if(S.wrapPage&&S.wrapYear===y)render();
+}
+function wStats(list){
+  const songs=new Map(),artists=new Map(),dayMap=new Map(),daySong=new Map(),hours=Array(24).fill(0),wd=Array(7).fill(0),months=Array(12).fill(0);
+  let secs=0;
+  for(const e of list){
+    const d=e.d||0, dt=new Date(e.t); secs+=d;
+    let so=songs.get(e.s); if(!so){so={id:e.s,title:e.ti||"Sin título",artist:e.ar||"",n:0,d:0};songs.set(e.s,so)}
+    so.n++; so.d+=d;
+    if(e.ar)for(const a of splitArtists(e.ar)){const k=norm(a);let o=artists.get(k);if(!o){o={name:a,d:0,n:0,songs:new Set()};artists.set(k,o)}o.d+=d;o.n++;o.songs.add(e.s)}
+    const dk=dayKey(e.t); dayMap.set(dk,(dayMap.get(dk)||0)+d);
+    const ds=dk+"|"+e.s; daySong.set(ds,(daySong.get(ds)||0)+1);
+    hours[dt.getHours()]+=d; wd[(dt.getDay()+6)%7]+=d; months[dt.getMonth()]+=d;
+  }
+  const keys=[...dayMap.keys()].sort(); let streak=0,run=0,prev=null;
+  for(const k of keys){const t=new Date(k+"T12:00:00").getTime();run=prev!==null&&Math.round((t-prev)/864e5)===1?run+1:1;streak=Math.max(streak,run);prev=t}
+  let rep=null; for(const [k,n] of daySong){if(!rep||n>rep.n){const i=k.indexOf("|");rep={day:k.slice(0,i),id:k.slice(i+1),n}}}
+  const B=[["de madrugada",0,6],["por la mañana",6,14],["por la tarde",14,21],["por la noche",21,24]].map(([l,a,b])=>[l,hours.slice(a,b).reduce((x,y)=>x+y,0)/(b-a)]).sort((a,b)=>b[1]-a[1]);
+  const topDay=[...dayMap.entries()].sort((a,b)=>b[1]-a[1])[0];
+  return {secs,plays:list.length,songs:[...songs.values()].sort((a,b)=>b.n-a.n||b.d-a.d),artists:[...artists.values()].sort((a,b)=>b.d-a.d||b.n-a.n),
+    topDay,nDays:dayMap.size,streak,rep,hours,wd,months,when:B[0][0],bestWd:wd.indexOf(Math.max(...wd)),bestMonth:months.indexOf(Math.max(...months))};
+}
+const songView=x=>{const l=byId(x.id);return l?{...l,title:l.title||x.title,artist:l.artist||x.artist}:{id:x.id,title:x.title,artist:x.artist}};
+function monthList(list,m){return list.filter(e=>new Date(e.t).getMonth()===m)}
 
+/* ---------- Wrapped: diapositivas ---------- */
+function buildSlides(st,P){
+  const sl=[], min=Math.round(st.secs/60), top=st.songs[0], tv=songView(top);
+  sl.push({k:"a",html:`<p class="ws-lead">Tu Wrapped</p><h1 class="ws-big">${esc(P.title)}</h1><p class="ws-p">Lo que más ha sonado ${esc(P.en)}${P.partial?", de momento":""}.</p>`});
+  const hours=min>=120?`Eso son unas ${fmtN(min/60)} horas. `:"";
+  sl.push({k:"b",html:`<p class="ws-lead">Has escuchado</p><p class="ws-big" data-count="${min}">${fmtN(min)}</p><p class="ws-h" style="margin:10px 0 0">${min===1?"minuto":"minutos"} de música</p><p class="ws-p">${hours}${st.nDays>1&&st.topDay?`El día que más escuchaste fue el ${dayTxt(st.topDay[0])}, con ${hm(st.topDay[1])}.`:""}</p>`});
+  const sz=Math.min(260,Math.max(160,innerWidth-48),Math.round(innerHeight*0.34));
+  sl.push({k:"c",html:`<p class="ws-lead">Tu canción ${esc(P.de)}</p><div class="ws-art">${art(tv,sz,22)}</div><h2 class="ws-h" style="margin-bottom:6px">${esc(tv.title)}</h2><p style="font-size:17px;margin:0;opacity:.75">${esc(tv.artist||"Artista desconocido")}</p><p class="ws-p">La pusiste ${top.n} ${top.n===1?"vez":"veces"}, ${hm(top.d)} en total.</p>`});
+  if(st.songs.length>=3){
+    const L=st.songs.slice(0,5);
+    sl.push({k:"b",html:`<h2 class="ws-h">Tus canciones más escuchadas</h2><ol class="ws-rank">${L.map((x,i)=>{const v=songView(x);return `<li><span class="n">${i+1}</span>${art(v,52,10)}<span class="m"><span class="t">${esc(v.title)}</span><span class="s">${esc(v.artist||"Artista desconocido")}</span></span><span class="c">${x.n} ${x.n===1?"vez":"veces"}</span></li>`}).join("")}</ol>`});
+  }
+  const A=st.artists[0];
+  if(A){
+    const more=st.artists.slice(1,5);
+    sl.push({k:"a",html:`<p class="ws-lead">Tu artista ${esc(P.de)}</p><h2 class="ws-big mid">${esc(A.name)}</h2><p class="ws-p">${hm(A.d)} de su música, con ${A.songs.size} ${A.songs.size===1?"canción":"canciones distintas"}.</p>${more.length?`<ol class="ws-rank" style="margin-top:30px">${more.map((x,i)=>`<li><span class="n">${i+2}</span><span class="m"><span class="t">${esc(x.name)}</span></span><span class="c">${hm(x.d)}</span></li>`).join("")}</ol>`:""}`});
+  }
+  if(st.plays>=3){
+    const mx=Math.max(...st.hours)||1, hi=st.hours.indexOf(mx);
+    sl.push({k:"b",html:`<p class="ws-lead">Cuándo escuchas</p><h2 class="ws-h">Lo tuyo es la música ${esc(st.when)}</h2><div class="ws-chart" aria-hidden="true">${st.hours.map((v,i)=>`<span class="${i===hi?"on":""}" style="height:${Math.max(3,v/mx*100)}%"></span>`).join("")}</div><div class="ws-axis" aria-hidden="true"><span>0 h</span><span>6 h</span><span>12 h</span><span>18 h</span><span>24 h</span></div><p class="ws-p">${st.nDays>=7?`Tu día favorito para escuchar música: ${DIAS[st.bestWd]}. `:""}La hora con más música, de ${hi} a ${hi+1} h.</p>`});
+  }
+  if(P.year){
+    const used=st.months.filter(v=>v>0).length;
+    if(used>=2){
+      const mx=Math.max(...st.months)||1;
+      sl.push({k:"c",html:`<p class="ws-lead">Mes a mes</p><h2 class="ws-h">Tu mes con más música fue ${MES[st.bestMonth]}</h2><div class="ws-chart" aria-hidden="true">${st.months.map((v,i)=>`<span class="${i===st.bestMonth?"on":""}" style="height:${Math.max(3,v/mx*100)}%"></span>`).join("")}</div><div class="ws-axis m" aria-hidden="true">${MES.map(m=>`<span>${m[0].toUpperCase()}</span>`).join("")}</div><p class="ws-p">${fmtN(st.months[st.bestMonth]/60)} minutos solo en ${MES[st.bestMonth]}.</p>`});
+    }
+  }
+  const facts=[];
+  facts.push(`<div><p class="ws-big" data-count="${st.songs.length}">${fmtN(st.songs.length)}</p><p>${st.songs.length===1?"canción distinta":"canciones distintas"}, en ${fmtN(st.plays)} ${st.plays===1?"escucha":"escuchas"}.</p></div>`);
+  if(st.streak>=2)facts.push(`<div><p class="ws-big" data-count="${st.streak}">${st.streak}</p><p>días seguidos escuchando música, tu mejor racha.</p></div>`);
+  if(st.rep&&st.rep.n>=3){const r=st.songs.find(x=>x.id===st.rep.id),v=r?songView(r):null;if(v)facts.push(`<div><p class="ws-big" data-count="${st.rep.n}">${st.rep.n}</p><p>veces sonó «${esc(v.title)}» el ${dayTxt(st.rep.day)}. Ese día no había otra.</p></div>`)}
+  if(st.plays>=3)sl.push({k:"c",html:`<div class="ws-facts">${facts.join("")}</div>`});
+  const ts=st.songs.slice(0,3).map(songView), ta=st.artists.slice(0,3);
+  sl.push({k:"a",last:true,html:`<p class="ws-lead">Tu Wrapped</p><h2 class="ws-h">${esc(P.title)}</h2><div class="ws-sum"><div><h3>Canciones</h3><ol>${ts.map(v=>`<li>${esc(v.title)}</li>`).join("")}</ol></div><div><h3>Artistas</h3>${ta.length?`<ol>${ta.map(a=>`<li>${esc(a.name)}</li>`).join("")}</ol>`:`<p style="margin:0;opacity:.75">Sin datos de artista</p>`}</div><div><h3>Minutos</h3><p class="v" style="margin:0">${fmtN(min)}</p></div><div><h3>Tu momento</h3><p class="v" style="margin:0">${esc(cap(st.when.replace(/^(de|por) (la )?/,"")))}</p></div></div><div class="ws-acts"><button class="ws-btn" data-wplay>${ICON.play}Reproducir tu top</button><button class="ws-btn ghost" data-wrestart>Ver otra vez</button></div>`});
+  sl.forEach(s=>s.P=P); sl.top=st.songs.slice(0,25).map(x=>x.id);
+  return sl;
+}
+
+/* ---------- Wrapped: historia a pantalla completa ---------- */
+let WS=null;
+function openStory(slides){
+  closeStory();
+  WS={slides,i:0,back:document.activeElement};
+  const el=document.createElement("div");
+  el.className="ws-wrap"; el.id="wstory"; el.setAttribute("role","dialog"); el.setAttribute("aria-modal","true"); el.setAttribute("aria-label","Tu Wrapped");
+  el.addEventListener("click",wsClick);
+  document.body.appendChild(el);
+  document.addEventListener("keydown",wsKey);
+  showSlide();
+}
+function closeStory(){
+  const el=$("#wstory"); if(el)el.remove();
+  document.removeEventListener("keydown",wsKey);
+  if(WS&&WS.back&&WS.back.focus)try{WS.back.focus()}catch(e){}
+  WS=null;
+}
+const BLOBPOS=["right:-38%;bottom:-24%","left:-44%;top:-18%","right:-50%;top:8%","left:-30%;bottom:-36%"];
+function showSlide(){
+  const el=$("#wstory"); if(!el||!WS)return;
+  const s=WS.slides[WS.i], n=WS.slides.length;
+  el.innerHTML=`<div class="ws k-${s.k}"><span class="ws-blob" aria-hidden="true" style="${BLOBPOS[WS.i%BLOBPOS.length]}"></span><div class="ws-bars" aria-hidden="true">${WS.slides.map((_,j)=>`<i class="${j<=WS.i?"on":""}"></i>`).join("")}</div><div class="ws-top"><span>${esc(s.P.title)}, ${WS.i+1} de ${n}</span><button class="ws-x" data-wclose aria-label="Cerrar Wrapped">${ICON.x}</button></div><div class="ws-body ws-in">${s.html}</div>${WS.i===0?`<p class="ws-hint">Toca para avanzar</p>`:""}</div>`;
+  const b=el.querySelector(".ws-body"); if(b){b.setAttribute("tabindex","-1");b.focus({preventScroll:true})}
+  countUp(el);
+}
+function wsGo(d){if(!WS)return;const i=WS.i+d;if(i<0||i>=WS.slides.length)return;WS.i=i;showSlide()}
+function wsClick(e){
+  const b=e.target.closest("button");
+  if(b){
+    if(b.hasAttribute("data-wclose")){closeStory();return}
+    if(b.hasAttribute("data-wrestart")){WS.i=0;showSlide();return}
+    if(b.hasAttribute("data-wplay")){
+      const ids=(WS.slides.top||[]).filter(byId);
+      if(!ids.length){toast("Esas canciones ya no están en tu biblioteca.");return}
+      const name="Top "+WS.slides[0].P.de;
+      closeStory(); setQueue(ids,0,name); load(true); return;
+    }
+    return;
+  }
+  const r=e.currentTarget.getBoundingClientRect();
+  wsGo(e.clientX<r.left+r.width*0.3?-1:1);
+}
+function wsKey(e){
+  if(e.key==="Escape"){closeStory();return}
+  if(e.key==="ArrowRight"||e.key===" "){if(e.target.closest&&e.target.closest("button"))return;e.preventDefault();wsGo(1)}
+  if(e.key==="ArrowLeft"){e.preventDefault();wsGo(-1)}
+}
+function countUp(root){
+  const els=root.querySelectorAll("[data-count]");
+  if(!els.length||!CFG.anim||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const t0=performance.now(), D=1100;
+  const step=t=>{const p=Math.min(1,(t-t0)/D),e=1-Math.pow(1-p,3);els.forEach(x=>{if(x.isConnected)x.textContent=fmtN(+x.dataset.count*e)});if(p<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step);
+}
+
+/* ---------- Wrapped: pantalla de periodos ---------- */
+function wrapCard(){
+  return `<section><button class="wcard slim" data-wpage><span class="wb" aria-hidden="true"></span><span style="position:relative;display:flex;flex-direction:column;min-width:0"><span class="wt">Tu Wrapped</span><span class="ws2">Tu resumen de cada mes y del año</span></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></section>`;
+}
+function renderWrapPage(){
+  const y=S.wrapYear, data=WR.data[y], now=new Date();
+  let h=`<div class="backline"><button class="iconbtn plain" data-wback aria-label="Volver">${ICON.back}</button></div><div class="top"><h1>Wrapped</h1></div>`;
+  const years=[]; for(let k=now.getFullYear();k>=FIRST_YEAR;k--)years.push(k);
+  if(years.length>1)h+=`<div class="seg" role="group" aria-label="Año" style="margin-top:-8px">${years.map(k=>`<button data-wyear="${k}" aria-pressed="${k===y}">${k}</button>`).join("")}</div>`;
+  if(!data){h+=`<p style="color:var(--muted)">Cargando tus escuchas…</p>`;return h}
+  if(data.err&&!data.list.length){h+=`<div class="empty"><h3>No se han podido cargar tus escuchas</h3><p style="margin:0 0 16px">Comprueba la conexión y vuelve a intentarlo.</p><button class="btn" data-wretry>Reintentar</button></div>`;return h}
+  const list=data.list;
+  if(!list.length){
+    h+=`<div class="empty"><h3>Tu Wrapped empieza ahora</h3><p style="margin:0">Cada canción que escuches al menos 30 segundos cuenta. Cuando lleves unos días escuchando música, aquí verás tu resumen del mes y del año.</p></div>`;
+  } else {
+    const st=wStats(list), curY=y===now.getFullYear();
+    h+=`<section><button class="wcard year" data-wstory="y"><span class="wb" aria-hidden="true"></span><span class="wt">Tu ${y}</span><span class="ws2">${fmtN(st.secs/60)} minutos y ${fmtN(st.songs.length)} ${st.songs.length===1?"canción":"canciones"}${curY?" hasta ahora":""}</span></button></section>`;
+    let rows="";
+    for(let m=11;m>=0;m--){
+      const ml=monthList(list,m); if(!ml.length)continue;
+      const ms=wStats(ml), v=songView(ms.songs[0]), cur=curY&&m===now.getMonth();
+      rows+=`<button class="wmonth" data-wstory="m:${m}">${art(v,52,10)}<span class="meta"><span class="mt">${cap(MES[m])}${cur?"<small>En curso</small>":""}</span><span class="s">${fmtN(ms.secs/60)} min, la que más: «${esc(v.title)}»</span></span></button>`;
+    }
+    h+=`<section><div class="sechead"><h2>Por meses</h2></div>${rows}</section>`;
+  }
+  h+=`<p class="wnote">Cuenta como escucha cada canción que suena al menos 30 segundos. El historial se guarda en tu nube.</p>`;
+  return h;
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button"); if(!t||t.closest("#wstory"))return;
+  const d=t.dataset;
+  if("wpage" in d){S.wrapPage=true;S.wrapYear=new Date().getFullYear();render();$("#main").scrollTop=0;loadWrap(S.wrapYear);return}
+  if("wback" in d){S.wrapPage=false;render();return}
+  if("wretry" in d){loadWrap(S.wrapYear);return}
+  if(d.wyear){S.wrapYear=+d.wyear;render();loadWrap(S.wrapYear);return}
+  if(d.wstory){
+    const y=S.wrapYear, data=WR.data[y]; if(!data||!data.list.length)return;
+    const now=new Date(), curY=y===now.getFullYear();
+    let list=data.list, P;
+    if(d.wstory==="y")P={title:String(y),en:"en "+y,de:"de "+y,partial:curY,year:true};
+    else{const m=+d.wstory.slice(2);list=monthList(list,m);P={title:cap(MES[m]),en:"en "+MES[m],de:"de "+MES[m],partial:curY&&m===now.getMonth()}}
+    if(!list.length)return;
+    openStory(buildSlides(wStats(list),P));
+  }
+});
+
+/* ---------- Arranque local ---------- */
 render();
 (async()=>{
   try{
     await idb.init();
-    S.db = mockDb; 
-    S.assets = mockAssets;
-    
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+    const db=localDb, assets=localAssets;
+    S.db=db; S.assets=assets;
+    if(!db){S.ready=true;render();return}
+    flushPlays();
+    loadLoop();
     refreshUsage();
-    const d = await mockDb.doc("state/settings").get();
-    if(d.exists) {
-        CFG={...CFG_DEF,...d.data()};
-        try{localStorage.setItem("cfg",JSON.stringify(CFG))}catch(e){}
-        applyCfg(); render(); renderPlayer();
-    }
-
+    db.doc("state/settings").get().then(d=>{if(d.exists){CFG={...CFG_DEF,...d.data()};try{localStorage.setItem("cfg",JSON.stringify(CFG))}catch(e){}applyCfg();render();renderPlayer()}}).catch(()=>{});
     let gotS=false,gotP=false;
     setTimeout(()=>{if(!S.restored&&gotS)restoreSession()},1000);
-
-    mockDb.collection("songs").onSnapshot(snap=>{
-      S.songs=snap.docs.map(d=>({id:d.id,...d.data()}));
-      gotS=true; S.ready=gotS&&gotP;
-      if(!snap.metadata||!snap.metadata.fromCache)restoreSession();
-      render(); renderPlayer();
-    }, ()=>{S.ready=true;render()});
-
-    mockDb.collection("playlists").orderBy("createdAt","asc").onSnapshot(snap=>{
-      S.playlists=snap.docs.map(d=>({id:d.id,...d.data()}));
-      gotP=true; S.ready=gotS&&gotP;
-      render();
-    }, ()=>{gotP=true;S.ready=gotS;render()});
+    db.collection("songs").onSnapshot(snap=>{S.songs=snap.docs.map(d=>({id:d.id,...d.data()}));gotS=true;S.ready=gotS&&gotP;if(!snap.metadata||!snap.metadata.fromCache)restoreSession();render();renderPlayer()},()=>{S.ready=true;render()});
+    db.collection("playlists").orderBy("createdAt","asc").onSnapshot(snap=>{S.playlists=snap.docs.map(d=>({id:d.id,...d.data()}));gotP=true;S.ready=gotS&&gotP;render()},()=>{gotP=true;S.ready=gotS;render()});
   }catch(err){S.ready=true;render()}
 })();
 })();
