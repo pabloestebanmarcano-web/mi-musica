@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-7">
+<meta name="app-version" content="2026.10.31-10">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -472,6 +472,16 @@ main section{margin-bottom:32px}
   .player .extras{margin-top:0}
 }
 .pushcode{display:block;width:100%;box-sizing:border-box;height:120px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px;font:12px/1.4 ui-monospace,Menlo,monospace;resize:none;overflow-wrap:anywhere}
+/* ---------- Toques coral (el verde sigue siendo el color principal) ---------- */
+:root{--coral:#E8664F;--coral-tint:#FBE3DD}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--coral:#FF8C70;--coral-tint:#3A221D}}
+:root[data-theme="dark"]{--coral:#FF8C70;--coral-tint:#3A221D}
+.welcome .dots span.on{background:var(--coral)}
+.welcome .hello .dot{color:var(--coral)}
+.favmark{color:var(--coral)}
+.nowrow:nth-child(-n+3) .n{color:var(--coral)}
+.swbg.r.go{background:var(--coral);color:#fff}
+.bday{background:linear-gradient(120deg,var(--tint),var(--coral-tint))}
 </style>
 </head>
 <body>
@@ -1087,7 +1097,7 @@ function renderPlayer(){
   applyFlow();
   setHTML(p.querySelector(".in"),`  <button class="grab" id="closePlayer" aria-label="Cerrar reproductor"></button>
   ${S.showLyrics&&s.lyrics?lyricsView(s,fav):`<div class="big" style="display:flex;justify-content:center;aspect-ratio:auto">${art(s,coverSize(p),24)}</div>
-  <div class="titleline"><div style="min-width:0;flex:1"><h2>${esc(s.title)}</h2><div class="a">${esc(s.artist||"Artista desconocido")}</div>${albumLabel(s)?`<div class="a" style="font-size:13px;margin-top:2px">${esc(albumLabel(s))}</div>`:""}</div><button class="iconbtn plain" id="favBtn" aria-pressed="${fav}" aria-label="${fav?"Quitar de favoritas":"Añadir a favoritas"}" style="color:${fav?"var(--accent)":"var(--ink)"}">${fav?ICON.heartOn:ICON.heart}</button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de la canción" style="margin-left:-6px">${ICON.dots}</button></div>`}
+  <div class="titleline"><div style="min-width:0;flex:1"><h2>${esc(s.title)}</h2><div class="a">${esc(s.artist||"Artista desconocido")}</div>${albumLabel(s)?`<div class="a" style="font-size:13px;margin-top:2px">${esc(albumLabel(s))}</div>`:""}</div><button class="iconbtn plain" id="favBtn" aria-pressed="${fav}" aria-label="${fav?"Quitar de favoritas":"Añadir a favoritas"}" style="color:${fav?"var(--coral)":"var(--ink)"}">${fav?ICON.heartOn:ICON.heart}</button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de la canción" style="margin-left:-6px">${ICON.dots}</button></div>`}
   <div><label for="seek" class="sr">Posición de la canción</label><input id="seek" type="range" min="0" max="1000" value="0"><div class="times"><span id="tCur">0:00</span><span id="tDur">−${fmt(Math.max(0,(tDur()||s.duration||0)-tNow()))}</span></div></div>
   <div class="controls">
     <button class="ctrl small${S.shuffle?" on":""}" id="shufBtn" aria-pressed="${S.shuffle}" aria-label="Aleatorio">${ICON.shuffle}</button>
@@ -1140,7 +1150,7 @@ function morphCover(toLyrics){
 function lrcFor(s){S.lrcCache=S.lrcCache||{};const k=s.id+"|"+(s.lyrics||"").length;if(!(k in S.lrcCache))S.lrcCache[k]=parseLRC(s.lyrics);return S.lrcCache[k]}
 function lyricsView(s,fav){
   const L=lrcFor(s);
-  const head=`<div class="lyrhead"><button class="lyrart" id="lyrArt" aria-label="Ver la portada">${art(s,48,10)}</button><span class="meta"><span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}</span><span style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(artistOf(s))}</span></span><button class="iconbtn plain" id="favBtn" aria-pressed="${fav}" aria-label="${fav?"Quitar de favoritas":"Añadir a favoritas"}" style="color:${fav?"var(--accent)":"var(--ink)"}">${fav?ICON.heartOn:ICON.heart}</button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de la canción" style="margin-left:-6px">${ICON.dots}</button></div>`;
+  const head=`<div class="lyrhead"><button class="lyrart" id="lyrArt" aria-label="Ver la portada">${art(s,48,10)}</button><span class="meta"><span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}</span><span style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(artistOf(s))}</span></span><button class="iconbtn plain" id="favBtn" aria-pressed="${fav}" aria-label="${fav?"Quitar de favoritas":"Añadir a favoritas"}" style="color:${fav?"var(--coral)":"var(--ink)"}">${fav?ICON.heartOn:ICON.heart}</button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de la canción" style="margin-left:-6px">${ICON.dots}</button></div>`;
   if(!L) return head+`<div class="lyr plain" id="lyr"><p>${esc(s.lyrics)}</p></div>`;
   return head+`<div class="lyr" id="lyr" data-synced="1">${L.map((l,i)=>`<button class="ln${l.text?"":" gap"}" data-seekto="${l.t}" data-i="${i}">${l.text?esc(l.text):"• • •"}</button>`).join("")}</div>`;
 }
@@ -2552,7 +2562,7 @@ function showWelcome(){W={step:0,name:"",day:"",month:""};let el=document.queryS
 function wRender(){
   const el=document.querySelector(".welcome");if(!el||!W)return;
   const last=3,hasSongs=S.songs.length>0;let b="",a="";
-  if(W.step===0){b=`<h1 class="hello">Hola.</h1><p>Esta es tu música, guardada en tu dispositivo. Antes de empezar, cuéntanos un par de cosas.</p>`;a=`<button class="btn" data-w="next">Empezar</button>`}
+  if(W.step===0){b=`<h1 class="hello">Hola<span class="dot">.</span></h1><p>Esta es tu música, guardada en tu dispositivo. Antes de empezar, cuéntanos un par de cosas.</p>`;a=`<button class="btn" data-w="next">Empezar</button>`}
   else if(W.step===1){b=`<button class="avbtn" data-w="photo" style="width:88px;height:88px;margin-bottom:22px" aria-label="${W.photo?"Cambiar foto":"Añadir foto"}">${avatarHTML(W.photo,88,W.name)}</button><h1>¿Cómo te llamas?</h1><p>Lo usaremos para saludarte y en tu Wrapped. Toca el círculo para poner una foto, si quieres.</p><label class="sr" for="wName">Tu nombre</label><input class="big" id="wName" maxlength="40" autocomplete="given-name" autocapitalize="words" placeholder="Tu nombre" value="${esc(W.name)}">`;a=`<button class="btn" data-w="next" ${W.name.trim()?"":"disabled"}>Continuar</button>`}
   else if(W.step===2){b=`<h1>¿Cuándo es tu cumpleaños?</h1><p>Solo el día y el mes. Ese día te espera una sorpresa en Inicio.</p><div class="bdrow"><label class="sr" for="wDay">Día</label><select class="big" id="wDay">${dayOpts(W.day)}</select><label class="sr" for="wMonth">Mes</label><select class="big" id="wMonth">${monthOpts(W.month)}</select></div>`;a=`<button class="btn" data-w="next" ${W.day&&W.month?"":"disabled"}>Continuar</button><button class="btn ghost" data-w="skipstep">Prefiero no decirlo</button>`}
   else{const n=W.name.trim();b=`<h1>${hasSongs?`Todo listo${n?", "+esc(n):""}.`:`Sube tus primeras canciones${n?", "+esc(n):""}`}</h1><p>${hasSongs?"Tu música te está esperando.":"Elige archivos de audio de tu dispositivo, una carpeta o un .zip. Puedes hacerlo también más tarde con el botón + de Inicio."}</p>`;a=hasSongs?`<button class="btn" data-w="finish">Ir a mi música</button>`:`<button class="btn" data-w="upload">Subir canciones</button><button class="btn ghost" data-w="finish">Más tarde</button>`}
@@ -2813,16 +2823,27 @@ function backupPick(){
 async function backupRestore(){
   const P=S.bkPending;if(!P)return;closeSheet();
   const B=S.bkBusy={kind:"load",step:"Restaurando…"};render();
+  let bad=0,lastErr=null;
   try{
     const {z,data}=P,A=data.assets||[];let i=0;
     for(const a of A){i++;if(i===1||i%5===0||i===A.length){B.step=`Recuperando archivo ${i} de ${A.length}…`;render()}
-      const bl=await z.blob("archivos/"+a.id,a.contentType);if(!bl)continue;
-      await idb.put("assets",{id:a.id,data:bl,sizeBytes:a.sizeBytes||bl.size,contentType:a.contentType||bl.type||"application/octet-stream",createdAt:a.createdAt||Date.now()})}
+      try{
+        const sl=await z.blob("archivos/"+a.id);if(!sl){bad++;continue}
+        /* Se lee entero y se guarda como archivo nuevo: Safari no deja guardar trozos del .zip elegido */
+        const type=a.contentType||"application/octet-stream",bl=new Blob([await sl.arrayBuffer()],{type});
+        await idb.put("assets",{id:a.id,data:bl,sizeBytes:a.sizeBytes||bl.size,contentType:type,createdAt:a.createdAt||Date.now()});
+      }catch(e){bad++;lastErr=e;console.warn("archivo",a.id,e);if(e&&e.name==="QuotaExceededError")throw e}
+      await new Promise(r=>setTimeout(r,0));
+    }
+    if(A.length&&bad===A.length)throw lastErr||new Error("ninguno");
     B.step="Recuperando canciones y listas…";render();
-    for(const st of ["songs","playlists","state","plays"])for(const r of (data.stores[st]||[]))if(r&&r.id)await idb.put(st,r);
+    for(const st of ["songs","playlists","state","plays"])for(const r of (data.stores[st]||[]))if(r&&r.id){try{await idb.put(st,r)}catch(e){lastErr=e;console.warn(st,e)}}
     for(const [k,v] of Object.entries(data.local||{}))if(BK_KEYS.includes(k))try{localStorage.setItem(k,v)}catch(e){}
-    S.bkPending=null;toast("Copia restaurada. Reiniciando…");setTimeout(()=>location.reload(),1200);
-  }catch(e){console.warn(e);S.bkBusy=null;render();toast(e&&e.name==="QuotaExceededError"?"No hay espacio suficiente en el dispositivo para restaurar la copia.":"No se ha podido restaurar la copia.")}
+    S.bkPending=null;
+    toast(bad?`Copia restaurada, salvo ${bad===1?"1 archivo":bad+" archivos"} que no se ha podido leer. Reiniciando…`:"Copia restaurada. Reiniciando…");
+    setTimeout(()=>location.reload(),bad?3500:1200);
+  }catch(e){console.warn(e);S.bkBusy=null;render();
+    toast(e&&e.name==="QuotaExceededError"?"No hay espacio suficiente en el dispositivo para restaurar la copia.":`No se ha podido restaurar la copia (${(e&&(e.name||e.message))||"error"}).`)}
 }
 function goTab(tab){S.wrapPage=false;S.moodOpen=null;S.autoOpen=null;S.tab=tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0}
 (function(){
@@ -3275,14 +3296,15 @@ async function makeShareFile(slides){
   y+=L.length*132+40;
   const box=(X,Y,w,h,lab,val)=>{x.fillStyle="rgba(255,255,255,.14)";rr(x,X,Y,w,h,32);x.fill();x.fillStyle="#fff";x.font=`600 30px ${F}`;x.globalAlpha=.8;x.fillText(lab,X+34,Y+58);x.globalAlpha=1;fitFont(x,val,w-68,64,40,700,D);x.fillText(fitTxt(x,val,w-68),X+34,Y+138)};
   const bh=Math.min(176,H-y-70); if(bh>140){box(84,y,438,bh,"Minutos",fmtN(st.secs/60));box(558,y,438,bh,"Tu artista",st.artists[0]?st.artists[0].name:"—")}
-  const bl=await new Promise(r=>c.toBlob(r,"image/png"));
-  return {file:new File([bl],"wrapped-"+(P.title||"").replace(/\s+/g,"-").toLowerCase()+".png",{type:"image/png"}),url:c.toDataURL("image/png")};
+  const bl=await new Promise(r=>c.toBlob(r,"image/jpeg",.92));
+  const slug=(P.title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase()||"resumen";
+  return {file:new File([bl],"wrapped-"+slug+".jpg",{type:"image/jpeg"}),url:URL.createObjectURL(bl)};
 }
 async function wShare(){
   if(!WS)return;
   if(!WS.img)WS.img=makeShareFile(WS.slides);
   const r=await WS.img; if(!r){toast("No se ha podido crear la imagen.");return}
-  try{if(navigator.canShare&&navigator.canShare({files:[r.file]})){await navigator.share({files:[r.file],title:"Mi Wrapped"});return}}
+  try{if(navigator.canShare&&navigator.canShare({files:[r.file]})){await navigator.share({files:[r.file]}); /* sin título: así iOS enseña la miniatura de la imagen */return}}
   catch(e){if(e&&e.name==="AbortError")return}
   const w=$("#wstory .ws"); if(!w)return;
   const d=document.createElement("div"); d.className="ws-share";
