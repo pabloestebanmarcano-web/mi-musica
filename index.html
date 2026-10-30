@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-6">
+<meta name="app-version" content="2026.10.31-7">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -912,6 +912,7 @@ function renderSettings(){
     <div class="setrow"><span class="lab">Escuchado hace poco<small>${S.recent.length} ${S.recent.length===1?"canción":"canciones"} en el historial</small></span><button class="btn ghost" id="clearRecent" ${S.recent.length?"":"disabled"} style="height:40px">Borrar historial</button></div>
   </div>
   ${notifGroup()}
+  ${backupGroup()}
   <div class="setgroup"><h2>Almacenamiento</h2>
     ${u?`<div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}" aria-label="Espacio usado"><div style="width:${Math.max(pct,1)}%"></div></div><p style="margin:0 0 6px;font-size:14px"><strong>${mb(u.bytes)}</strong> <span style="color:var(--muted)">usados de ${mb(u.maxBytes)} · ${S.songs.length} ${S.songs.length===1?"canción":"canciones"}</span></p>`:`<p style="color:var(--muted);margin:0 0 6px;font-size:14px">${S.assets?"Calculando espacio…":"No se ha podido leer el espacio."}</p>`}
     <button class="setrow setbtn" id="openManage"><span class="lab">Gestionar canciones<small>Selecciona varias y bórralas a la vez</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
@@ -2708,6 +2709,121 @@ async function pushEnable(){
     render();pushCodeSheet(js);
   }catch(e){console.warn(e);toast("No se han podido activar. Cierra la app del todo y prueba otra vez.")}
 }
+/* ---------- Copia de seguridad (un .zip con todo: canciones, portadas, listas, escuchas, perfil y ajustes) ---------- */
+const BACKUP_HERE=true; /* false en la versión online */
+const BK_KEYS=["cfg","pal","playsPending","profile","recent","recentQ","session"];
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u8,c=0xFFFFFFFF){for(let i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&255]^(c>>>8);return c}
+function bkSize(n){return n>=1073741824?(n/1073741824).toFixed(1).replace(".",",")+" GB":Math.max(1,Math.round(n/1048576))+" MB"}
+/* Escritor de .zip sin comprimir (el audio ya va comprimido); admite copias de más de 4 GB (ZIP64) */
+function zipWriter(){
+  const parts=[],cen=[];let off=0;
+  const d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  return{
+    async add(name,blob){
+      const nm=new TextEncoder().encode(name),size=blob.size;let c=0xFFFFFFFF;
+      for(let p=0;p<size;p+=8388608){c=crc32(new Uint8Array(await blob.slice(p,p+8388608).arrayBuffer()),c);await new Promise(r=>setTimeout(r,0))}
+      const crc=(c^0xFFFFFFFF)>>>0,lh=new DataView(new ArrayBuffer(30));
+      lh.setUint32(0,0x04034b50,true);lh.setUint16(4,45,true);lh.setUint16(6,0x0800,true);lh.setUint16(8,0,true);lh.setUint16(10,tm,true);lh.setUint16(12,dt,true);
+      lh.setUint32(14,crc,true);lh.setUint32(18,size,true);lh.setUint32(22,size,true);lh.setUint16(26,nm.length,true);lh.setUint16(28,0,true);
+      parts.push(lh.buffer,nm,blob);cen.push({nm,crc,size,off});off+=30+nm.length+size;
+    },
+    finish(){
+      const cdStart=off;let cdSize=0;const cd=[];
+      for(const e of cen){const big=e.off>0xFFFFFFFE,ex=big?12:0,v=new DataView(new ArrayBuffer(46+ex));
+        v.setUint32(0,0x02014b50,true);v.setUint16(4,45,true);v.setUint16(6,45,true);v.setUint16(8,0x0800,true);v.setUint16(10,0,true);v.setUint16(12,tm,true);v.setUint16(14,dt,true);
+        v.setUint32(16,e.crc,true);v.setUint32(20,e.size,true);v.setUint32(24,e.size,true);v.setUint16(28,e.nm.length,true);v.setUint16(30,ex,true);
+        v.setUint32(42,big?0xFFFFFFFF:e.off,true);
+        const buf=new Uint8Array(46+e.nm.length+ex);buf.set(new Uint8Array(v.buffer,0,46),0);buf.set(e.nm,46);
+        if(big){const x=new DataView(buf.buffer,46+e.nm.length,12);x.setUint16(0,1,true);x.setUint16(2,8,true);x.setBigUint64(4,BigInt(e.off),true)}
+        cd.push(buf);cdSize+=buf.length}
+      const z64=cen.length>65534||cdStart>0xFFFFFFFE||cdSize>0xFFFFFFFE,tail=[];
+      if(z64){const r=new DataView(new ArrayBuffer(56));r.setUint32(0,0x06064b50,true);r.setBigUint64(4,44n,true);r.setUint16(12,45,true);r.setUint16(14,45,true);
+        r.setBigUint64(24,BigInt(cen.length),true);r.setBigUint64(32,BigInt(cen.length),true);r.setBigUint64(40,BigInt(cdSize),true);r.setBigUint64(48,BigInt(cdStart),true);
+        const l=new DataView(new ArrayBuffer(20));l.setUint32(0,0x07064b50,true);l.setBigUint64(8,BigInt(cdStart+cdSize),true);l.setUint32(16,1,true);tail.push(r.buffer,l.buffer)}
+      const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);
+      e.setUint16(8,z64?0xFFFF:cen.length,true);e.setUint16(10,z64?0xFFFF:cen.length,true);e.setUint32(12,z64?0xFFFFFFFF:cdSize,true);e.setUint32(16,z64?0xFFFFFFFF:cdStart,true);
+      return new Blob([...parts,...cd,...tail,e.buffer],{type:"application/zip"});
+    }
+  };
+}
+/* Lector: va a trozos sobre el archivo, sin cargarlo entero en memoria */
+async function zipRead(file){
+  const rd=async(a,n)=>new DataView(await file.slice(a,a+n).arrayBuffer());
+  const tl=Math.min(file.size,65557),tail=new Uint8Array(await file.slice(file.size-tl).arrayBuffer());
+  let p=-1;for(let i=tail.length-22;i>=0;i--)if(tail[i]===0x50&&tail[i+1]===0x4b&&tail[i+2]===5&&tail[i+3]===6){p=i;break}
+  if(p<0)throw new Error("nozip");
+  const e=new DataView(tail.buffer,p);let n=e.getUint16(10,true),cdSize=e.getUint32(12,true),cdOff=e.getUint32(16,true);
+  if(n===0xFFFF||cdOff===0xFFFFFFFF){const l=await rd(file.size-tl+p-20,20);if(l.getUint32(0,true)!==0x07064b50)throw new Error("zip64");
+    const r=await rd(Number(l.getBigUint64(8,true)),56);n=Number(r.getBigUint64(32,true));cdSize=Number(r.getBigUint64(40,true));cdOff=Number(r.getBigUint64(48,true))}
+  const cd=new DataView(await file.slice(cdOff,cdOff+cdSize).arrayBuffer()),dec=new TextDecoder(),M=new Map();let q=0;
+  for(let k=0;k<n;k++){if(cd.getUint32(q,true)!==0x02014b50)throw new Error("cd");
+    const meth=cd.getUint16(q+10,true),cs=cd.getUint32(q+20,true),nl=cd.getUint16(q+28,true),xl=cd.getUint16(q+30,true),cl=cd.getUint16(q+32,true);let lo=cd.getUint32(q+42,true);
+    const name=dec.decode(new Uint8Array(cd.buffer,cd.byteOffset+q+46,nl));
+    if(lo===0xFFFFFFFF){let x=q+46+nl;const end=x+xl;while(x<end){const id=cd.getUint16(x,true),sz=cd.getUint16(x+2,true);if(id===1){lo=Number(cd.getBigUint64(x+4+(cs===0xFFFFFFFF?16:0),true));break}x+=4+sz}}
+    M.set(name,{meth,size:cs,off:lo});q+=46+nl+xl+cl}
+  return{names:[...M.keys()],async blob(name,type){const m=M.get(name);if(!m)return null;if(m.meth!==0)throw new Error("comprimido");
+    const lh=await rd(m.off,30);const s=m.off+30+lh.getUint16(26,true)+lh.getUint16(28,true);return file.slice(s,s+m.size,type||"")}};
+}
+function backupGroup(){
+  const chev=ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"'),b=S.bkBusy;
+  return `<div class="setgroup"><h2>Copia de seguridad</h2>
+    <button class="setrow setbtn" id="bkMake" ${b?"disabled":""}><span class="lab">Hacer copia de seguridad<small>${!BACKUP_HERE?"Solo funciona en la app instalada":b&&b.kind==="make"?esc(b.step):"Canciones, portadas, listas, escuchas, perfil y ajustes en un archivo"}</small></span>${chev}</button>
+    <button class="setrow setbtn" id="bkLoad" ${b?"disabled":""}><span class="lab">Restaurar una copia<small>${!BACKUP_HERE?"Solo funciona en la app instalada":b&&b.kind==="load"?esc(b.step):"Recupera todo desde un archivo de copia"}</small></span>${chev}</button>
+  </div>`;
+}
+let BK_FILE=null;
+async function backupMake(){
+  if(!BACKUP_HERE){toast("Esto solo funciona en la app instalada.");return}
+  if(S.bkBusy)return;
+  const B=S.bkBusy={kind:"make",step:"Preparando…"};render();
+  try{
+    const data={app:"Mi música",formato:1,version:typeof APP_VER!=="undefined"?APP_VER:"",fecha:Date.now(),stores:{},local:{}};
+    for(const st of ["songs","playlists","state","plays"])data.stores[st]=await idb.getAll(st);
+    for(const k of BK_KEYS){const v=localStorage.getItem(k);if(v!=null)data.local[k]=v}
+    const assets=await idb.getAll("assets");
+    data.assets=assets.map(a=>({id:a.id,sizeBytes:a.sizeBytes||(a.data&&a.data.size)||0,contentType:a.contentType||"",createdAt:a.createdAt||0}));
+    const Z=zipWriter();await Z.add("datos.json",new Blob([JSON.stringify(data)],{type:"application/json"}));
+    let i=0;for(const a of assets){i++;if(i===1||i%5===0||i===assets.length){B.step=`Guardando archivo ${i} de ${assets.length}…`;render()}
+      if(a.data)await Z.add("archivos/"+a.id,a.data)}
+    const blob=Z.finish(),dd=new Date(),name=`mi-musica-copia-${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,"0")}-${String(dd.getDate()).padStart(2,"0")}.zip`;
+    BK_FILE=new File([blob],name,{type:"application/zip"});
+    S.bkBusy=null;render();
+    showSheet(`<h3>Tu copia está lista</h3><p style="color:var(--muted);margin:0 0 16px">${data.stores.songs.length===1?"1 canción":data.stores.songs.length+" canciones"}, ${data.stores.playlists.length===1?"1 lista":data.stores.playlists.length+" listas"} · ${bkSize(BK_FILE.size)}. Guárdala en Archivos o en iCloud Drive, fuera de la app.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="bkSave">Guardar copia</button></div>`);
+  }catch(e){console.warn(e);S.bkBusy=null;render();toast(e&&e.name==="QuotaExceededError"?"No hay espacio suficiente para preparar la copia.":"No se ha podido hacer la copia.")}
+}
+async function backupSave(){
+  const f=BK_FILE;if(!f)return;
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:f.name});closeSheet();toast("Copia guardada");return}}
+  catch(e){if(e&&e.name==="AbortError")return}
+  const u=URL.createObjectURL(f),a=document.createElement("a");a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);closeSheet();
+}
+function backupPick(){
+  if(!BACKUP_HERE){toast("Esto solo funciona en la app instalada.");return}
+  let inp=$("#bkIn");if(!inp){inp=document.createElement("input");inp.type="file";inp.accept=".zip,application/zip";inp.id="bkIn";inp.className="sr";document.body.appendChild(inp)}
+  inp.value="";inp.onchange=async()=>{const file=inp.files&&inp.files[0];if(!file)return;
+    try{const z=await zipRead(file);const j=await z.blob("datos.json");if(!j)throw new Error("nodatos");const data=JSON.parse(await j.text());
+      if(!data||data.app!=="Mi música"||!data.stores)throw new Error("nodatos");
+      S.bkPending={z,data};
+      const ns=(data.stores.songs||[]).length,np=(data.stores.playlists||[]).length,f=new Date(data.fecha||0);
+      showSheet(`<h3>Restaurar esta copia</h3><p style="color:var(--muted);margin:0 0 16px">Copia del ${f.getDate()} de ${MESES[f.getMonth()]} de ${f.getFullYear()}: ${ns===1?"1 canción":ns+" canciones"} y ${np===1?"1 lista":np+" listas"}. Lo que ya tienes se mantiene; si algo está en los dos sitios, se queda la versión de la copia. Al terminar, la app se reiniciará.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="bkDo">Restaurar</button></div>`);
+    }catch(e){console.warn(e);toast(e&&e.message==="comprimido"?"Esta copia está comprimida y no se puede leer. Usa el archivo tal cual lo guardó la app.":"Ese archivo no es una copia de Mi música.")}};
+  inp.click();
+}
+async function backupRestore(){
+  const P=S.bkPending;if(!P)return;closeSheet();
+  const B=S.bkBusy={kind:"load",step:"Restaurando…"};render();
+  try{
+    const {z,data}=P,A=data.assets||[];let i=0;
+    for(const a of A){i++;if(i===1||i%5===0||i===A.length){B.step=`Recuperando archivo ${i} de ${A.length}…`;render()}
+      const bl=await z.blob("archivos/"+a.id,a.contentType);if(!bl)continue;
+      await idb.put("assets",{id:a.id,data:bl,sizeBytes:a.sizeBytes||bl.size,contentType:a.contentType||bl.type||"application/octet-stream",createdAt:a.createdAt||Date.now()})}
+    B.step="Recuperando canciones y listas…";render();
+    for(const st of ["songs","playlists","state","plays"])for(const r of (data.stores[st]||[]))if(r&&r.id)await idb.put(st,r);
+    for(const [k,v] of Object.entries(data.local||{}))if(BK_KEYS.includes(k))try{localStorage.setItem(k,v)}catch(e){}
+    S.bkPending=null;toast("Copia restaurada. Reiniciando…");setTimeout(()=>location.reload(),1200);
+  }catch(e){console.warn(e);S.bkBusy=null;render();toast(e&&e.name==="QuotaExceededError"?"No hay espacio suficiente en el dispositivo para restaurar la copia.":"No se ha podido restaurar la copia.")}
+}
 function goTab(tab){S.wrapPage=false;S.moodOpen=null;S.autoOpen=null;S.tab=tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0}
 (function(){
   const n=tabNav(); if(!n)return;
@@ -2766,6 +2882,10 @@ document.addEventListener("click",async e=>{
   if(t.id==="pushOn"){pushEnable();return}
   if(t.id==="pushCode"){pushCodeSheet(localStorage.getItem("pushSub")||"");return}
   if(t.id==="pushCopy"){const v=($("#pushTxt")||{}).value||"";(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast("Código copiado")).catch(()=>{const ta=$("#pushTxt");if(ta){ta.focus();ta.select()}toast("Mantén pulsado el código y elige Copiar")});return}
+  if(t.id==="bkMake"){backupMake();return}
+  if(t.id==="bkSave"){backupSave();return}
+  if(t.id==="bkLoad"){backupPick();return}
+  if(t.id==="bkDo"){backupRestore();return}
   if(d.goto){S.tab=d.goto;S.openList=null;render();return}
   if(t.id==="addSongs"||t.id==="addSongs2"){showSheet(`<h3>Subir canciones</h3>${CFG.folder?`<button class="pickrow up" id="pickDir">Buscar nuevas en «${esc(CFG.folder)}»<span class="pickhint">Vuelve a elegir esa carpeta y solo se suben las canciones que aún no tienes${CFG.folderAt?`. Última vez: ${agoTxt(CFG.folderAt)}`:""}</span></button>`:""}<button class="pickrow up" id="pickFiles">Elegir canciones<span class="pickhint">Una o varias a la vez</span></button>${CFG.folder?"":`<button class="pickrow up" id="pickDir">Elegir tu carpeta de música<span class="pickhint">Sube las canciones que tenga dentro, también las de sus subcarpetas. La app la recuerda para que luego subas solo las nuevas</span></button>`}<button class="pickrow up" id="pickZip">Elegir una carpeta comprimida (.zip)<span class="pickhint">Si el dispositivo no te deja elegir la carpeta: en Archivos, mantenla pulsada, toca «Comprimir» y elige el .zip que se crea</span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button></div>`);return}
   if(t.id==="pickFiles"||t.id==="pickZip"){closeSheet();$("#fileIn").click();return}
