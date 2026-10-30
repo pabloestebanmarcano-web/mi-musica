@@ -1,0 +1,41 @@
+name: Avisar de versión nueva
+on:
+  push:
+    paths:
+      - index.html
+  workflow_dispatch:
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: ¿Ha cambiado la versión?
+        id: ver
+        run: |
+          NUEVA=$(grep -o 'name="app-version" content="[^"]*"' index.html | sed 's/.*content="//;s/"$//')
+          ANTES=$(git show HEAD~1:index.html 2>/dev/null | grep -o 'name="app-version" content="[^"]*"' | sed 's/.*content="//;s/"$//' || true)
+          echo "nueva=$NUEVA" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$NUEVA" != "$ANTES" ]; then echo "avisar=si" >> "$GITHUB_OUTPUT"; else echo "avisar=no" >> "$GITHUB_OUTPUT"; fi
+      - name: Esperar a que se publique la web
+        if: steps.ver.outputs.avisar == 'si' && github.event_name == 'push'
+        run: sleep 120
+      - name: Enviar notificación
+        if: steps.ver.outputs.avisar == 'si'
+        env:
+          PUSH_SUB: ${{ secrets.PUSH_SUB }}
+          VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          VERSION: ${{ steps.ver.outputs.nueva }}
+          SUBJECT: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          npm install --no-save web-push@3.6.7 > /dev/null
+          node -e '
+            if (!process.env.PUSH_SUB) { console.log("Todavía no hay PUSH_SUB: activa las notificaciones en la app."); process.exit(0); }
+            const wp = require("web-push");
+            wp.setVapidDetails(process.env.SUBJECT, process.env.VAPID_PUBLIC, process.env.VAPID_PRIVATE);
+            const subs = process.env.PUSH_SUB.trim().split(/\n+/).filter(Boolean).map(s => JSON.parse(s));
+            const msg = JSON.stringify({ title: "Mi música", body: "Hay una versión nueva (" + process.env.VERSION + "). Toca para actualizar.", tag: "actualizacion" });
+            Promise.all(subs.map(s => wp.sendNotification(s, msg).then(r => console.log("Enviada:", r.statusCode)).catch(e => { console.error("Fallo:", e.statusCode, e.body); process.exitCode = 1; })));
+          '
