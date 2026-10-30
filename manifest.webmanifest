@@ -1,0 +1,13 @@
+{
+  "name": "Mi música",
+  "short_name": "Mi música",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "icono.png", "sizes": "any", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -8,8 +8,9 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-5">
+<meta name="app-version" content="2026.10.31-6">
 <link rel="apple-touch-icon" href="icono.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -470,6 +471,7 @@ main section{margin-bottom:32px}
   .player .lyr .ln{font-size:22px}
   .player .extras{margin-top:0}
 }
+.pushcode{display:block;width:100%;box-sizing:border-box;height:120px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px;font:12px/1.4 ui-monospace,Menlo,monospace;resize:none;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -909,6 +911,7 @@ function renderSettings(){
     <div class="setrow"><span class="lab">Mostrar «Sencillo»<small>En canciones sin álbum</small></span>${sw("single","Mostrar Sencillo en canciones sin álbum")}</div>
     <div class="setrow"><span class="lab">Escuchado hace poco<small>${S.recent.length} ${S.recent.length===1?"canción":"canciones"} en el historial</small></span><button class="btn ghost" id="clearRecent" ${S.recent.length?"":"disabled"} style="height:40px">Borrar historial</button></div>
   </div>
+  ${notifGroup()}
   <div class="setgroup"><h2>Almacenamiento</h2>
     ${u?`<div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}" aria-label="Espacio usado"><div style="width:${Math.max(pct,1)}%"></div></div><p style="margin:0 0 6px;font-size:14px"><strong>${mb(u.bytes)}</strong> <span style="color:var(--muted)">usados de ${mb(u.maxBytes)} · ${S.songs.length} ${S.songs.length===1?"canción":"canciones"}</span></p>`:`<p style="color:var(--muted);margin:0 0 6px;font-size:14px">${S.assets?"Calculando espacio…":"No se ha podido leer el espacio."}</p>`}
     <button class="setrow setbtn" id="openManage"><span class="lab">Gestionar canciones<small>Selecciona varias y bórralas a la vez</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
@@ -2669,6 +2672,42 @@ addEventListener("orientationchange",()=>setTimeout(applyRot,50));
 try{screen.orientation&&screen.orientation.addEventListener("change",applyRot)}catch(e){}
 try{matchMedia(LANDQ).addEventListener("change",applyRot)}catch(e){}
 const FAVMARK='<svg class="favmark" viewBox="0 0 24 24" fill="currentColor" aria-label="Favorita" role="img"><path d="M12 3.6l2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.6l-5.1 2.7.97-5.68L3.75 9.6l5.7-.83z"/></svg>';
+/* ---------- Notificaciones de versión nueva ---------- */
+const PUSH_HERE=true; /* false en la versión online: allí no hay notificaciones */
+const VAPID_PUBLIC="BO4-754RMUvBRIlPEweQcZWAFfyZfJWPbhsrFKKbTex49P500xML1AUKKve3sLQyaDYyCMsoVthD5okU8WpsndE";
+function pushSupport(){return PUSH_HERE&&"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window}
+function pushState(){if(!PUSH_HERE)return"aqui";if(!pushSupport())return"nosoporta";if(Notification.permission==="denied")return"denegado";return Notification.permission==="granted"&&localStorage.getItem("pushSub")?"activo":"apagado"}
+function b64u(s){const b=atob((s+"=".repeat((4-s.length%4)%4)).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(b,c=>c.charCodeAt(0))}
+if(PUSH_HERE&&"serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(e=>console.warn("Notificaciones:",e));
+  navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="check-update"&&typeof checkUpdate==="function")checkUpdate(true)});
+}
+function notifGroup(){
+  const st=pushState(),chev=ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"');
+  const sub={aqui:"Solo funciona en la app instalada",nosoporta:"Abre la app desde su icono de la pantalla de inicio (iOS 16.4 o posterior)",denegado:"Sin permiso. Actívalo en Ajustes del dispositivo → Notificaciones → Mi música",activo:"Activadas en este dispositivo",apagado:"Te llega un aviso cuando subas una versión nueva"}[st];
+  return `<div class="setgroup"><h2>Notificaciones</h2>
+    <button class="setrow setbtn" id="pushOn"><span class="lab">Avisarme de actualizaciones<small>${sub}</small></span>${st==="activo"?ICON.check||chev:chev}</button>
+    ${st==="activo"?`<button class="setrow setbtn" id="pushCode"><span class="lab">Código para GitHub<small>El que se pega en el secreto PUSH_SUB</small></span>${chev}</button>`:""}
+  </div>`;
+}
+function pushCodeSheet(js){
+  showSheet(`<h3>Último paso: pégalo en GitHub</h3><p style="color:var(--muted);margin:0 0 12px">Copia este código y guárdalo en tu repositorio como el secreto <b>PUSH_SUB</b>. Solo hace falta una vez.</p><textarea class="pushcode" id="pushTxt" readonly aria-label="Código de notificaciones">${esc(js)}</textarea><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button><button class="btn" id="pushCopy">Copiar código</button></div>`);
+}
+async function pushEnable(){
+  const st=pushState();
+  if(st==="aqui"){toast("Esto solo funciona en la app instalada.");return}
+  if(st==="nosoporta"){toast("Este dispositivo no permite notificaciones aquí. Abre la app desde su icono de la pantalla de inicio.");return}
+  if(st==="activo"){pushCodeSheet(localStorage.getItem("pushSub"));return}
+  let perm="default";try{perm=await Notification.requestPermission()}catch(e){}
+  if(perm!=="granted"){render();toast("Sin permiso no se pueden enviar avisos.");return}
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await Promise.race([reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUBLIC)}),new Promise((_,rej)=>setTimeout(()=>rej(new Error("tiempo")),20000))]);
+    const js=JSON.stringify(sub.toJSON());try{localStorage.setItem("pushSub",js)}catch(e){}
+    render();pushCodeSheet(js);
+  }catch(e){console.warn(e);toast("No se han podido activar. Cierra la app del todo y prueba otra vez.")}
+}
 function goTab(tab){S.wrapPage=false;S.moodOpen=null;S.autoOpen=null;S.tab=tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0}
 (function(){
   const n=tabNav(); if(!n)return;
@@ -2724,6 +2763,9 @@ document.addEventListener("click",async e=>{
     if(!s){toast("No tienes «"+x.name+"» en tu música.");return}
     const ids=[],seen=new Set();for(const y of NOW.items){const m=nowLocal(y);if(m&&!seen.has(m.id)){seen.add(m.id);ids.push(m.id)}}
     setQueue(ids,Math.max(0,ids.indexOf(s.id)),"Ahora");load(true);return}
+  if(t.id==="pushOn"){pushEnable();return}
+  if(t.id==="pushCode"){pushCodeSheet(localStorage.getItem("pushSub")||"");return}
+  if(t.id==="pushCopy"){const v=($("#pushTxt")||{}).value||"";(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast("Código copiado")).catch(()=>{const ta=$("#pushTxt");if(ta){ta.focus();ta.select()}toast("Mantén pulsado el código y elige Copiar")});return}
   if(d.goto){S.tab=d.goto;S.openList=null;render();return}
   if(t.id==="addSongs"||t.id==="addSongs2"){showSheet(`<h3>Subir canciones</h3>${CFG.folder?`<button class="pickrow up" id="pickDir">Buscar nuevas en «${esc(CFG.folder)}»<span class="pickhint">Vuelve a elegir esa carpeta y solo se suben las canciones que aún no tienes${CFG.folderAt?`. Última vez: ${agoTxt(CFG.folderAt)}`:""}</span></button>`:""}<button class="pickrow up" id="pickFiles">Elegir canciones<span class="pickhint">Una o varias a la vez</span></button>${CFG.folder?"":`<button class="pickrow up" id="pickDir">Elegir tu carpeta de música<span class="pickhint">Sube las canciones que tenga dentro, también las de sus subcarpetas. La app la recuerda para que luego subas solo las nuevas</span></button>`}<button class="pickrow up" id="pickZip">Elegir una carpeta comprimida (.zip)<span class="pickhint">Si el dispositivo no te deja elegir la carpeta: en Archivos, mantenla pulsada, toca «Comprimir» y elige el .zip que se crea</span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button></div>`);return}
   if(t.id==="pickFiles"||t.id==="pickZip"){closeSheet();$("#fileIn").click();return}
