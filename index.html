@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-1">
+<meta name="app-version" content="2026.10.31-5">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
@@ -393,7 +393,9 @@ main section{margin-bottom:32px}
 @media (prefers-reduced-motion: reduce){.ws-in,.ws-blob,.wcard .wb{animation:none}}
 
 /* ---------- Pestaña Ahora ---------- */
-.nowrow{display:flex;align-items:center;gap:14px;min-height:64px;padding:6px 0;color:var(--ink);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.nowrow{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:6px 0;border:none;background:none;font:inherit;text-align:left;color:var(--ink);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.nowrow .have{flex-shrink:0;font-size:12px;font-weight:600;color:var(--accent);background:var(--tint);border-radius:10px;padding:3px 8px}
+.nowrow.miss .meta{opacity:.7}
 .nowrow:active{opacity:.6}
 .nowrow .n{width:24px;flex-shrink:0;text-align:right;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:17px;color:var(--muted);font-variant-numeric:tabular-nums}
 .nowrow:nth-child(-n+3) .n{color:var(--accent)}
@@ -490,7 +492,7 @@ main section{margin-bottom:32px}
 <div id="overlay"></div>
 
 <script>
-/* ---------- Guardado en el iPhone (IndexedDB) ---------- */
+/* ---------- Guardado en el dispositivo (IndexedDB) ---------- */
 const APP_VER=(document.querySelector('meta[name="app-version"]')||{}).content||"";
 const UPD={checking:false,last:0,offered:""};
 
@@ -835,7 +837,7 @@ function render(){
   h+=`<div class="top"><h1>${titles[S.tab]}</h1>${S.tab==="inicio"?`<button class="avbtn" id="openProfile" aria-label="Tu perfil">${avatarHTML(PROFILE&&PROFILE.photo,44)}</button>`:S.tab==="listas"?`<button class="iconbtn" id="newList" aria-label="Nueva lista">${ICON.plus}</button>`:`<button class="iconbtn" id="addSongs" aria-label="Subir canciones">${ICON.plus}</button>`}</div>`;
   if(S.uploading) h+=`<p class="status" role="status">Subiendo ${S.uploading.done+1} de ${S.uploading.total}: ${esc(S.uploading.name)}<span class="progress" style="display:block"><span style="display:block;height:100%;background:var(--accent);width:${Math.round(S.uploading.done/S.uploading.total*100)}%"></span></span></p>`;
   if(!S.ready){h+=`<p class="status">Cargando tu biblioteca…</p>`;setHTML(m,h);renderMini();return}
-  if(!S.db){h+=`<div class="empty"><h3>No se puede abrir tu biblioteca</h3><p>Cierra la app del todo y vuelve a abrirla. Si sigue pasando, comprueba que queda espacio en el iPhone.</p></div>`;setHTML(m,h);renderMini();return}
+  if(!S.db){h+=`<div class="empty"><h3>No se puede abrir tu biblioteca</h3><p>Cierra la app del todo y vuelve a abrirla. Si sigue pasando, comprueba que queda espacio en el dispositivo.</p></div>`;setHTML(m,h);renderMini();return}
 
   if(S.tab==="inicio"){
     h+=`<label class="search"><span class="sr">Buscar en tu música</span>${ICON.search}<input id="q" type="search" placeholder="Buscar" value="${esc(S.q)}" autocomplete="off"></label>`;
@@ -843,7 +845,7 @@ function render(){
       const r=filtered();
       const lh=lyricHits();if(r.length||!lh.length)h+=`<section><div class="sechead"><h2>Resultados</h2></div>${r.length?r.map(s=>songRow(s,"search")).join(""):`<p style="color:var(--muted)">No hay canciones que coincidan con «${esc(S.q)}».</p>`}</section>`;h+=lyrSection(lh);
     } else if(!S.songs.length){
-      h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en este iPhone.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
+      h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en este dispositivo.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
     } else {
       h+=bdayCard();h+=nowCard();
       const rec=S.recent.map(byId).filter(Boolean).slice(0,10);
@@ -903,7 +905,7 @@ function renderSettings(){
   </div>
   <div class="setgroup"><h2>Biblioteca</h2>
     <div class="setrow"><span class="lab">Separar artistas con «&amp;»<small>Desactívalo si tienes grupos como «Simon &amp; Garfunkel»</small></span>${sw("splitAmp","Separar artistas con &")}</div>
-    <button class="setrow setbtn" id="fillMeta" ${S.fillBusy?"disabled":""}><span class="lab">Completar portadas y letras<small>${!META_HERE?"Solo funciona en la app del iPhone":S.fillBusy?`Buscando ${Math.min(S.fillBusy.done+1,S.fillBusy.total)} de ${S.fillBusy.total}…`:"Busca en internet las que les faltan a tus canciones"}</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
+    <button class="setrow setbtn" id="fillMeta" ${S.fillBusy?"disabled":""}><span class="lab">Completar portadas y letras<small>${!META_HERE?"Solo funciona en la app instalada":S.fillBusy?`Buscando ${Math.min(S.fillBusy.done+1,S.fillBusy.total)} de ${S.fillBusy.total}…`:"Busca en internet las que les faltan a tus canciones"}</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
     <div class="setrow"><span class="lab">Mostrar «Sencillo»<small>En canciones sin álbum</small></span>${sw("single","Mostrar Sencillo en canciones sin álbum")}</div>
     <div class="setrow"><span class="lab">Escuchado hace poco<small>${S.recent.length} ${S.recent.length===1?"canción":"canciones"} en el historial</small></span><button class="btn ghost" id="clearRecent" ${S.recent.length?"":"disabled"} style="height:40px">Borrar historial</button></div>
   </div>
@@ -1181,7 +1183,7 @@ function playId(id,ctx){
   setQueue(ids,i,name); load(true);
 }
 /* ===== Reproducción continua: encadena las canciones en una sola pista ===== */
-/* Se envía el audio a trozos pequeños y solo un poco por delante, porque el iPhone
+/* Se envía el audio a trozos pequeños y solo un poco por delante, porque el dispositivo
    reserva muy poca memoria para este tipo de pista. */
 const MMS=window.ManagedMediaSource||window.MediaSource||null;
 let ST=null, stGen=0, stFailed=false, stStep="";
@@ -1658,7 +1660,7 @@ function mediaSession(s){
   }catch(e){}
 }
 /* ---------- Ecualizador ---------- */
-/* Solo se pone en marcha si lo enciendes. Pasa el sonido por Web Audio, que en el iPhone
+/* Solo se pone en marcha si lo enciendes. Pasa el sonido por Web Audio, que en el dispositivo
    a veces se detiene con la pantalla bloqueada; por eso está apagado por defecto. */
 const EQ_PRE={plano:[0,0,0],graves:[6,0,-1],voz:[-3,4,2],agudos:[-1,0,5],suave:[2,-1,-4]};
 const EQ_NAMES=[["plano","Plano"],["graves","Más graves"],["voz","Voz"],["agudos","Más agudos"],["suave","Suave"],["propio","A tu gusto"]];
@@ -1946,7 +1948,7 @@ async function zipItems(file){
 }
 const LIMIT_MB=20;
 /* ----- Tu carpeta de música: solo se suben las canciones nuevas ----- */
-/* Una web no puede vigilar una carpeta del iPhone, así que la app recuerda cuál es tu
+/* Una web no puede vigilar una carpeta del dispositivo, así que la app recuerda cuál es tu
    carpeta y, cuando la vuelves a elegir, compara con lo que ya tienes (nombre y tamaño
    del archivo) y sube solo lo que falta, sin preguntar por las repetidas. */
 const knownFile=it=>S.songs.some(x=>x.file===it.name&&x.size===it.size);
@@ -2040,7 +2042,7 @@ async function findMeta(title,artist,dur,need){
 function metaSummary(c,l){const p=[];if(c)p.push(c===1?"1 portada":c+" portadas");if(l)p.push(l===1?"1 letra":l+" letras");return p.length?p.join(" y ")+(c+l===1?" añadida":" añadidas"):""}
 /* Completar las canciones que ya están en la biblioteca */
 async function fillLibrary(){
-  if(!META_HERE){toast("Esto solo funciona en la app del iPhone.");return}
+  if(!META_HERE){toast("Esto solo funciona en la app instalada.");return}
   if(S.fillBusy||!S.db)return;
   if(!navigator.onLine){toast("Necesitas conexión a internet para buscar portadas y letras.");return}
   const todo=S.songs.filter(s=>!s.coverId||!parseLRC(s.lyrics||""));
@@ -2107,7 +2109,7 @@ async function uploadFiles(files,opts){
       await S.db.collection("songs").add({title,artist,album,coverId,coverType,lyrics:tags.lyrics||"",assetId:r.id,duration:dur,size:r.sizeBytes,createdAt:Date.now(),file:f.name,...(af?{af}:{})});
     }catch(e){
       const c=e&&e.code;
-      fails.push(f.name+(c==="unsupported_type"?" (formato no admitido)":c==="quota_exceeded"?" (no queda espacio en el iPhone)":c==="too_large"?" (demasiado grande)":""));
+      fails.push(f.name+(c==="unsupported_type"?" (formato no admitido)":c==="quota_exceeded"?" (no queda espacio en el dispositivo)":c==="too_large"?" (demasiado grande)":""));
     }
   }
   S.uploading=null; render(); refreshUsage();
@@ -2196,7 +2198,7 @@ $("#main").addEventListener("scroll",e=>{
 },{passive:true});
 
 /* ---------- Carpetas por estado de ánimo ---------- */
-/* El propio iPhone escucha cada canción (tempo, energía, brillo, tono mayor o menor)
+/* El propio dispositivo escucha cada canción (tempo, energía, brillo, tono mayor o menor)
    y a partir de eso decide la carpeta. No se usa Claude ni ningún servicio externo. */
 const MOODS=[
   {k:"animo",name:"Para animarte",feel:"Si estás feliz",desc:"Alegres y con buen rollo"},
@@ -2364,12 +2366,12 @@ async function analyzeLibrary(){
   else if(b.fail)toast(b.fail===1?"Una canción no se ha podido analizar.":b.fail+" canciones no se han podido analizar.",4000);
   else toast("Canciones colocadas en sus carpetas");
 }
-const anText=()=>`El iPhone está escuchando tus canciones: ${S.anBusy.done} de ${S.anBusy.total}…`;
+const anText=()=>`El dispositivo está escuchando tus canciones: ${S.anBusy.done} de ${S.anBusy.total}…`;
 function moodSection(){
   const todo=S.songs.filter(needsAn), any=S.songs.some(s=>moodsOf(s).length);
   let h=`<section><div class="sechead"><h2>¿Cómo te sientes?</h2></div><div class="recent">${[LOOP,...MOODS].map(m=>{const n=moodSongs(m.k).length;return `<button class="card" data-mood="${m.k}">${moodCover(m.k,132,18)}<span><span class="t" style="display:block">${esc(m.name)}</span><span class="s" style="display:block">${n?n+(n===1?" canción":" canciones"):"Vacía"}</span></span></button>`}).join("")}</div>`;
   if(S.anBusy)h+=`<div class="foldercall" role="status"><p id="anStatus">${anText()}</p><button class="btn ghost" data-anstop>Parar</button></div>`;
-  else if(!any&&todo.length){const mbt=todo.reduce((t,s)=>t+(s.size||0),0);h+=`<div class="foldercall"><p>El iPhone escucha tus canciones y las reparte en las carpetas. Tiene que descargarlas una vez${mbt?`, unos ${mb(mbt)}`:""}. Mejor con wifi.</p><button class="btn" data-analyze>Analizar</button></div>`}
+  else if(!any&&todo.length){const mbt=todo.reduce((t,s)=>t+(s.size||0),0);h+=`<div class="foldercall"><p>El dispositivo escucha tus canciones y las reparte en las carpetas. Tiene que descargarlas una vez${mbt?`, unos ${mb(mbt)}`:""}. Mejor con wifi.</p><button class="btn" data-analyze>Analizar</button></div>`}
   else if(todo.length)h+=`<button class="link" data-analyze style="margin-top:2px">Analizar ${todo.length===1?"1 canción":todo.length+" canciones"} sin carpeta</button>`;
   return h+`</section>`;
 }
@@ -2403,7 +2405,7 @@ function renderMoodPage(){
   const m=moodOf(S.moodOpen), list=moodSongs(m.k), n=list.length;
   let h=`<div class="backline"><button class="iconbtn plain" data-moodback aria-label="Volver">${ICON.back}</button></div>`;
   h+=`<div style="display:flex;gap:18px;align-items:flex-end;margin-bottom:22px">${moodArt(m.k,120,18)}<div style="min-width:0"><p style="margin:0 0 4px;font-size:13px;color:var(--muted)">${esc(m.feel)}</p><h1 style="font-size:28px;letter-spacing:-.5px;overflow-wrap:anywhere">${esc(m.name)}</h1><p style="color:var(--muted);margin:6px 0 0">${n} ${n===1?"canción":"canciones"}</p></div></div>`;
-  if(!n)return h+`<div class="empty"><h3>Aún no hay canciones aquí</h3><p style="margin:0">${m.k==="bucle"?"Aquí aparecen las canciones que más escuches en 30 días. Hace falta escuchar una canción al menos dos veces.":m.k==="amor"?"Por cómo suena, el iPhone no puede saber si una canción es romántica. Añádelas tú desde su menú, en «Estado de ánimo».":"Añade canciones desde su menú, en «Estado de ánimo»."}</p></div>`;
+  if(!n)return h+`<div class="empty"><h3>Aún no hay canciones aquí</h3><p style="margin:0">${m.k==="bucle"?"Aquí aparecen las canciones que más escuches en 30 días. Hace falta escuchar una canción al menos dos veces.":m.k==="amor"?"Por cómo suena, el dispositivo no puede saber si una canción es romántica. Añádelas tú desde su menú, en «Estado de ánimo».":"Añade canciones desde su menú, en «Estado de ánimo»."}</p></div>`;
   h+=`<div style="display:flex;gap:10px;margin-bottom:18px"><button class="btn" data-playall="mood">${ICON.play} <span style="vertical-align:middle">Reproducir</span></button><button class="btn ghost" data-shuffleall="mood">Aleatorio</button></div>`;
   return h+list.map(x=>songRow(x,"mood")).join("");
 }
@@ -2415,7 +2417,7 @@ function moodSheet(id){
   const s=byId(id); if(!s)return;
   const manual=s.moodBy==="tú"&&Array.isArray(s.moods);
   S.moodPick=new Set(moodsOf(s));
-  showSheet(`<h3 style="margin-bottom:4px">Estado de ánimo</h3><p style="color:var(--muted);margin:0 0 6px">${esc(s.title)}</p><p style="color:var(--muted);margin:0 0 14px;font-size:14px">${s.af?"El iPhone ha detectado "+afText(s.af):"Esta canción aún no se ha analizado."}${manual?" Las carpetas las has elegido tú.":""}</p>${MOODS.map(m=>{const on=S.moodPick.has(m.k);return `<button class="pickrow" data-moodpick="${m.k}" aria-pressed="${on}"><span class="check${on?" on":""}">${on?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">${esc(m.name)}</span><span style="font-size:13px;color:var(--muted)">${esc(m.desc)}</span></span></button>`}).join("")}${manual&&s.af?`<button class="pickrow" data-moodauto="${esc(id)}" style="color:var(--accent)">Volver a las carpetas automáticas</button>`:""}<div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" data-moodsave="${esc(id)}">Guardar</button></div>`);
+  showSheet(`<h3 style="margin-bottom:4px">Estado de ánimo</h3><p style="color:var(--muted);margin:0 0 6px">${esc(s.title)}</p><p style="color:var(--muted);margin:0 0 14px;font-size:14px">${s.af?"El dispositivo ha detectado "+afText(s.af):"Esta canción aún no se ha analizado."}${manual?" Las carpetas las has elegido tú.":""}</p>${MOODS.map(m=>{const on=S.moodPick.has(m.k);return `<button class="pickrow" data-moodpick="${m.k}" aria-pressed="${on}"><span class="check${on?" on":""}">${on?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">${esc(m.name)}</span><span style="font-size:13px;color:var(--muted)">${esc(m.desc)}</span></span></button>`}).join("")}${manual&&s.af?`<button class="pickrow" data-moodauto="${esc(id)}" style="color:var(--accent)">Volver a las carpetas automáticas</button>`:""}<div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" data-moodsave="${esc(id)}">Guardar</button></div>`);
 }
 document.addEventListener("click",async e=>{
   const t=e.target.closest("button"); if(!t||t.closest("#wstory"))return;
@@ -2450,9 +2452,9 @@ function syncPill(anim){
 function nearestTab(cx){const bs=tabBtns();let bi=0,bd=1e9;bs.forEach((b,i)=>{const d=Math.abs(b.offsetLeft+b.offsetWidth/2-cx);if(d<bd){bd=d;bi=i}});return bi}
 /* ---------- Pestaña Ahora: lo más escuchado en España (solo con internet) ---------- */
 const NOW_HERE=true; /* false en la versión online: allí no se puede conectar con Apple */
-const NOW_SRC=["https://rss.marketingtools.apple.com/api/v2/es/music/most-played/50/songs.json","ahora.json"];
+const NOW_SRC=[]; /* Apple no deja leer su ranking desde la web; se usa el Top España de Deezer */
 const NOW={items:null,at:0,loading:false,fail:""};
-try{const c=JSON.parse(localStorage.getItem("nowCache")||"null");if(c&&c.items){NOW.items=c.items;NOW.at=c.at||0}}catch(e){}
+try{const c=JSON.parse(localStorage.getItem("nowCache")||"null");if(c&&c.items){NOW.items=c.items;NOW.at=c.at||0;NOW.src=c.src||"Apple Music"}}catch(e){}
 const NOW_ICON={
   ext:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/></svg>',
   off:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2.4-1.7M2 9.5a15 15 0 0 1 4.3-2.8M22 9.5A15 15 0 0 0 11 5.1"/><circle cx="12" cy="20" r=".6" fill="currentColor"/></svg>',
@@ -2475,22 +2477,38 @@ async function loadNow(force){
       const j=await r.json();const res=(j&&j.feed&&j.feed.results)||[];
       if(!res.length)continue;
       NOW.items=res.map(x=>({name:x.name||"",artist:x.artistName||"",art:String(x.artworkUrl100||"").replace(/\/\d+x\d+bb\./,"/200x200bb."),url:x.url||""}));
-      NOW.at=Date.now();ok=true;
-      try{localStorage.setItem("nowCache",JSON.stringify({items:NOW.items,at:NOW.at}))}catch(e){}
+      NOW.at=Date.now();NOW.src="Apple Music";ok=true;
+      try{localStorage.setItem("nowCache",JSON.stringify({items:NOW.items,at:NOW.at,src:NOW.src}))}catch(e){}
       break;
     }catch(e){}
   }
+  /* Top España de Deezer (lista oficial «Top Spain» de Deezer Charts); si no aparece, el top general de Deezer */
+  if(!ok&&navigator.onLine){
+    const mapDz=res=>res.map(x=>{const a=(x.artist&&x.artist.name)||"";return{name:x.title||"",artist:a,art:(x.album&&(x.album.cover_medium||x.album.cover))||"",url:"https://music.apple.com/es/search?term="+encodeURIComponent((x.title||"")+" "+a)}});
+    const save=src=>{NOW.at=Date.now();NOW.src=src;ok=true;try{localStorage.setItem("nowCache",JSON.stringify({items:NOW.items,at:NOW.at,src:NOW.src}))}catch(e){}};
+    try{
+      let pid=localStorage.getItem("dzTopEs")||"";
+      if(!pid){const s=await jsonp("https://api.deezer.com/search/playlist?q="+encodeURIComponent("Top Spain")+"&output=jsonp");
+        const p=((s&&s.data)||[]).find(x=>/^top spain$/i.test((x.title||"").trim())&&/deezer/i.test((x.user&&x.user.name)||""));
+        if(p){pid=String(p.id);try{localStorage.setItem("dzTopEs",pid)}catch(e){}}}
+      if(pid){const d=await jsonp("https://api.deezer.com/playlist/"+pid+"/tracks?limit=50&output=jsonp");const res=(d&&d.data)||[];
+        if(res.length){NOW.items=mapDz(res);save("Deezer España")}else{try{localStorage.removeItem("dzTopEs")}catch(e){}}}
+    }catch(e){}
+    if(!ok){try{const d=await jsonp("https://api.deezer.com/chart/0/tracks?limit=50&output=jsonp");const res=(d&&d.data)||[];if(res.length){NOW.items=mapDz(res);save("Deezer")}}catch(e){}}
+  }
   NOW.loading=false;
-  if(!ok)NOW.fail=(!navigator.onLine||netErrs===NOW_SRC.length)?"offline":"source";
+  if(!ok)NOW.fail=navigator.onLine?"source":"offline";
   if(S.tab==="ahora")render();
 }
+/* ¿Tengo esta canción del ranking en mi biblioteca? */
+function nowLocal(x){let best=null,bs=0;for(const s of S.songs){const st=simil(s.title,x.name);if(st<.85)continue;const sa=x.artist?simil(s.artist||"",x.artist):.5;if(sa<.5)continue;const sc=st*2+sa;if(sc>bs){bs=sc;best=s}}return best}
 function nowRows(stale){
-  return `<div class="nowlist${stale?" stale":""}">${NOW.items.map((x,i)=>`<a class="nowrow" href="${esc(x.url)}" target="_blank" rel="noopener"><span class="n">${i+1}</span>${x.art?`<img src="${esc(x.art)}" alt="" loading="lazy">`:`<span class="cover" style="width:52px;height:52px;background:var(--surface)"></span>`}<span class="meta"><span class="t">${esc(x.name)}</span><span class="s">${esc(x.artist)}</span></span>${NOW_ICON.ext}</a>`).join("")}</div>`;
+  return `<div class="nowlist${stale?" stale":""}">${NOW.items.map((x,i)=>{const s=nowLocal(x);return `<button class="nowrow${s?"":" miss"}" data-nowplay="${i}" aria-label="${esc(x.name)} de ${esc(x.artist)}${s?", en tu música":", no la tienes"}"><span class="n">${i+1}</span>${x.art?`<img src="${esc(x.art)}" alt="" loading="lazy">`:`<span class="cover" style="width:52px;height:52px;background:var(--surface)"></span>`}<span class="meta"><span class="t">${esc(x.name)}</span><span class="s">${esc(x.artist)}</span></span>${s?`<span class="have">En tu música</span>`:""}</button>`}).join("")}</div>`;
 }
 function renderNow(){
   let h=`<div class="top"><h1>Ahora</h1>${NOW_HERE?`<button class="iconbtn" id="nowReload" aria-label="Actualizar">${NOW_ICON.reload}</button>`:""}</div>`;
   if(!NOW_HERE){
-    return h+`<div class="empty nowoff">${NOW_ICON.off}<h3>Solo en la app del iPhone</h3><p style="margin:0">Aquí se ve lo más escuchado en España en Apple Music. Esta versión no puede conectarse a Apple, así que la pestaña funciona en la app instalada en tu iPhone.</p></div>`;
+    return h+`<div class="empty nowoff">${NOW_ICON.off}<h3>Solo en la app instalada</h3><p style="margin:0">Aquí se ve lo más escuchado en España en Apple Music. Esta versión no puede conectarse a Apple, así que la pestaña funciona en la app instalada en tu dispositivo.</p></div>`;
   }
   if(!navigator.onLine||NOW.fail==="offline"){
     h+=`<div class="empty nowoff" role="status">${NOW_ICON.off}<h3>Sin conexión</h3><p style="margin:0">Conéctate a internet para ver lo que se escucha ahora. Tu música sigue funcionando sin conexión.</p></div>`;
@@ -2498,10 +2516,10 @@ function renderNow(){
     return h;
   }
   if(NOW.fail==="source"&&!NOW.items){
-    return h+`<div class="empty nowoff">${NOW_ICON.off}<h3>No se puede cargar el ranking</h3><p style="margin:0 0 16px">Apple Music no ha respondido. Prueba otra vez en un rato.</p><button class="btn" id="nowReload2">Reintentar</button></div>`;
+    return h+`<div class="empty nowoff">${NOW_ICON.off}<h3>No se puede cargar el ranking</h3><p style="margin:0 0 16px">Deezer no ha respondido. Prueba otra vez en un rato.</p><button class="btn" id="nowReload2">Reintentar</button></div>`;
   }
   if(!NOW.items){setTimeout(()=>loadNow(false),0);return h+`<p class="status" role="status">Cargando lo más escuchado…</p>`}
-  h+=`<p class="nowsub">${NOW.loading?"Actualizando…":`Lo más escuchado en España en Apple Music, actualizado ${nowAgo(NOW.at)}`}</p>`;
+  h+=`<p class="nowsub">${NOW.loading?"Actualizando…":`${NOW.src==="Deezer España"?"Lo más escuchado en España en Deezer":NOW.src==="Deezer"?"Lo más escuchado ahora en Deezer":"Lo más escuchado en España"}, actualizado ${nowAgo(NOW.at)}`}</p>`;
   if(!NOW.loading&&Date.now()-NOW.at>10*60000)setTimeout(()=>loadNow(false),0);
   return h+nowRows(false);
 }
@@ -2530,10 +2548,10 @@ function showWelcome(){W={step:0,name:"",day:"",month:""};let el=document.queryS
 function wRender(){
   const el=document.querySelector(".welcome");if(!el||!W)return;
   const last=3,hasSongs=S.songs.length>0;let b="",a="";
-  if(W.step===0){b=`<h1 class="hello">Hola.</h1><p>Esta es tu música, guardada en tu iPhone. Antes de empezar, cuéntanos un par de cosas.</p>`;a=`<button class="btn" data-w="next">Empezar</button>`}
+  if(W.step===0){b=`<h1 class="hello">Hola.</h1><p>Esta es tu música, guardada en tu dispositivo. Antes de empezar, cuéntanos un par de cosas.</p>`;a=`<button class="btn" data-w="next">Empezar</button>`}
   else if(W.step===1){b=`<button class="avbtn" data-w="photo" style="width:88px;height:88px;margin-bottom:22px" aria-label="${W.photo?"Cambiar foto":"Añadir foto"}">${avatarHTML(W.photo,88,W.name)}</button><h1>¿Cómo te llamas?</h1><p>Lo usaremos para saludarte y en tu Wrapped. Toca el círculo para poner una foto, si quieres.</p><label class="sr" for="wName">Tu nombre</label><input class="big" id="wName" maxlength="40" autocomplete="given-name" autocapitalize="words" placeholder="Tu nombre" value="${esc(W.name)}">`;a=`<button class="btn" data-w="next" ${W.name.trim()?"":"disabled"}>Continuar</button>`}
   else if(W.step===2){b=`<h1>¿Cuándo es tu cumpleaños?</h1><p>Solo el día y el mes. Ese día te espera una sorpresa en Inicio.</p><div class="bdrow"><label class="sr" for="wDay">Día</label><select class="big" id="wDay">${dayOpts(W.day)}</select><label class="sr" for="wMonth">Mes</label><select class="big" id="wMonth">${monthOpts(W.month)}</select></div>`;a=`<button class="btn" data-w="next" ${W.day&&W.month?"":"disabled"}>Continuar</button><button class="btn ghost" data-w="skipstep">Prefiero no decirlo</button>`}
-  else{const n=W.name.trim();b=`<h1>${hasSongs?`Todo listo${n?", "+esc(n):""}.`:`Sube tus primeras canciones${n?", "+esc(n):""}`}</h1><p>${hasSongs?"Tu música te está esperando.":"Elige archivos de audio de tu iPhone, una carpeta o un .zip. Puedes hacerlo también más tarde con el botón + de Inicio."}</p>`;a=hasSongs?`<button class="btn" data-w="finish">Ir a mi música</button>`:`<button class="btn" data-w="upload">Subir canciones</button><button class="btn ghost" data-w="finish">Más tarde</button>`}
+  else{const n=W.name.trim();b=`<h1>${hasSongs?`Todo listo${n?", "+esc(n):""}.`:`Sube tus primeras canciones${n?", "+esc(n):""}`}</h1><p>${hasSongs?"Tu música te está esperando.":"Elige archivos de audio de tu dispositivo, una carpeta o un .zip. Puedes hacerlo también más tarde con el botón + de Inicio."}</p>`;a=hasSongs?`<button class="btn" data-w="finish">Ir a mi música</button>`:`<button class="btn" data-w="upload">Subir canciones</button><button class="btn ghost" data-w="finish">Más tarde</button>`}
   el.innerHTML=`<div class="wtop"><div class="dots" aria-hidden="true">${[0,1,2,3].map(i=>`<span class="${i===W.step?"on":""}"></span>`).join("")}</div>${W.step>0&&W.step<last?`<button class="skip" data-w="skipall">Saltar</button>`:""}</div><div class="wbody" key="${W.step}">${b}</div><div class="wacts">${a}</div>`;
   const inp=el.querySelector("#wName");if(inp)setTimeout(()=>{try{inp.focus()}catch(e){}},350);
 }
@@ -2702,8 +2720,12 @@ document.addEventListener("click",async e=>{
   if(d.closefav!==undefined){S.favOpen=false;render();return}
   if(t.id==="checkUpd"){checkUpdate(true);return}
   if(t.id==="doUpd"){const v=t.dataset.ver;closeSheet();doUpdate(v);return}
+  if(d.nowplay!==undefined){const x=NOW.items&&NOW.items[+d.nowplay];if(!x)return;const s=nowLocal(x);
+    if(!s){toast("No tienes «"+x.name+"» en tu música.");return}
+    const ids=[],seen=new Set();for(const y of NOW.items){const m=nowLocal(y);if(m&&!seen.has(m.id)){seen.add(m.id);ids.push(m.id)}}
+    setQueue(ids,Math.max(0,ids.indexOf(s.id)),"Ahora");load(true);return}
   if(d.goto){S.tab=d.goto;S.openList=null;render();return}
-  if(t.id==="addSongs"||t.id==="addSongs2"){showSheet(`<h3>Subir canciones</h3>${CFG.folder?`<button class="pickrow up" id="pickDir">Buscar nuevas en «${esc(CFG.folder)}»<span class="pickhint">Vuelve a elegir esa carpeta y solo se suben las canciones que aún no tienes${CFG.folderAt?`. Última vez: ${agoTxt(CFG.folderAt)}`:""}</span></button>`:""}<button class="pickrow up" id="pickFiles">Elegir canciones<span class="pickhint">Una o varias a la vez</span></button>${CFG.folder?"":`<button class="pickrow up" id="pickDir">Elegir tu carpeta de música<span class="pickhint">Sube las canciones que tenga dentro, también las de sus subcarpetas. La app la recuerda para que luego subas solo las nuevas</span></button>`}<button class="pickrow up" id="pickZip">Elegir una carpeta comprimida (.zip)<span class="pickhint">Si el iPhone no te deja elegir la carpeta: en Archivos, mantenla pulsada, toca «Comprimir» y elige el .zip que se crea</span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button></div>`);return}
+  if(t.id==="addSongs"||t.id==="addSongs2"){showSheet(`<h3>Subir canciones</h3>${CFG.folder?`<button class="pickrow up" id="pickDir">Buscar nuevas en «${esc(CFG.folder)}»<span class="pickhint">Vuelve a elegir esa carpeta y solo se suben las canciones que aún no tienes${CFG.folderAt?`. Última vez: ${agoTxt(CFG.folderAt)}`:""}</span></button>`:""}<button class="pickrow up" id="pickFiles">Elegir canciones<span class="pickhint">Una o varias a la vez</span></button>${CFG.folder?"":`<button class="pickrow up" id="pickDir">Elegir tu carpeta de música<span class="pickhint">Sube las canciones que tenga dentro, también las de sus subcarpetas. La app la recuerda para que luego subas solo las nuevas</span></button>`}<button class="pickrow up" id="pickZip">Elegir una carpeta comprimida (.zip)<span class="pickhint">Si el dispositivo no te deja elegir la carpeta: en Archivos, mantenla pulsada, toca «Comprimir» y elige el .zip que se crea</span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button></div>`);return}
   if(t.id==="pickFiles"||t.id==="pickZip"){closeSheet();$("#fileIn").click();return}
   if(t.id==="pickDir"){closeSheet();$("#dirIn").click();return}
   if(d.play){playId(d.play,d.ctx);return}
@@ -2719,12 +2741,12 @@ document.addEventListener("click",async e=>{
   if(t.id==="openDups"){S.setView="dups";S.dupPick=new Map();render();$("#main").scrollTop=0;return}
   if(t.id==="closeDups"){S.setView=null;render();return}
   if(d.dupkeep){S.dupPick.set(d.dupg,d.dupkeep);const st=$("#main").scrollTop;render();$("#main").scrollTop=st;return}
-  if(t.id==="mergeDups"){const n=dupPlan().reduce((a,g)=>a+g.rm.length,0);if(!n)return;showSheet(`<h3>¿Quitar ${n===1?"1 copia repetida":n+" copias repetidas"}?</h3><p style="color:var(--muted);margin:0 0 16px">Se queda la versión marcada. En tus listas se cambia la copia por la que se queda, y en tu Wrapped sus escuchas se suman. Los archivos repetidos se borran de este iPhone.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="confirmMerge">Quitar repetidas</button></div>`);return}
+  if(t.id==="mergeDups"){const n=dupPlan().reduce((a,g)=>a+g.rm.length,0);if(!n)return;showSheet(`<h3>¿Quitar ${n===1?"1 copia repetida":n+" copias repetidas"}?</h3><p style="color:var(--muted);margin:0 0 16px">Se queda la versión marcada. En tus listas se cambia la copia por la que se queda, y en tu Wrapped sus escuchas se suman. Los archivos repetidos se borran de este dispositivo.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="confirmMerge">Quitar repetidas</button></div>`);return}
   if(t.id==="confirmMerge"){closeSheet();if(!S.db)return;mergeDups(dupPlan());return}
   if(t.id==="closeManage"){S.setView=null;S.sel=new Set();render();return}
   if(t.id==="selAll"){S.sel=S.sel.size===S.songs.length?new Set():new Set(S.songs.map(x=>x.id));const st=$("#main").scrollTop;render();$("#main").scrollTop=st;return}
   if(d.sel){const on=!S.sel.has(d.sel);if(on)S.sel.add(d.sel);else S.sel.delete(d.sel);t.setAttribute("aria-pressed",on);const c=t.querySelector(".check");c.classList.toggle("on",on);c.innerHTML=on?ICON.check:"";$("#selInfo").textContent=selInfo();const b=$("#bulkDelete");b.disabled=!S.sel.size;const sa=$("#selAll");if(sa)sa.textContent=S.sel.size===S.songs.length?"Quitar selección":"Seleccionar todas";return}
-  if(t.id==="bulkDelete"){const n=S.sel.size;if(!n)return;showSheet(`<h3>¿Borrar ${n===1?"1 canción":n+" canciones"}?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrarán de este iPhone y de todas tus listas. Esto no se puede deshacer.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" id="confirmBulk">Borrar ${n===1?"canción":n+" canciones"}</button></div>`);return}
+  if(t.id==="bulkDelete"){const n=S.sel.size;if(!n)return;showSheet(`<h3>¿Borrar ${n===1?"1 canción":n+" canciones"}?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrarán de este dispositivo y de todas tus listas. Esto no se puede deshacer.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" id="confirmBulk">Borrar ${n===1?"canción":n+" canciones"}</button></div>`);return}
   if(t.id==="confirmBulk"){closeSheet();if(!S.db)return;deleteSongs([...S.sel],true);return}
   if(t.id==="cleanOrphans"){if(!S.assets){toast("No se puede usar ahora mismo.");return}
     try{const o=await findOrphans();if(!o.length){toast("No hay archivos sueltos. Todo en orden.");return}
@@ -2770,7 +2792,7 @@ document.addEventListener("click",async e=>{
   if(d.closesheet!==undefined){closeSheet();return}
   if(d.edit){editSong(d.edit);return}
   if(d.saveedit){const title=$("#eT").value.trim()||"Sin título",artist=$("#eA").value.trim(),album=$("#eL").value.trim();closeSheet();try{await S.db.collection("songs").doc(d.saveedit).update({title,artist,album});toast("Cambios guardados")}catch(err){toast("No se han podido guardar los cambios.")}return}
-  if(d.delete){const s=byId(d.delete);closeSheet();showSheet(`<h3>¿Borrar «${esc(s.title)}»?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrará de este iPhone y de todas tus listas.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" data-confirmdelete="${esc(s.id)}">Borrar canción</button></div>`);return}
+  if(d.delete){const s=byId(d.delete);closeSheet();showSheet(`<h3>¿Borrar «${esc(s.title)}»?</h3><p style="color:var(--muted);margin:0 0 16px">Se borrará de este dispositivo y de todas tus listas.</p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn danger" data-confirmdelete="${esc(s.id)}">Borrar canción</button></div>`);return}
   if(d.confirmdelete){const s=byId(d.confirmdelete);closeSheet();if(!s)return;const bk1=snapSongs([s]);
     try{
       if(current()&&current().id===s.id){audio.pause();stopStream();audio.removeAttribute("src");S.queue=S.queue.filter(x=>x!==s.id);S.qi=-1;S.playerOpen=false;renderPlayer()}
@@ -3162,7 +3184,7 @@ function renderWrapPage(){
     }
     h+=`<section><div class="sechead"><h2>Por meses</h2></div>${rows}</section>`;
   }
-  h+=`<p class="wnote">Cuenta como escucha cada canción que suena al menos 30 segundos. El historial se guarda en este iPhone.</p>`;
+  h+=`<p class="wnote">Cuenta como escucha cada canción que suena al menos 30 segundos. El historial se guarda en este dispositivo.</p>`;
   return h;
 }
 document.addEventListener("click",e=>{
