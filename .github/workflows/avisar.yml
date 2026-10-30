@@ -14,8 +14,8 @@ jobs:
       - name: ¿Ha cambiado la versión?
         id: ver
         run: |
-          NUEVA=$(grep -o 'name="app-version" content="[^"]*"' index.html | sed 's/.*content="//;s/"$//')
-          ANTES=$(git show HEAD~1:index.html 2>/dev/null | grep -o 'name="app-version" content="[^"]*"' | sed 's/.*content="//;s/"$//' || true)
+          NUEVA=$(grep -o '<meta name="app-version" content="[^"]*"' index.html | head -1 | sed 's/.*content="//;s/"$//')
+          ANTES=$(git show HEAD~1:index.html 2>/dev/null | grep -o '<meta name="app-version" content="[^"]*"' | head -1 | sed 's/.*content="//;s/"$//' || true)
           echo "nueva=$NUEVA" >> "$GITHUB_OUTPUT"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$NUEVA" != "$ANTES" ]; then echo "avisar=si" >> "$GITHUB_OUTPUT"; else echo "avisar=no" >> "$GITHUB_OUTPUT"; fi
       - name: Esperar a que se publique la web
