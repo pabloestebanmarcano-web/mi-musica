@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-12">
+<meta name="app-version" content="2026.10.31-14">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -942,6 +942,9 @@ function renderSettings(){
   <div class="setgroup"><h2>Perfil</h2>
     <button class="setrow setbtn" id="editProfile"><span class="lab withav">${avatarHTML(PROFILE&&PROFILE.photo,44)}<span style="display:flex;flex-direction:column">${PROFILE&&PROFILE.name?esc(PROFILE.name):"Sin nombre"}<small>${bdayTxt()}</small></span></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
   </div>
+  ${typeof AMI!=="undefined"&&AMI&&AMI.me?`<div class="setgroup"><h2>Cuenta</h2>
+    <div class="setrow"><span class="lab">@${esc(AMI.me.username)}<small>Tu perfil y tu Wrapped se guardan en tu cuenta</small></span><button class="btn danger" id="frOut" style="height:40px;flex-shrink:0">Cerrar sesión</button></div>
+  </div>`:""}
   <div class="setgroup"><h2>Apariencia</h2>
     <div class="setrow"><span class="lab">Tema</span>${seg("theme",[["auto","Auto"],["light","Claro"],["dark","Oscuro"]])}</div>
     <div class="setrow"><span class="lab">Color</span><div class="swatches" role="group" aria-label="Color de la app">${accents.map(([v,c,n])=>`<button class="swatch" data-cfg="accent" data-val="${v}" aria-pressed="${CFG.accent===v}" aria-label="${n}"><span style="background:${c};${v==="mono"?"box-shadow:inset 0 0 0 1px var(--line)":""}"></span></button>`).join("")}</div></div>
@@ -2583,7 +2586,8 @@ addEventListener("offline",()=>{NOW.fail="offline";if(S.tab==="ahora")render()})
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 let PROFILE=null;try{PROFILE=JSON.parse(localStorage.getItem("profile")||"null")}catch(e){}
 let welcomeChecked=false,W=null;
-function saveProfile(p){PROFILE={name:String(p.name||"").trim().slice(0,40),day:+p.day||0,month:+p.month||0,photo:p.photo||"",done:true};
+function saveProfile(p){PROFILE={name:String(p.name||"").trim().slice(0,40),day:+p.day||0,month:+p.month||0,photo:p.photo||"",done:true,at:Date.now()};
+  setTimeout(()=>{if(typeof AMI!=="undefined"&&AMI&&AMI.me)clPushProfile().catch(()=>{})},0);
   try{localStorage.setItem("profile",JSON.stringify(PROFILE))}catch(e){}
   try{if(S.db)Promise.resolve(S.db.doc("state/profile").set({...PROFILE})).catch(()=>{})}catch(e){}}
 function isBday(){if(!PROFILE||!PROFILE.day||!PROFILE.month)return false;const n=new Date();return n.getDate()===PROFILE.day&&n.getMonth()+1===PROFILE.month}
@@ -2592,28 +2596,56 @@ function homeTitle(){const n=PROFILE&&PROFILE.name;if(!n)return"Tu música";if(i
 function bdayCard(){return isBday()?`<div class="bday"><p>Hoy es tu día. Mira qué música te ha acompañado este año.</p><button class="btn" data-wpage>Ver tu Wrapped</button></div>`:""}
 async function welcomeCheck(){
   if(welcomeChecked||!S.ready||!S.db)return;welcomeChecked=true;
+  if(typeof AMI!=="undefined"&&AMI&&AMI.ok){
+    if(!frHasSession()){showWelcome();return}
+    if(PROFILE&&PROFILE.done)return;
+    if(navigator.onLine){try{await frInit()}catch(e){}if(PROFILE&&PROFILE.done){render();return}}
+    showWelcome();W.step=1;wRender();return;
+  }
   if(PROFILE&&PROFILE.done)return;
   try{const d=await S.db.doc("state/profile").get();if(d&&d.exists){const v=d.data();if(v&&v.done){PROFILE=v;try{localStorage.setItem("profile",JSON.stringify(v))}catch(e){}render();return}}}catch(e){}
   showWelcome();
 }
 function dayOpts(sel){let o=`<option value="">Día</option>`;for(let i=1;i<=31;i++)o+=`<option value="${i}"${+sel===i?" selected":""}>${i}</option>`;return o}
 function monthOpts(sel){return `<option value="">Mes</option>`+MESES.map((m,i)=>`<option value="${i+1}"${+sel===i+1?" selected":""}>${m}</option>`).join("")}
-function showWelcome(){W={step:0,name:"",day:"",month:""};let el=document.querySelector(".welcome");if(!el){el=document.createElement("div");el.className="welcome";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","Bienvenida");document.body.appendChild(el);el.addEventListener("click",welcomeClick);el.addEventListener("input",welcomeInput);el.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="wName"){e.preventDefault();wNext()}})}wRender()}
+function showWelcome(){W={step:0,name:"",day:"",month:""};let el=document.querySelector(".welcome");if(!el){el=document.createElement("div");el.className="welcome";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","Bienvenida");document.body.appendChild(el);el.addEventListener("click",welcomeClick);el.addEventListener("input",welcomeInput);el.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="wName"){e.preventDefault();wNext()}else if(e.key==="Enter"&&e.target.id==="wU"){e.preventDefault();const pp=document.querySelector("#wP");if(pp)pp.focus()}else if(e.key==="Enter"&&e.target.id==="wP"){e.preventDefault();W.step==="signup"?wSignup():wLogin()}})}wRender()}
 function wRender(){
   const el=document.querySelector(".welcome");if(!el||!W)return;
-  const last=3,hasSongs=S.songs.length>0;let b="",a="";
-  if(W.step===0){b=`<h1 class="hello">Hola<span class="dot">.</span></h1><p>Esta es tu música, guardada en tu dispositivo. Antes de empezar, cuéntanos un par de cosas.</p>`;a=`<button class="btn" data-w="next">Empezar</button>`}
+  const last=3,hasSongs=S.songs.length>0,acct=typeof AMI!=="undefined"&&AMI&&AMI.ok;let b="",a="";
+  if(W.step===0){b=`<h1 class="hello">Hola<span class="dot">.</span></h1><p>Esta es tu música, guardada en tu dispositivo. Antes de empezar, cuéntanos un par de cosas.</p>`;if(acct){b=`<h1 class="hello">Hola<span class="dot">.</span></h1><p>Esta es tu música, guardada en tu dispositivo. Para empezar, crea tu cuenta: así no pierdes tu perfil ni tu Wrapped y puedes ver qué escuchan tus amigos.</p>`;a=`<button class="btn" data-w="signup">Crear cuenta</button><button class="btn ghost" data-w="login">Ya tengo cuenta</button>`}else a=`<button class="btn" data-w="next">Empezar</button>`}
+  else if(W.step==="signup"){b=`<h1>Crea tu cuenta</h1><p>Tu nombre de usuario es para que tus amigos te encuentren. Es distinto de tu nombre: no sale en el saludo.</p><label class="sr" for="wU">Nombre de usuario</label><input class="big" id="wU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" maxlength="20" placeholder="Nombre de usuario" value="${esc(W.u||"")}" style="margin-bottom:12px"><label class="sr" for="wP">Contraseña</label><input class="big" id="wP" type="password" autocomplete="new-password" placeholder="Contraseña (mín. 6)"><p style="font-size:14px;color:var(--muted);margin-top:12px">Letras, números, punto o guion bajo. Apunta la contraseña: la necesitarás si cambias de móvil.</p><p id="wMsg" role="alert" style="color:var(--danger);font-size:15px;min-height:22px;margin-top:6px">${esc(W.err||"")}</p>`;a=`<button class="btn" data-w="dosignup"${W.busy?" disabled":""}>${W.busy?"Creando…":"Crear cuenta"}</button><button class="btn ghost" data-w="back0">Volver</button>`}
+  else if(W.step==="login"){b=`<h1>Inicia sesión</h1><p>Recuperarás tu nombre, tu foto, tu cumpleaños y tu Wrapped. Tus canciones tendrás que volver a subirlas a este dispositivo.</p><label class="sr" for="wU">Nombre de usuario</label><input class="big" id="wU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" maxlength="20" placeholder="Nombre de usuario" value="${esc(W.u||"")}" style="margin-bottom:12px"><label class="sr" for="wP">Contraseña</label><input class="big" id="wP" type="password" autocomplete="current-password" placeholder="Contraseña"><p id="wMsg" role="alert" style="color:var(--danger);font-size:15px;min-height:22px;margin-top:12px">${esc(W.err||"")}</p>`;a=`<button class="btn" data-w="dologin"${W.busy?" disabled":""}>${W.busy?"Entrando…":"Entrar"}</button><button class="btn ghost" data-w="back0">Volver</button>`}
   else if(W.step===1){b=`<button class="avbtn" data-w="photo" style="width:88px;height:88px;margin-bottom:22px" aria-label="${W.photo?"Cambiar foto":"Añadir foto"}">${avatarHTML(W.photo,88,W.name)}</button><h1>¿Cómo te llamas?</h1><p>Lo usaremos para saludarte y en tu Wrapped. Toca el círculo para poner una foto, si quieres.</p><label class="sr" for="wName">Tu nombre</label><input class="big" id="wName" maxlength="40" autocomplete="given-name" autocapitalize="words" placeholder="Tu nombre" value="${esc(W.name)}">`;a=`<button class="btn" data-w="next" ${W.name.trim()?"":"disabled"}>Continuar</button>`}
   else if(W.step===2){b=`<h1>¿Cuándo es tu cumpleaños?</h1><p>Solo el día y el mes. Ese día te espera una sorpresa en Inicio.</p><div class="bdrow"><label class="sr" for="wDay">Día</label><select class="big" id="wDay">${dayOpts(W.day)}</select><label class="sr" for="wMonth">Mes</label><select class="big" id="wMonth">${monthOpts(W.month)}</select></div>`;a=`<button class="btn" data-w="next" ${W.day&&W.month?"":"disabled"}>Continuar</button><button class="btn ghost" data-w="skipstep">Prefiero no decirlo</button>`}
   else{const n=W.name.trim();b=`<h1>${hasSongs?`Todo listo${n?", "+esc(n):""}.`:`Sube tus primeras canciones${n?", "+esc(n):""}`}</h1><p>${hasSongs?"Tu música te está esperando.":"Elige archivos de audio de tu dispositivo, una carpeta o un .zip. Puedes hacerlo también más tarde con el botón + de Inicio."}</p>`;a=hasSongs?`<button class="btn" data-w="finish">Ir a mi música</button>`:`<button class="btn" data-w="upload">Subir canciones</button><button class="btn ghost" data-w="finish">Más tarde</button>`}
-  el.innerHTML=`<div class="wtop"><div class="dots" aria-hidden="true">${[0,1,2,3].map(i=>`<span class="${i===W.step?"on":""}"></span>`).join("")}</div>${W.step>0&&W.step<last?`<button class="skip" data-w="skipall">Saltar</button>`:""}</div><div class="wbody" key="${W.step}">${b}</div><div class="wacts">${a}</div>`;
-  const inp=el.querySelector("#wName");if(inp)setTimeout(()=>{try{inp.focus()}catch(e){}},350);
+  el.innerHTML=`<div class="wtop"><div class="dots" aria-hidden="true">${[0,1,2,3].map(i=>`<span class="${i===(typeof W.step==="number"?W.step:0)?"on":""}"></span>`).join("")}</div>${typeof W.step==="number"&&W.step>0&&W.step<last?`<button class="skip" data-w="skipall">Saltar</button>`:""}</div><div class="wbody" key="${W.step}">${b}</div><div class="wacts">${a}</div>`;
+  const inp=el.querySelector("#wName")||((W.step==="login"||W.step==="signup")&&!W.u?el.querySelector("#wU"):null);if(inp)setTimeout(()=>{try{inp.focus()}catch(e){}},350);
+}
+function wSignup(){wLogin("signup")}
+async function wLogin(mode){
+  mode=mode==="signup"?"signup":"login";
+  const u=frClean(($("#wU")||{}).value),pw=($("#wP")||{}).value||"";W.u=u;
+  if(!u||!pw){W.err="Escribe tu usuario y tu contraseña.";wRender();return}
+  if(mode==="signup"&&!frValid(u)){W.err="El nombre de usuario debe tener de 3 a 20 caracteres: letras, números, punto o guion bajo.";wRender();return}
+  if(mode==="signup"&&pw.length<6){W.err="La contraseña tiene que tener al menos 6 caracteres.";wRender();return}
+  W.busy=true;W.err="";wRender();
+  try{
+    await frSignIn(mode,u,pw);
+    W.busy=false;
+    if(PROFILE&&PROFILE.done){const n=PROFILE.name;W=null;const el=document.querySelector(".welcome");if(el)el.remove();render();toast(n?`Hola de nuevo, ${n}`:"Sesión iniciada");return}
+    W.step=1;W.name="";wRender();
+  }catch(e){W.busy=false;W.err=/Confirm email/.test(e.message||"")?e.message:frErr(e);wRender()}
 }
 function wNext(){if(W.step===1&&!W.name.trim())return;W.step++;wRender()}
 function wClose(){saveProfile({name:W.name,day:W.day,month:W.month,photo:W.photo||""});W=null;const el=document.querySelector(".welcome");if(el)el.remove();render()}
-function welcomeInput(e){const t=e.target;if(t.id==="wName"){W.name=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!W.name.trim()}else if(t.id==="wDay"||t.id==="wMonth"){W[t.id==="wDay"?"day":"month"]=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!(W.day&&W.month)}}
+function welcomeInput(e){const t=e.target;if(t.id==="wU"){W.u=t.value;return}if(t.id==="wName"){W.name=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!W.name.trim()}else if(t.id==="wDay"||t.id==="wMonth"){W[t.id==="wDay"?"day":"month"]=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!(W.day&&W.month)}}
 function welcomeClick(e){const b=e.target.closest("[data-w]");if(!b||b.disabled)return;e.stopPropagation();const w=b.dataset.w;
   if(w==="next")wNext();
+  else if(w==="login"){W.step="login";W.err="";wRender()}
+  else if(w==="back0"){W.step=0;W.err="";wRender()}
+  else if(w==="dologin")wLogin();
+  else if(w==="signup"){W.step="signup";W.err="";wRender()}
+  else if(w==="dosignup")wSignup();
   else if(w==="skipstep"){W.day="";W.month="";wNext()}
   else if(w==="skipall"){if(W.step<2&&!W.name.trim()){W.step=3}else W.step=3;wRender()}
   else if(w==="finish")wClose();
@@ -2630,7 +2662,7 @@ function pickPhoto(cb){let inp=$("#photoIn");if(!inp){inp=document.createElement
       c.getContext("2d").drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,320,320);URL.revokeObjectURL(url);
       cb(c.toDataURL("image/jpeg",.85))}catch(e){toast("No se ha podido abrir esa imagen.")}};
   inp.click()}
-function profileSheet(){pPhoto=PROFILE&&PROFILE.photo||"";showSheet(`<h3>Tu perfil</h3><div class="pfhead"><span id="pAv">${avatarHTML(pPhoto,96)}</span><div class="row2"><button class="btn ghost" id="pPhoto">${pPhoto?"Cambiar foto":"Añadir foto"}</button>${pPhoto?`<button class="btn ghost" id="pNoPhoto">Quitar</button>`:""}</div></div><div class="field"><label for="pN">Nombre</label><input id="pN" maxlength="40" value="${esc(PROFILE&&PROFILE.name||"")}" placeholder="Tu nombre"></div><div class="field"><label for="pD">Cumpleaños</label><div style="display:grid;grid-template-columns:1fr 2fr;gap:10px"><select id="pD" aria-label="Día">${dayOpts(PROFILE&&PROFILE.day)}</select><select id="pM" aria-label="Mes">${monthOpts(PROFILE&&PROFILE.month)}</select></div></div><button class="pickrow" id="frOpen" style="margin-bottom:6px"><span style="display:flex;flex-direction:column"><span style="font-weight:600">Amigos</span><span style="font-size:13px;color:var(--muted)">Mira qué están escuchando</span></span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="saveProfile">Guardar cambios</button></div>`)}
+function profileSheet(){pPhoto=PROFILE&&PROFILE.photo||"";showSheet(`<h3>Tu perfil</h3><div class="pfhead"><span id="pAv">${avatarHTML(pPhoto,96)}</span><div class="row2"><button class="btn ghost" id="pPhoto">${pPhoto?"Cambiar foto":"Añadir foto"}</button>${pPhoto?`<button class="btn ghost" id="pNoPhoto">Quitar</button>`:""}</div></div><div class="field"><label for="pN">Nombre</label><input id="pN" maxlength="40" value="${esc(PROFILE&&PROFILE.name||"")}" placeholder="Tu nombre"></div><div class="field"><label for="pD">Cumpleaños</label><div style="display:grid;grid-template-columns:1fr 2fr;gap:10px"><select id="pD" aria-label="Día">${dayOpts(PROFILE&&PROFILE.day)}</select><select id="pM" aria-label="Mes">${monthOpts(PROFILE&&PROFILE.month)}</select></div></div>${typeof AMI!=="undefined"&&AMI&&AMI.ok?(AMI.me?`<p style="font-size:13px;color:var(--muted);margin:0 0 6px">Sesión iniciada como <strong style="color:var(--ink)">@${esc(AMI.me.username)}</strong>. Tu perfil y tu Wrapped se guardan en tu cuenta.</p>`:`<p style="font-size:13px;color:var(--muted);margin:0 0 6px">Crea una cuenta en «Amigos» para no perder tu perfil ni tu Wrapped si cambias de móvil.</p>`):""}<button class="pickrow" id="frOpen" style="margin-bottom:6px"><span style="display:flex;flex-direction:column"><span style="font-weight:600">Amigos</span><span style="font-size:13px;color:var(--muted)">Mira qué están escuchando</span></span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="saveProfile">Guardar cambios</button></div>`)}
 function refreshPfHead(){const a=$("#pAv");if(a)a.innerHTML=avatarHTML(pPhoto,96,($("#pN")||{}).value||"");const r=document.querySelector(".pfhead .row2");if(r)r.innerHTML=`<button class="btn ghost" id="pPhoto">${pPhoto?"Cambiar foto":"Añadir foto"}</button>${pPhoto?`<button class="btn ghost" id="pNoPhoto">Quitar</button>`:""}`}
 /* ---------- Deshacer al borrar ---------- */
 function toastUndo(msg,onUndo,onExpire,ms){
@@ -3156,6 +3188,7 @@ async function flushPlays(){
       const map=new Map(((d.exists&&d.data().plays)||[]).map(e=>[e.t+"_"+e.s,e]));
       for(const key of keys){const e=batch[key],o=map.get(key);map.set(key,o&&o.d>e.d?o:e)}
       await ref.set({day:k,month:k.slice(0,7),year:+k.slice(0,4),plays:[...map.values()].sort((a,b)=>a.t-b.t)});
+      if(typeof AMI!=="undefined"&&AMI&&AMI.me)clMark(k);
       for(const key of keys){if(pend[k]&&pend[k][key]===batch[key])delete pend[k][key]}
       if(pend[k]&&!Object.keys(pend[k]).length)delete pend[k];
       savePend();
@@ -3557,6 +3590,7 @@ async function frInit2(){
     AMI.me=p;AMI.ready=true;
     await frRefresh(true);
     frPublish(true);
+    await cloudSync();
   }catch(e){AMI.ready=true;AMI.err=e&&e.message==="config"?"":frErr(e);frRerender()}
 }
 async function frRefresh(force){
@@ -3577,6 +3611,7 @@ async function frRefresh(force){
     AMI.friends=(fs||[]).filter(f=>f.status==="accepted").map(f=>{const id=other(f);return {id,username:name(id),mine:f.requester===me,np:np.find(n=>n.user_id===id)||null}});
     AMI.incoming=(fs||[]).filter(f=>f.status==="pending"&&f.addressee===me).map(f=>({id:f.requester,username:name(f.requester)}));
     AMI.outgoing=(fs||[]).filter(f=>f.status==="pending"&&f.requester===me).map(f=>({id:f.addressee,username:name(f.addressee)}));
+    frLoadAvatars(AMI.friends.map(f=>f.id));
     AMI.err="";
     const sig=JSON.stringify([AMI.friends,AMI.incoming,AMI.outgoing,Math.floor(Date.now()/60000)]);
     if(force||sig!==AMI.sig){AMI.sig=sig;frRerender()}
@@ -3610,7 +3645,7 @@ function friendsSection(){
   const list=frSorted(), inc=AMI.incoming.length;
   let h=`<section><div class="sechead"><h2>Tus amigos</h2><button class="link" data-fropen>${inc?`Solicitudes (${inc})`:"Ver todos"}</button></div>`;
   if(!list.length)return h+`<button class="row" data-fropen><span class="cover" style="width:44px;height:44px;border:1px dashed var(--line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);border-radius:22px">${ICON.plus}</span><span class="meta"><span class="t">Añade a tus amigos</span><span class="s">Búscalos por su nombre de usuario</span></span></button></section>`;
-  return h+`<div class="recent">${list.map(f=>`<button class="card frcard${f.st.live?" live":""}" data-friend="${esc(f.id)}"><span class="frav">${avatarHTML("",72,f.username)}${f.st.live?FR_EQ:""}</span><span><span class="t" style="display:block">${esc(f.username)}</span><span class="s" style="display:block">${f.st.song?esc(f.st.song.title):"—"}</span><span class="s w" style="display:block">${esc(f.st.live?"Ahora":f.st.line.replace(/^Escuchó /,""))}</span></span></button>`).join("")}</div></section>`;
+  return h+`<div class="recent">${list.map(f=>`<button class="card frcard${f.st.live?" live":""}" data-friend="${esc(f.id)}"><span class="frav">${avatarHTML(frPhoto(f.id),72,f.username)}${f.st.live?FR_EQ:""}</span><span><span class="t" style="display:block">${esc(f.username)}</span><span class="s" style="display:block">${f.st.song?esc(f.st.song.title):"—"}</span><span class="s w" style="display:block">${esc(f.st.live?"Ahora":f.st.line.replace(/^Escuchó /,""))}</span></span></button>`).join("")}</div></section>`;
 }
 /* Página de amigos */
 function renderFriends(){
@@ -3632,9 +3667,9 @@ function renderFriends(){
   if(AMI.err)h+=`<p class="status" style="margin-top:0;color:var(--danger)">${esc(AMI.err)}</p>`;
   if(AMI.incoming.length)h+=`<section><div class="sechead"><h2>Solicitudes</h2></div>${AMI.incoming.map(p=>`<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">${esc(p.username)}</span><span class="s">Quiere ser tu amigo</span></span><button class="btn sm" data-fracc="${esc(p.id)}">Aceptar</button><button class="iconbtn plain" data-frdel="${esc(p.id)}" data-frdir="in" aria-label="Rechazar">${ICON.x}</button></div>`).join("")}</section>`;
   const list=frSorted();
-  h+=`<section><div class="sechead"><h2>Tus amigos</h2></div>${list.length?list.map(f=>`<button class="row" data-friend="${esc(f.id)}"><span class="frav sm">${avatarHTML("",44,f.username)}${f.st.live?FR_EQ:""}</span><span class="meta"><span class="t">${esc(f.username)}</span><span class="s">${f.st.song?`${esc(f.st.song.title)}${f.st.song.artist?" · "+esc(f.st.song.artist):""}`:"Sin actividad todavía"}</span><span class="s"${f.st.live?` style="color:var(--accent)"`:""}>${esc(f.st.song?f.st.line:"")}</span></span></button>`).join(""):`<p style="color:var(--muted);margin:0">Aún no tienes amigos aquí. Búscalos arriba por su nombre de usuario.</p>`}</section>`;
+  h+=`<section><div class="sechead"><h2>Tus amigos</h2></div>${list.length?list.map(f=>`<button class="row" data-friend="${esc(f.id)}"><span class="frav sm">${avatarHTML(frPhoto(f.id),44,f.username)}${f.st.live?FR_EQ:""}</span><span class="meta"><span class="t">${esc(f.username)}</span><span class="s">${f.st.song?`${esc(f.st.song.title)}${f.st.song.artist?" · "+esc(f.st.song.artist):""}`:"Sin actividad todavía"}</span><span class="s"${f.st.live?` style="color:var(--accent)"`:""}>${esc(f.st.song?f.st.line:"")}</span></span></button>`).join(""):`<p style="color:var(--muted);margin:0">Aún no tienes amigos aquí. Búscalos arriba por su nombre de usuario.</p>`}</section>`;
   if(AMI.outgoing.length)h+=`<section><div class="sechead"><h2>Enviadas</h2></div>${AMI.outgoing.map(p=>`<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">${esc(p.username)}</span><span class="s">Pendiente de que acepte</span></span><button class="btn ghost sm" data-frdel="${esc(p.id)}" data-frdir="out">Cancelar</button></div>`).join("")}</section>`;
-  h+=`<section><button class="pickrow" id="frShare" aria-pressed="${AMI.share}"><span class="check${AMI.share?" on":""}">${AMI.share?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir lo que escucho</span><span style="font-size:13px;color:var(--muted)">${AMI.share?"Tus amigos ven qué canción suena.":"Tus amigos no ven lo que escuchas."}</span></span></button><button class="btn danger" id="frOut" style="margin-top:18px">Cerrar sesión</button></section>`;
+  h+=`<section><button class="pickrow" id="frShare" aria-pressed="${AMI.share}"><span class="check${AMI.share?" on":""}">${AMI.share?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir lo que escucho</span><span style="font-size:13px;color:var(--muted)">${AMI.share?"Tus amigos ven qué canción suena.":"Tus amigos no ven lo que escuchas."}</span></span></button></section>`;
   return h;
 }
 function frResHTML(){
@@ -3660,6 +3695,40 @@ function frSearch(){
     const r=$("#frRes");if(r)r.innerHTML=frResHTML();
   },300);
 }
+async function frLogout(){
+  if(!navigator.onLine){toast("Necesitas conexión para cerrar sesión.");return}
+  toast("Guardando en tu cuenta…",1800);
+  try{
+    recordPlay();await flushPlays();
+    if(CL.dirty.size)await clPushPlays();
+    if(PROFILE&&PROFILE.done)await clPushProfile();
+    if(CL.dirty.size||Object.keys(pend).length)throw new Error("red");
+  }catch(e){toast("No se ha podido guardar todo en tu cuenta. Inténtalo con mejor conexión.");return}
+  try{await SBC.from("now_playing").upsert({user_id:AMI.me.id,playing:false,updated_at:new Date().toISOString()});await SBC.auth.signOut()}catch(_){}
+  try{localStorage.removeItem(FR_KEY);localStorage.removeItem("profile");localStorage.removeItem("frAv");localStorage.removeItem("cloudDirty")}catch(_){}
+  try{const snap=await S.db.collection("plays").get();for(const d of snap.docs)await S.db.doc("plays/"+d.id).delete();await S.db.doc("state/profile").delete()}catch(_){}
+  PROFILE=null;FAV={};CL.dirty.clear();for(const y in WR.data)delete WR.data[y];S.loop=[];
+  AMI.me=null;AMI.friends=[];AMI.incoming=[];AMI.outgoing=[];AMI.pub.key="";
+  S.friendsOpen=false;S.tab="inicio";S.setView=null;render();showWelcome();
+}
+async function frSignIn(mode,u,p){
+  const c=await sbLoad();
+  if(mode==="signup"){
+    const {data:taken}=await c.from("profiles").select("id").eq("username",u).maybeSingle();
+    if(taken)throw new Error("already registered");
+    const {data,error}=await c.auth.signUp({email:frEmail(u),password:p});
+    if(error)throw error;
+    if(!data.session)throw new Error("Hay que desactivar «Confirm email» en Supabase.");
+    const r=await c.from("profiles").insert({id:data.user.id,username:u});
+    if(r.error)throw r.error;
+  }else{
+    const {error}=await c.auth.signInWithPassword({email:frEmail(u),password:p});
+    if(error)throw error;
+  }
+  AMI.err="";AMI.hide=false;
+  try{localStorage.removeItem("cloudSince:"+((await c.auth.getUser()).data.user||{}).id)}catch(e){}
+  await frInit();
+}
 async function frAuth(){
   const u=frClean($("#frU")&&$("#frU").value),p=($("#frP")&&$("#frP").value)||"";
   const msg=t=>{AMI.err=t;const m=$("#frMsg");if(m)m.textContent=t};
@@ -3667,21 +3736,8 @@ async function frAuth(){
   if(p.length<6)return msg("La contraseña tiene que tener al menos 6 caracteres.");
   AMI.busy=true;msg("");const b=$("#frGo");if(b){b.disabled=true;b.textContent="Un momento…"}
   try{
-    const c=await sbLoad();
-    if(AMI.mode==="signup"){
-      const {data:taken}=await c.from("profiles").select("id").eq("username",u).maybeSingle();
-      if(taken)throw new Error("already registered");
-      const {data,error}=await c.auth.signUp({email:frEmail(u),password:p});
-      if(error)throw error;
-      if(!data.session)throw new Error("Hay que desactivar «Confirm email» en Supabase.");
-      const r=await c.from("profiles").insert({id:data.user.id,username:u});
-      if(r.error)throw r.error;
-    }else{
-      const {error}=await c.auth.signInWithPassword({email:frEmail(u),password:p});
-      if(error)throw error;
-    }
-    AMI.busy=false;AMI.err="";AMI.hide=false;
-    await frInit();
+    await frSignIn(AMI.mode,u,p);
+    AMI.busy=false;render();
     toast(AMI.mode==="signup"?"Cuenta creada":"Sesión iniciada");
   }catch(e){AMI.busy=false;const t=/Confirm email/.test(e.message||"")?e.message:frErr(e);const bb=$("#frGo");if(bb){bb.disabled=false;bb.textContent=AMI.mode==="signup"?"Crear cuenta":"Entrar"}msg(t)}
 }
@@ -3692,7 +3748,7 @@ async function frDo(fn,ok){
 function friendSheet(id){
   const f=AMI.friends.find(x=>x.id===id);if(!f)return;
   const st=frStatus(f.np),mine=st.song?frMatch(st.song):null;
-  showSheet(`<div class="frhead"><span class="frav">${avatarHTML("",64,f.username)}${st.live?FR_EQ:""}</span><div style="min-width:0"><h3 style="margin:0">${esc(f.username)}</h3><p style="color:${st.live?"var(--accent)":"var(--muted)"};margin:2px 0 0;font-size:14px">${esc(st.line)}</p></div></div>${st.song?`<div class="frnow"><span class="t">${esc(st.song.title)}</span><span class="s">${esc(st.song.artist||"Artista desconocido")}</span></div>`:""}${mine?`<button class="pickrow" data-frplay="${esc(mine.id)}" style="color:var(--accent);font-weight:600">${ICON.play}<span>Escucharla tú también</span></button>`:st.song?`<p style="color:var(--muted);font-size:14px;margin:0 0 8px">No tienes esta canción en tu biblioteca.</p>`:""}<button class="pickrow" data-frdel="${esc(f.id)}" data-frdir="${f.mine?"out":"in"}" data-frconfirm="1" style="color:var(--danger)">Eliminar de tus amigos</button><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
+  showSheet(`<div class="frhead"><span class="frav">${avatarHTML(frPhoto(f.id),64,f.username)}${st.live?FR_EQ:""}</span><div style="min-width:0"><h3 style="margin:0">${esc(f.username)}</h3><p style="color:${st.live?"var(--accent)":"var(--muted)"};margin:2px 0 0;font-size:14px">${esc(st.line)}</p></div></div>${st.song?`<div class="frnow"><span class="t">${esc(st.song.title)}</span><span class="s">${esc(st.song.artist||"Artista desconocido")}</span></div>`:""}${mine?`<button class="pickrow" data-frplay="${esc(mine.id)}" style="color:var(--accent);font-weight:600">${ICON.play}<span>Escucharla tú también</span></button>`:st.song?`<p style="color:var(--muted);font-size:14px;margin:0 0 8px">No tienes esta canción en tu biblioteca.</p>`:""}<button class="pickrow" data-frdel="${esc(f.id)}" data-frdir="${f.mine?"out":"in"}" data-frconfirm="1" style="color:var(--danger)">Eliminar de tus amigos</button><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
 }
 /* Publicar lo que suena */
 function frPos(){try{if(ST&&ST.cur)return Math.max(0,audio.currentTime-ST.cur.start);return audio.currentTime||0}catch(e){return 0}}
@@ -3713,7 +3769,8 @@ function frPublish(force){
 ["play","pause","ended","seeked"].forEach(ev=>audio.addEventListener(ev,()=>{if(AMI.me)frPublish(ev==="seeked")}));
 let frTU=0;audio.addEventListener("timeupdate",()=>{const n=Date.now();if(AMI.me&&n-frTU>5000){frTU=n;frPublish(false)}});
 setInterval(()=>{if(AMI.me&&document.visibilityState==="visible"&&S.tab==="inicio")frRefresh(false)},30000);
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&AMI.me){frRefresh(false);frPublish(false)}});
+let clLast=Date.now();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&AMI.me){frRefresh(false);frPublish(false);if(Date.now()-clLast>600000){clLast=Date.now();cloudSync()}}});
 addEventListener("online",()=>{if(AMI.ok&&frHasSession()&&!AMI.me)frInit()});
 document.addEventListener("input",e=>{if(e.target.id==="frQ"){AMI.q=e.target.value;frSearch()}});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.target.id==="frU"||e.target.id==="frP")){e.preventDefault();if(e.target.id==="frU"){const p=$("#frP");if(p)p.focus()}else frAuth()}});
@@ -3734,9 +3791,109 @@ document.addEventListener("click",async e=>{
     closeSheet();const id=d.frdel,out=d.frdir==="out";
     frDo(()=>SBC.from("friendships").delete().match(out?{requester:AMI.me.id,addressee:id}:{requester:id,addressee:AMI.me.id}),d.frconfirm?"Eliminado de tus amigos":out?"Solicitud cancelada":"Solicitud rechazada");return}
   if(t.id==="frShare"){AMI.share=!AMI.share;try{localStorage.setItem("frShare",AMI.share?"1":"0")}catch(_){}AMI.pub.key="";frPublish(true);render();return}
-  if(t.id==="frOut"){if(!confirm("¿Cerrar sesión? Tus canciones no se borran."))return;try{await SBC.from("now_playing").upsert({user_id:AMI.me.id,playing:false,updated_at:new Date().toISOString()});await SBC.auth.signOut()}catch(_){}try{localStorage.removeItem(FR_KEY)}catch(_){}AMI.me=null;AMI.friends=[];AMI.incoming=[];AMI.outgoing=[];AMI.mode="login";render();toast("Sesión cerrada");return}
+  if(t.id==="frOut"){if(!confirm("¿Cerrar sesión? Tus canciones se quedan en este iPhone. Tu perfil y tu Wrapped se quedan guardados en tu cuenta."))return;frLogout();return}
 },true);
 if(AMI.ok&&frHasSession()&&navigator.onLine)setTimeout(frInit,1500);
+/* ---------- Cuenta en la nube: perfil, foto y escuchas del Wrapped ---------- */
+/* Las canciones siguen solo en el iPhone. Se guardan en Supabase tu nombre, cumpleaños y foto
+   (user_profile, avatars) y tus escuchas por día (play_days), igual que en la colección local "plays". */
+const CL={busy:false,pushT:0,dirty:new Set()};
+try{(JSON.parse(localStorage.getItem("cloudDirty")||"[]")||[]).forEach(d=>CL.dirty.add(d))}catch(e){}
+const clSaveDirty=()=>{try{localStorage.setItem("cloudDirty",JSON.stringify([...CL.dirty]))}catch(e){}};
+const clKey=()=>"cloudSince:"+(AMI.me&&AMI.me.id);
+function clMark(day){CL.dirty.add(day);clSaveDirty();clearTimeout(CL.pushT);CL.pushT=setTimeout(clPushPlays,4000)}
+function profLocal(p){
+  PROFILE=p;try{localStorage.setItem("profile",JSON.stringify(p))}catch(e){}
+  try{if(S.db)Promise.resolve(S.db.doc("state/profile").set({...p})).catch(()=>{})}catch(e){}
+}
+async function clPushProfile(){
+  if(!SBC||!AMI.me||!PROFILE||!PROFILE.done)return;
+  if(!PROFILE.at){PROFILE.at=Date.now();profLocal(PROFILE)}
+  const uid=AMI.me.id;
+  const r1=await SBC.from("user_profile").upsert({user_id:uid,name:PROFILE.name||"",bday_day:+PROFILE.day||null,bday_month:+PROFILE.month||null,edited_at:PROFILE.at});
+  if(r1.error)throw r1.error;
+  const r2=await SBC.from("avatars").upsert({user_id:uid,photo:PROFILE.photo||null});
+  if(r2.error)throw r2.error;
+}
+async function clSyncProfile(){
+  const uid=AMI.me.id;
+  const {data:pr,error}=await SBC.from("user_profile").select("name,bday_day,bday_month,edited_at").eq("user_id",uid).maybeSingle();
+  if(error)throw error;
+  const cAt=pr?+pr.edited_at||1:0, lAt=PROFILE&&PROFILE.done?(+PROFILE.at||1):0;
+  if(pr&&cAt>lAt){
+    const {data:av}=await SBC.from("avatars").select("photo").eq("user_id",uid).maybeSingle();
+    profLocal({name:pr.name||"",day:pr.bday_day||0,month:pr.bday_month||0,photo:(av&&av.photo)||"",done:true,at:cAt});
+    return true;
+  }
+  if(lAt&&lAt>cAt)await clPushProfile();
+  return false;
+}
+function mergePlays(a,b){
+  const m=new Map((a||[]).map(e=>[e.t+"_"+e.s,e]));
+  for(const e of (b||[])){const k=e.t+"_"+e.s,o=m.get(k);if(!o||(e.d||0)>(o.d||0))m.set(k,e)}
+  return [...m.values()].sort((x,y)=>x.t-y.t);
+}
+const playsSig=l=>(l||[]).length+":"+(l||[]).reduce((n,e)=>n+(e.d||0),0);
+async function clPullPlays(){
+  const uid=AMI.me.id;let since=localStorage.getItem(clKey())||"";
+  if(!since){const snap=await S.db.collection("plays").get();for(const d of snap.docs)CL.dirty.add(d.id);clSaveDirty()}
+  let from=0,changed=false,maxAt=since;
+  for(;;){
+    let q=SBC.from("play_days").select("day,plays,updated_at").eq("user_id",uid).order("updated_at").range(from,from+199);
+    if(since)q=q.gt("updated_at",new Date(Date.parse(since)-120000).toISOString());
+    const {data,error}=await q;if(error)throw error;
+    for(const r of data||[]){
+      const ref=S.db.doc("plays/"+r.day),d=await ref.get(),loc=(d.exists&&d.data().plays)||[];
+      const merged=mergePlays(loc,r.plays);
+      if(playsSig(merged)!==playsSig(loc)){await ref.set({day:r.day,month:r.day.slice(0,7),year:+r.day.slice(0,4),plays:merged});changed=true}
+      if(playsSig(merged)!==playsSig(r.plays))CL.dirty.add(r.day);
+      if(!maxAt||r.updated_at>maxAt)maxAt=r.updated_at;
+    }
+    if(!data||data.length<200)break;from+=200;
+  }
+  if(maxAt)try{localStorage.setItem(clKey(),maxAt)}catch(e){}
+  clSaveDirty();
+  return changed;
+}
+async function clPushPlays(){
+  if(!SBC||!AMI.me||!S.db||!CL.dirty.size)return;
+  const uid=AMI.me.id,days=[...CL.dirty];
+  for(let i=0;i<days.length;i+=30){
+    const part=days.slice(i,i+30),rows=[];
+    for(const k of part){const d=await S.db.doc("plays/"+k).get();if(d.exists)rows.push({user_id:uid,day:k,plays:d.data().plays||[]})}
+    if(rows.length){const {error}=await SBC.from("play_days").upsert(rows);if(error)return}
+    part.forEach(k=>CL.dirty.delete(k));clSaveDirty();
+  }
+}
+async function cloudSync(){
+  if(SBC&&AMI.me&&!S.db){setTimeout(cloudSync,3000);return}
+  if(!SBC||!AMI.me||!S.db||CL.busy)return;CL.busy=true;
+  try{
+    const p=await clSyncProfile();
+    const c=await clPullPlays();
+    await clPushPlays();
+    if(c){for(const y in WR.data)delete WR.data[y];loadLoop()}
+    if(p||c)frRerender();
+  }catch(e){}
+  CL.busy=false;
+}
+/* Fotos de los amigos: solo se descargan cuando cambian */
+let FAV={};try{FAV=JSON.parse(localStorage.getItem("frAv")||"{}")||{}}catch(e){FAV={}}
+async function frLoadAvatars(ids){
+  if(!ids.length)return;
+  try{
+    const {data}=await SBC.from("avatars").select("user_id,updated_at").in("user_id",ids);
+    const need=(data||[]).filter(r=>!FAV[r.user_id]||FAV[r.user_id].at!==r.updated_at).map(r=>r.user_id);
+    if(need.length){
+      const {data:ph}=await SBC.from("avatars").select("user_id,photo,updated_at").in("user_id",need);
+      for(const r of ph||[])FAV[r.user_id]={at:r.updated_at,photo:r.photo||""};
+      try{localStorage.setItem("frAv",JSON.stringify(FAV))}catch(e){}
+      frRerender();
+    }
+  }catch(e){}
+}
+const frPhoto=id=>(FAV[id]&&FAV[id].photo)||"";
+
 
 (async()=>{
   try{
