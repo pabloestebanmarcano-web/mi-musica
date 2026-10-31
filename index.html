@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-21">
+<meta name="app-version" content="2026.10.31-22">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -524,6 +524,10 @@ main section{margin-bottom:32px}
 .frnow{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);margin-bottom:10px}
 .frnow .t{font-weight:600}.frnow .s{font-size:14px;color:var(--muted)}
 .pickrow svg{flex-shrink:0}
+.lypick{max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin:0 -6px 6px;padding:0 6px}
+.lyl{background:none;border:none;text-align:left;padding:10px 12px;border-radius:12px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:18px;line-height:1.25;color:var(--muted)}
+.lyl.on{background:var(--accent);color:var(--on-accent)}
+.lyprev{display:block;width:62%;margin:0 auto 14px;border-radius:16px;box-shadow:0 12px 34px rgba(0,0,0,.25)}
 .cvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-height:46vh;overflow-y:auto;margin-bottom:6px}
 .cvmsg{grid-column:1/-1;color:var(--muted);margin:4px 0 10px;font-size:14px}
 .cvitem{background:none;border:none;padding:0;text-align:left;display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--ink)}
@@ -1271,7 +1275,7 @@ function morphCover(toLyrics){
 function lrcFor(s){S.lrcCache=S.lrcCache||{};const k=s.id+"|"+(s.lyrics||"").length;if(!(k in S.lrcCache))S.lrcCache[k]=parseLRC(s.lyrics);return S.lrcCache[k]}
 function lyricsView(s,fav){
   const L=lrcFor(s);
-  const head=`<div class="lyrhead"><button class="lyrart" id="lyrArt" aria-label="Ver la portada">${art(s,48,10)}</button><span class="meta"><span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}</span><span style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(artistOf(s))}</span></span><button class="iconbtn plain" id="favBtn" aria-pressed="${fav}" aria-label="${fav?"Quitar de favoritas":"Añadir a favoritas"}" style="color:${fav?"var(--coral)":"var(--ink)"}">${fav?ICON.heartOn:ICON.heart}</button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de la canción" style="margin-left:-6px">${ICON.dots}</button></div>`;
+  const head=`<div class="lyrhead"><button class="lyrart" id="lyrArt" aria-label="Ver la portada">${art(s,48,10)}</button><span class="meta"><span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}</span><span style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(artistOf(s))}</span></span><button class="iconbtn plain" id="lyrShare" aria-label="Compartir la letra en historias">${ICON.share}</button><button class="iconbtn plain" id="favBtn" aria-pressed="${fav}" aria-label="${fav?"Quitar de favoritas":"Añadir a favoritas"}" style="color:${fav?"var(--coral)":"var(--ink)"}">${fav?ICON.heartOn:ICON.heart}</button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de la canción" style="margin-left:-6px">${ICON.dots}</button></div>`;
   if(!L) return head+`<div class="lyr plain" id="lyr"><p>${esc(s.lyrics)}</p></div>`;
   return head+`<div class="lyr" id="lyr" data-synced="1">${L.map((l,i)=>`<button class="ln${l.text?"":" gap"}" data-seekto="${l.t}" data-i="${i}">${l.text?esc(l.text):"• • •"}</button>`).join("")}</div>`;
 }
@@ -3523,6 +3527,75 @@ function showSlide(){
 /* ----- Imagen para compartir (formato historia, 1080 × 1920) ----- */
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
 function rr(x,X,Y,W,H,R){x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()}
+
+/* ---------- Compartir la letra en historias ---------- */
+const LYS={id:null,lines:[],sel:new Set()};
+function lyrLines(s){
+  const L=lrcFor(s);
+  if(L)return L.map((l,i)=>({t:l.text,i})).filter(l=>l.t&&l.t.trim());
+  return lyrText(s).split(/\n/).map(t=>t.trim()).filter(Boolean).map((t,i)=>({t,i:-1}));
+}
+function lyrPickSheet(){
+  const s=current();if(!s||!s.lyrics)return;
+  LYS.id=s.id;LYS.lines=lyrLines(s);LYS.sel=new Set();
+  if(lrcFor(s)&&lyrIdx>=0){const k=LYS.lines.findIndex(l=>l.i>=lyrIdx);if(k>=0)LYS.sel.add(k)}
+  showSheet(`<h3 style="margin-bottom:2px">Compartir la letra</h3><p style="color:var(--muted);margin:0 0 12px">Elige hasta 5 líneas.</p><div class="lypick" id="lyPick">${LYS.lines.map((l,k)=>`<button class="lyl${LYS.sel.has(k)?" on":""}" data-lyk="${k}" aria-pressed="${LYS.sel.has(k)}">${esc(l.t)}</button>`).join("")}</div><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="lyMake"${LYS.sel.size?"":" disabled"}>Crear imagen</button></div>`);
+  const on=document.querySelector(".lyl.on");if(on)on.scrollIntoView({block:"center"});
+}
+function rrect(x,X,Y,W,H,R){x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()}
+function wrapTxt(x,t,w){const out=[];let line="";for(const word of String(t).split(/\s+/)){const tr=line?line+" "+word:word;if(x.measureText(tr).width<=w||!line)line=tr;else{out.push(line);line=word}}if(line)out.push(line);return out}
+async function lyricsImage(s,lines){
+  try{await Promise.all([document.fonts.load('800 80px "Bricolage Grotesque"'),document.fonts.load('700 40px "Bricolage Grotesque"'),document.fonts.load('600 40px "Figtree"')])}catch(e){}
+  const pal=(await getPal(s))||genPal(s.id);
+  const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const D='"Bricolage Grotesque",system-ui,sans-serif',F='"Figtree",system-ui,sans-serif';
+  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,pal.f3);g.addColorStop(1,"#0B0B10");x.fillStyle=g;x.fillRect(0,0,W,H);
+  const blob=(cx,cy,r,col,a)=>{const rg=x.createRadialGradient(cx,cy,0,cx,cy,r);rg.addColorStop(0,col);rg.addColorStop(1,"rgba(0,0,0,0)");x.globalAlpha=a;x.fillStyle=rg;x.fillRect(0,0,W,H);x.globalAlpha=1};
+  blob(900,260,720,pal.v[0],.55);blob(120,1650,760,pal.v[1],.5);
+  // Texto de la letra
+  const CW=920,PAD=66,TW=CW-PAD*2;let fz=86,rows;
+  for(;;){x.font=`800 ${fz}px ${D}`;rows=[];lines.forEach((l,i)=>{rows.push(...wrapTxt(x,l,TW));if(i<lines.length-1)rows.push("")});if(rows.length*fz*1.12<=900||fz<=44)break;fz-=4}
+  const lh=Math.round(fz*1.12),textH=rows.reduce((h,r)=>h+(r?lh:Math.round(lh*.45)),0);
+  const headH=150,footH=90,CH=PAD+headH+36+textH+36+footH,CX=(W-CW)/2,CY=Math.max(220,Math.round((H-CH)/2)-40);
+  x.save();x.shadowColor="rgba(0,0,0,.45)";x.shadowBlur=80;x.shadowOffsetY=30;rrect(x,CX,CY,CW,CH,56);x.fillStyle=pal.f1;x.fill();x.restore();
+  // Portada
+  const cs=120,cx0=CX+PAD,cy0=CY+PAD;
+  let drawn=false;
+  if(s.coverId){try{const im=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=bu(s.coverId)});x.save();rrect(x,cx0,cy0,cs,cs,20);x.clip();x.drawImage(im,cx0,cy0,cs,cs);x.restore();drawn=true}catch(e){}}
+  if(!drawn){x.save();rrect(x,cx0,cy0,cs,cs,20);x.fillStyle=pal.f2;x.fill();x.beginPath();x.arc(cx0+cs/2,cy0+cs/2,cs*.3,0,7);x.fillStyle=pal.v[0];x.fill();x.restore()}
+  x.fillStyle="#fff";x.textBaseline="alphabetic";
+  const mw=CW-PAD*2-cs-28;
+  fitFont(x,s.title||"Sin título",mw,46,32,700,D);x.fillText(fitTxt(x,s.title||"Sin título",mw),cx0+cs+28,cy0+52);
+  x.font=`600 34px ${F}`;x.globalAlpha=.8;x.fillText(fitTxt(x,artistOf(s)||"",mw),cx0+cs+28,cy0+100);x.globalAlpha=1;
+  // Líneas
+  let y=cy0+headH+36+fz*.9;x.font=`800 ${fz}px ${D}`;
+  for(const r of rows){if(r){x.fillText(r,CX+PAD,y);y+=lh}else y+=Math.round(lh*.45)}
+  // Pie
+  const fy=CY+CH-PAD+6;x.beginPath();x.arc(CX+PAD+12,fy-12,12,0,7);x.fillStyle="#fff";x.globalAlpha=.9;x.fill();
+  x.font=`700 30px ${D}`;x.fillText("Mi música",CX+PAD+36,fy);x.globalAlpha=1;
+  const blob2=await new Promise(r=>c.toBlob(r,"image/jpeg",.92));if(!blob2)return null;
+  const file=new File([blob2],`letra-${(s.title||"cancion").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"cancion"}.jpg`,{type:"image/jpeg"});
+  return {file,url:URL.createObjectURL(blob2)};
+}
+let LYIMG=null;
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(t.id==="lyrShare"){e.stopPropagation();lyrPickSheet();return}
+  if(d.lyk!=null){e.stopPropagation();const k=+d.lyk;
+    if(LYS.sel.has(k))LYS.sel.delete(k);else{if(LYS.sel.size>=5){toast("Puedes elegir hasta 5 líneas");return}LYS.sel.add(k)}
+    t.classList.toggle("on",LYS.sel.has(k));t.setAttribute("aria-pressed",LYS.sel.has(k));const b=$("#lyMake");if(b)b.disabled=!LYS.sel.size;return}
+  if(t.id==="lyMake"){e.stopPropagation();const s=byId(LYS.id);if(!s)return;
+    const lines=[...LYS.sel].sort((a,b)=>a-b).map(k=>LYS.lines[k].t);
+    t.disabled=true;t.textContent="Creando…";
+    const r=await lyricsImage(s,lines).catch(()=>null);
+    if(!r){t.disabled=false;t.textContent="Crear imagen";toast("No se ha podido crear la imagen.");return}
+    if(LYIMG)URL.revokeObjectURL(LYIMG.url);LYIMG=r;closeSheet();
+    const can=!!(navigator.canShare&&navigator.canShare({files:[r.file]}));
+    showSheet(`<h3>Vista previa</h3><img class="lyprev" src="${r.url}" alt="Imagen con la letra de ${esc(s.title)}">${can?"":`<p style="color:var(--muted);font-size:14px;margin:0 0 8px">Mantén pulsada la imagen y elige «Guardar en Fotos» o «Compartir».</p>`}<div class="actions"><button class="btn ghost" id="lyBack">Cambiar líneas</button>${can?`<button class="btn" id="lyGo">Compartir</button>`:`<button class="btn" data-closesheet>Cerrar</button>`}</div>`);
+    return}
+  if(t.id==="lyBack"){e.stopPropagation();const sel=new Set(LYS.sel);closeSheet();lyrPickSheet();LYS.sel=sel;document.querySelectorAll(".lyl").forEach(b=>{const on=sel.has(+b.dataset.lyk);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});const m=$("#lyMake");if(m)m.disabled=!sel.size;return}
+  if(t.id==="lyGo"){e.stopPropagation();if(!LYIMG)return;try{await navigator.share({files:[LYIMG.file]})}catch(err){if(!err||err.name!=="AbortError")toast("No se ha podido compartir. Mantén pulsada la imagen para guardarla.")}return}
+},true);
 function fitFont(x,t,w,big,small,wt,fam){let z=big;x.font=`${wt} ${z}px ${fam}`;while(z>small&&x.measureText(t).width>w){z-=2;x.font=`${wt} ${z}px ${fam}`}return z}
 function wrap2(x,t,w){const ws=String(t||"").split(/\s+/);let a="";let i=0;for(;i<ws.length;i++){const n=a?a+" "+ws[i]:ws[i];if(x.measureText(n).width>w&&a)break;a=n}const b=ws.slice(i).join(" ");return b?[fitTxt(x,a,w),fitTxt(x,b,w)]:[fitTxt(x,a,w)]}
 function fitTxt(x,t,w){t=String(t||"");if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+"…").width>w)t=t.slice(0,-1);return t.trimEnd()+"…"}
