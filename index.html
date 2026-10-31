@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-17">
+<meta name="app-version" content="2026.10.31-19">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -521,6 +521,24 @@ main section{margin-bottom:32px}
 .frnow{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);margin-bottom:10px}
 .frnow .t{font-weight:600}.frnow .s{font-size:14px;color:var(--muted)}
 .pickrow svg{flex-shrink:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn>svg{flex-shrink:0}
+.songrow .favmark{width:13px;height:13px;margin:0 8px 0 0;vertical-align:0}
+.gen.hue{background:hsl(var(--h) 42% 89%)}
+.gen.hue .blob{background:hsl(var(--h) 36% 40%)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gen.hue{background:hsl(var(--h) 20% 21%)}:root:not([data-theme="light"]) .gen.hue .blob{background:hsl(var(--h) 42% 62%)}:root:not([data-theme="light"]) .gen.hue svg{color:#16141F!important}}
+:root[data-theme="dark"] .gen.hue{background:hsl(var(--h) 20% 21%)}
+:root[data-theme="dark"] .gen.hue .blob{background:hsl(var(--h) 42% 62%)}
+:root[data-theme="dark"] .gen.hue svg{color:#16141F!important}
+.frsec .sechead{margin-bottom:10px}
+.frstories{gap:12px}
+.frstory{width:72px;flex-shrink:0;background:none;border:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--ink)}
+.frstory .frav{padding:3px;border:2px solid var(--line);border-radius:50%}
+.frstory.live .frav{border-color:var(--accent)}
+.frstory .n{font-size:13px;font-weight:600;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frstory .w{font-size:12px;color:var(--accent);max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-4px}
+.frstory.add .frav{border-style:dashed}
+.addav{width:60px;height:60px;display:flex!important;align-items:center;justify-content:center;border-radius:50%;background:var(--surface)!important;color:var(--muted)}
 .frreq{padding:6px 16px 8px;border-radius:20px;background:var(--surface)}
 .frreq h2{font-size:15px;font-weight:600;margin:10px 0 2px}
 .frreq .avatar{background:var(--bg)}
@@ -528,6 +546,41 @@ main section{margin-bottom:32px}
 nav.tabs button[data-tab]{position:relative}
 nav.tabs button.frdot::after{content:"";position:absolute;top:6px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 2px var(--bg)}
 .rcode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;font-weight:600;letter-spacing:1px;text-align:center;padding:18px 12px;border-radius:16px;background:var(--surface);margin-bottom:8px;user-select:all;-webkit-user-select:all;overflow-wrap:anywhere}
+
+/* ---------- Colores: estados de ánimo, grises a juego con el color y más colores ---------- */
+:root{--mo-animo-bg:#FFE08A;--mo-animo-fg:#C2410C;--mo-bajon-bg:#2B2E5C;--mo-bajon-fg:#B9C2FF;--mo-calma-bg:#D7E8F7;--mo-calma-fg:#2F6FA8;--mo-energia-bg:#FF7A3D;--mo-energia-fg:#FFF4EC;--mo-foco-bg:#DDE6DA;--mo-foco-fg:#3E5B45;--mo-amor-bg:#F9D3DE;--mo-amor-fg:#C2185B}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--mo-animo-bg:#3A2E10;--mo-animo-fg:#FFC94D;--mo-bajon-bg:#1B1D3A;--mo-bajon-fg:#9AA6F2;--mo-calma-bg:#14273A;--mo-calma-fg:#8CC0EC;--mo-energia-bg:#4A1F0E;--mo-energia-fg:#FF9A5C;--mo-foco-bg:#1C2A20;--mo-foco-fg:#A9C9AE;--mo-amor-bg:#3D1626;--mo-amor-fg:#FF8FB3}}
+:root[data-theme="dark"]{--mo-animo-bg:#3A2E10;--mo-animo-fg:#FFC94D;--mo-bajon-bg:#1B1D3A;--mo-bajon-fg:#9AA6F2;--mo-calma-bg:#14273A;--mo-calma-fg:#8CC0EC;--mo-energia-bg:#4A1F0E;--mo-energia-fg:#FF9A5C;--mo-foco-bg:#1C2A20;--mo-foco-fg:#A9C9AE;--mo-amor-bg:#3D1626;--mo-amor-fg:#FF8FB3}
+:root[data-theme="light"]:not([data-accent]){--accent:#2F6B4F;--tint:#DCEBE2;--on-accent:#FFFFFF;--ink:#141A17;--muted:#66706A;--surface:#F2F5F3;--line:#E3E9E5}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]):not([data-accent]){--accent:#2F6B4F;--tint:#DCEBE2;--on-accent:#FFFFFF;--ink:#141A17;--muted:#66706A;--surface:#F2F5F3;--line:#E3E9E5}}
+:root[data-theme="dark"]:not([data-accent]){--accent:#6FBF93;--tint:#1F3A2C;--on-accent:#0E1F16;--bg:#101312;--ink:#EFF3F0;--muted:#A0ABA4;--surface:#1B201D;--line:#29302C}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]):not([data-accent]){--accent:#6FBF93;--tint:#1F3A2C;--on-accent:#0E1F16;--bg:#101312;--ink:#EFF3F0;--muted:#A0ABA4;--surface:#1B201D;--line:#29302C}}
+:root[data-theme="light"][data-accent="azul"]{--accent:#1F4FD8;--tint:#DCE5FF;--on-accent:#FFFFFF;--ink:#141722;--muted:#666B7C;--surface:#F2F4F8;--line:#E3E7EF}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"])[data-accent="azul"]{--accent:#1F4FD8;--tint:#DCE5FF;--on-accent:#FFFFFF;--ink:#141722;--muted:#666B7C;--surface:#F2F4F8;--line:#E3E7EF}}
+:root[data-theme="dark"][data-accent="azul"]{--accent:#8EA8FF;--tint:#1E2A4A;--on-accent:#0B1430;--bg:#101218;--ink:#EFF1F6;--muted:#A0A6B6;--surface:#1B1E27;--line:#292D39}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"])[data-accent="azul"]{--accent:#8EA8FF;--tint:#1E2A4A;--on-accent:#0B1430;--bg:#101218;--ink:#EFF1F6;--muted:#A0A6B6;--surface:#1B1E27;--line:#292D39}}
+:root[data-theme="light"][data-accent="petroleo"]{--accent:#0F6E7A;--tint:#D6ECEE;--on-accent:#FFFFFF;--ink:#131B1D;--muted:#64716F;--surface:#F1F5F6;--line:#E1EAEB}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"])[data-accent="petroleo"]{--accent:#0F6E7A;--tint:#D6ECEE;--on-accent:#FFFFFF;--ink:#131B1D;--muted:#64716F;--surface:#F1F5F6;--line:#E1EAEB}}
+:root[data-theme="dark"][data-accent="petroleo"]{--accent:#5FC3CF;--tint:#163A3F;--on-accent:#06242A;--bg:#0F1415;--ink:#EEF4F4;--muted:#9DABAD;--surface:#1A2123;--line:#283033}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"])[data-accent="petroleo"]{--accent:#5FC3CF;--tint:#163A3F;--on-accent:#06242A;--bg:#0F1415;--ink:#EEF4F4;--muted:#9DABAD;--surface:#1A2123;--line:#283033}}
+:root[data-theme="light"][data-accent="mono"]{--accent:#161616;--tint:#E6E6E8;--on-accent:#FFFFFF;--ink:#161616;--muted:#6B6B72;--surface:#F4F4F5;--line:#E6E6E8}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"])[data-accent="mono"]{--accent:#161616;--tint:#E6E6E8;--on-accent:#FFFFFF;--ink:#161616;--muted:#6B6B72;--surface:#F4F4F5;--line:#E6E6E8}}
+:root[data-theme="dark"][data-accent="mono"]{--accent:#F2F2F3;--tint:#2C2C2F;--on-accent:#121212;--bg:#121212;--ink:#F2F2F3;--muted:#A5A5AC;--surface:#1E1E20;--line:#2C2C2F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"])[data-accent="mono"]{--accent:#F2F2F3;--tint:#2C2C2F;--on-accent:#121212;--bg:#121212;--ink:#F2F2F3;--muted:#A5A5AC;--surface:#1E1E20;--line:#2C2C2F}}
+:root[data-theme="light"][data-accent="morado"]{--accent:#6A3FC2;--tint:#E9E0FA;--on-accent:#FFFFFF;--ink:#18141F;--muted:#6D6878;--surface:#F5F3F8;--line:#E8E4EF}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"])[data-accent="morado"]{--accent:#6A3FC2;--tint:#E9E0FA;--on-accent:#FFFFFF;--ink:#18141F;--muted:#6D6878;--surface:#F5F3F8;--line:#E8E4EF}}
+:root[data-theme="dark"][data-accent="morado"]{--accent:#B79BFF;--tint:#2A2145;--on-accent:#170E2E;--bg:#131118;--ink:#F2F0F6;--muted:#A8A2B5;--surface:#1F1C26;--line:#2D2936}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"])[data-accent="morado"]{--accent:#B79BFF;--tint:#2A2145;--on-accent:#170E2E;--bg:#131118;--ink:#F2F0F6;--muted:#A8A2B5;--surface:#1F1C26;--line:#2D2936}}
+:root[data-theme="light"][data-accent="coral"]{--accent:#C4432C;--tint:#FBE3DD;--on-accent:#FFFFFF;--ink:#1C1615;--muted:#75696A;--surface:#F8F4F3;--line:#EEE6E4;--coral:#C4432C}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"])[data-accent="coral"]{--accent:#C4432C;--tint:#FBE3DD;--on-accent:#FFFFFF;--ink:#1C1615;--muted:#75696A;--surface:#F8F4F3;--line:#EEE6E4;--coral:#C4432C}}
+:root[data-theme="dark"][data-accent="coral"]{--accent:#FF8C70;--tint:#3A221D;--on-accent:#2A0E07;--bg:#151211;--ink:#F6F1F0;--muted:#B1A6A3;--surface:#221D1C;--line:#322B29;--coral:#FF8C70}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"])[data-accent="coral"]{--accent:#FF8C70;--tint:#3A221D;--on-accent:#2A0E07;--bg:#151211;--ink:#F6F1F0;--muted:#B1A6A3;--surface:#221D1C;--line:#322B29;--coral:#FF8C70}}
+:root[data-theme="light"][data-accent="mostaza"]{--accent:#8F6400;--tint:#F6E9C4;--on-accent:#FFFFFF;--ink:#1B1812;--muted:#726B5E;--surface:#F7F5EF;--line:#ECE7DC}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"])[data-accent="mostaza"]{--accent:#8F6400;--tint:#F6E9C4;--on-accent:#FFFFFF;--ink:#1B1812;--muted:#726B5E;--surface:#F7F5EF;--line:#ECE7DC}}
+:root[data-theme="dark"][data-accent="mostaza"]{--accent:#E8B931;--tint:#3A2E0E;--on-accent:#261C00;--bg:#14130F;--ink:#F5F2EA;--muted:#ADA796;--surface:#211F19;--line:#312E25}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"])[data-accent="mostaza"]{--accent:#E8B931;--tint:#3A2E0E;--on-accent:#261C00;--bg:#14130F;--ink:#F5F2EA;--muted:#ADA796;--surface:#211F19;--line:#312E25}}
+.reddot{background:var(--coral)}
+nav.tabs button.frdot::after{background:var(--coral)}
 </style>
 </head>
 <body>
@@ -721,11 +774,12 @@ function applyFlow(){
 
 /* ---------- Portadas generadas ---------- */
 function hash(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+const GEN_HUES=[150,205,262,330,12,32,186,95,228,350];
 function art(song,size,radius){
   const r=radius??Math.max(8,Math.round(size*0.12));
   if(song&&song.coverId){const pc=PAL.get(song.coverId);return `<span class="cover" aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${r}px;background:${pc?pc.avg:"var(--surface)"};display:block"><img src="${bu(song.coverId)}" alt="" ${SEEN.has(song.coverId)?"":'loading="lazy"'} style="width:100%;height:100%;object-fit:cover;display:block"></span>`}
-  const ic=Math.round(size*0.3), delay=-(hash(song?song.id:"x")%9000)/1000;
-  return `<span class="cover gen" aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${r}px;background:var(--tint);display:flex;align-items:center;justify-content:center"><span class="blob" style="animation-delay:${delay}s"></span><svg width="${ic}" height="${ic}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="position:relative;color:var(--on-accent)"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span>`;
+  const ic=Math.round(size*0.3), delay=-(hash(song?song.id:"x")%9000)/1000, gh=GEN_HUES[hash(song?(song.album||song.title||song.id):"x")%GEN_HUES.length];
+  return `<span class="cover gen hue" aria-hidden="true" style="--h:${gh};width:${size}px;height:${size}px;border-radius:${r}px;display:flex;align-items:center;justify-content:center"><span class="blob" style="animation-delay:${delay}s"></span><svg width="${ic}" height="${ic}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="position:relative;color:var(--on-accent)"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span>`;
 }
 function listArt(p,size,radius){
   const first=(p.songIds||[]).map(byId).find(x=>x&&x.coverId);
@@ -834,7 +888,7 @@ function renderAuto(){
 }
 function songRow(s,ctx,right){
   const cur=current(), playing=cur&&cur.id===s.id;
-  return `<div class="songrow"><button class="row${playing?" playing":""}" data-play="${esc(s.id)}" data-ctx="${esc(ctx)}">${art(s,44,8)}<span class="meta"><span class="t">${s.fav?FAVMARK:""}${esc(s.title)}</span><span class="s">${ctx==="lyr"&&LYRSNIP.has(s.id)?"«"+esc(LYRSNIP.get(s.id))+"»":sub(s)}</span></span><span class="s" style="font-size:13px;color:var(--muted);flex-shrink:0">${right!=null?esc(right):s.duration?fmt(s.duration):""}</span></button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de ${esc(s.title)}">${ICON.dots}</button></div>`;
+  return `<div class="songrow"><button class="row${playing?" playing":""}" data-play="${esc(s.id)}" data-ctx="${esc(ctx)}">${art(s,44,8)}<span class="meta"><span class="t">${esc(s.title)}</span><span class="s">${ctx==="lyr"&&LYRSNIP.has(s.id)?"«"+esc(LYRSNIP.get(s.id))+"»":sub(s)}</span></span><span class="s" style="font-size:13px;color:var(--muted);flex-shrink:0;display:flex;align-items:center">${s.fav?FAVMARK:""}${right!=null?esc(right):s.duration?fmt(s.duration):""}</span></button><button class="iconbtn plain" data-menu="${esc(s.id)}" aria-label="Opciones de ${esc(s.title)}">${ICON.dots}</button></div>`;
 }
 const norm=x=>String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
 const artistOf=s=>s.artist||"Artista desconocido";
@@ -905,10 +959,11 @@ function render(){
       const r=filtered();
       const lh=lyricHits();if(r.length||!lh.length)h+=`<section><div class="sechead"><h2>Resultados</h2></div>${r.length?r.map(s=>songRow(s,"search")).join(""):`<p style="color:var(--muted)">No hay canciones que coincidan con «${esc(S.q)}».</p>`}</section>`;h+=lyrSection(lh);
     } else if(!S.songs.length){
+      if(typeof AMI!=="undefined"&&AMI)h+=friendsSection()+requestsCard();
       h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en este dispositivo.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
-      h+=(typeof AMI!=="undefined"&&AMI?`<div style="height:24px"></div>`+requestsCard()+recoveryCard()+friendsSection():"");
+      if(typeof AMI!=="undefined"&&AMI)h+=`<div style="height:24px"></div>`+recoveryCard();
     } else {
-      h+=bdayCard();h+=nowCard();h+=(typeof AMI!=="undefined"&&AMI?requestsCard()+recoveryCard()+friendsSection():"");
+      h+=bdayCard();if(typeof AMI!=="undefined"&&AMI)h+=friendsSection()+requestsCard();h+=nowCard();if(typeof AMI!=="undefined"&&AMI)h+=recoveryCard();
       const rec=S.recent.map(byId).filter(Boolean).slice(0,10);
       if(rec.length) h+=`<section><div class="sechead"><h2>Escuchado hace poco</h2></div><div class="recent">${rec.map(s=>`<button class="card" data-play="${esc(s.id)}" data-ctx="recent">${art(s,132,16)}<span><span class="t" style="display:block">${esc(s.title)}</span><span class="s" style="display:block">${esc(s.artist||"Artista desconocido")}</span></span></button>`).join("")}</div></section>`;
       h+=moodSection();
@@ -931,7 +986,7 @@ function render(){
     } else if(!S.songs.length) h+=`<div class="empty"><h3>Aún no hay canciones</h3><p style="margin:0 0 16px">Sube tus archivos de audio para empezar.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
     else{
       h+=`<div style="display:flex;gap:10px;margin:-10px 0 14px"><button class="btn" data-playall="all">${ICON.play} <span style="vertical-align:middle">Reproducir</span></button><button class="btn ghost" data-shuffleall="all">Aleatorio</button></div>`;
-      h+=`<p class="status" style="margin:0 0 6px">${S.songs.length} ${S.songs.length===1?"canción":"canciones"}${S.usage?` · Espacio usado: ${mb(S.usage.bytes)} de ${mb(S.usage.maxBytes)} (máx. ${S.usage.maxFiles} archivos)`:""}</p>`;
+      h+=`<p class="status" style="margin:0 0 6px">${S.songs.length} ${S.songs.length===1?"canción":"canciones"}</p>`;
       {const lh=S.q.trim()?lyricHits():[];h+=r.map(s=>songRow(s,"all")).join("")||(lh.length?"":`<p style="color:var(--muted)">No hay canciones que coincidan.</p>`);h+=lyrSection(lh)}
     }
   } else {
@@ -946,7 +1001,7 @@ function seg(key,opts){return `<div class="mini-seg" role="group">${opts.map(([v
 function sw(key,label){return `<button class="switch" role="switch" data-cfgsw="${key}" aria-checked="${!!CFG[key]}" aria-label="${esc(label)}"></button>`}
 function renderSettings(){
   const u=S.usage, pct=u&&u.maxBytes?Math.min(100,u.bytes/u.maxBytes*100):0;
-  const accents=[["verde","#2F6B4F","Verde bosque"],["azul","#1F4FD8","Azul tinta"],["petroleo","#0F6E7A","Azul petróleo"],["mono","#16141F","Monocromo"]];
+  const accents=[["verde","#2F6B4F","Verde bosque"],["azul","#1F4FD8","Azul tinta"],["petroleo","#0F6E7A","Azul petróleo"],["morado","#6A3FC2","Morado"],["coral","#C4432C","Coral"],["mostaza","#B8860B","Mostaza"],["mono","#161616","Monocromo"]];
   return `<div class="top"><h1>Ajustes</h1></div>
   <div class="setgroup"><h2>Perfil</h2>
     <button class="setrow setbtn" id="editProfile"><span class="lab withav">${avatarHTML(PROFILE&&PROFILE.photo,44)}<span style="display:flex;flex-direction:column">${PROFILE&&PROFILE.name?esc(PROFILE.name):"Sin nombre"}<small>${bdayTxt()}</small></span></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
@@ -2306,7 +2361,7 @@ function moodSongs(k){if(k==="bucle")return S.loop.map(x=>byId(x.id)).filter(Boo
 function moodNow(){const h=new Date().getHours();return h<7?"calma":h<11?"animo":h<17?"foco":h<21?"energia":"calma"}
 function moodArt(k,size,r){return moodCover(k,size,r)}
 /* ----- Carátulas animadas de las carpetas (figuras geométricas) ----- */
-const COVPAL={bucle:["var(--tint)","var(--ink)"],animo:["var(--accent)","var(--on-accent)"],bajon:["var(--ink)","var(--bg)"],calma:["var(--tint)","var(--accent)"],energia:["var(--ink)","var(--accent)"],foco:["var(--surface)","var(--ink)"],amor:["var(--accent)","var(--tint)"]};
+const COVPAL={bucle:["var(--tint)","var(--ink)"],animo:["var(--mo-animo-bg)","var(--mo-animo-fg)"],bajon:["var(--mo-bajon-bg)","var(--mo-bajon-fg)"],calma:["var(--mo-calma-bg)","var(--mo-calma-fg)"],energia:["var(--mo-energia-bg)","var(--mo-energia-fg)"],foco:["var(--mo-foco-bg)","var(--mo-foco-fg)"],amor:["var(--mo-amor-bg)","var(--mo-amor-fg)"]};
 function moodCover(k,size,r){
   const R=r??Math.round(size*.12), [bg,fg]=COVPAL[k]||COVPAL.calma;
   let g="";
@@ -2440,7 +2495,7 @@ function moodSection(){
   const todo=S.songs.filter(needsAn), any=S.songs.some(s=>moodsOf(s).length);
   let h=`<section><div class="sechead"><h2>¿Cómo te sientes?</h2></div><div class="recent">${[LOOP,...MOODS].map(m=>{const n=moodSongs(m.k).length;return `<button class="card" data-mood="${m.k}">${moodCover(m.k,132,18)}<span><span class="t" style="display:block">${esc(m.name)}</span><span class="s" style="display:block">${n?n+(n===1?" canción":" canciones"):"Vacía"}</span></span></button>`}).join("")}</div>`;
   if(S.anBusy)h+=`<div class="foldercall" role="status"><p id="anStatus">${anText()}</p><button class="btn ghost" data-anstop>Parar</button></div>`;
-  else if(!any&&todo.length){const mbt=todo.reduce((t,s)=>t+(s.size||0),0);h+=`<div class="foldercall"><p>El dispositivo escucha tus canciones y las reparte en las carpetas. Tiene que descargarlas una vez${mbt?`, unos ${mb(mbt)}`:""}. Mejor con wifi.</p><button class="btn" data-analyze>Analizar</button></div>`}
+  else if(!any&&todo.length){const mbt=todo.reduce((t,s)=>t+(s.size||0),0);h+=`<div class="foldercall"><p>Reparte tus canciones por cómo suenan.${mbt?` Descarga unos ${mb(mbt)}, mejor con wifi.`:" Mejor con wifi."}</p><button class="btn" data-analyze>Analizar</button></div>`}
   else if(todo.length)h+=`<button class="link" data-analyze style="margin-top:2px">Analizar ${todo.length===1?"1 canción":todo.length+" canciones"} sin carpeta</button>`;
   return h+`</section>`;
 }
@@ -3672,15 +3727,14 @@ function requestsCard(){
 const FR_EQ=`<span class="freq" aria-hidden="true"><i></i><i></i><i></i></span>`;
 /* Sección de Inicio */
 function friendsSection(){
-  if(!AMI.ok)return "";
+  if(!AMI||!AMI.ok)return "";
   if(!AMI.me){
     if(frHasSession()||AMI.hide)return "";
     return `<section><div class="frcall"><span class="frdots" aria-hidden="true">${avatarHTML("",40,"")}${avatarHTML("",40,"")}</span><span class="meta"><span class="t">Escucha con tus amigos</span><span class="s">Mira qué están escuchando ahora mismo.</span></span><span class="acts"><button class="btn" data-fropen>Empezar</button><button class="link" id="frHide">Ahora no</button></span></div></section>`;
   }
   const list=frSorted(), inc=AMI.incoming.length;
-  let h=`<section><div class="sechead"><h2>Tus amigos</h2><button class="link" data-fropen>${inc?`<span class="reddot" aria-hidden="true"></span>Solicitudes (${inc})`:"Ver todos"}</button></div>`;
-  if(!list.length)return h+`<button class="row" data-fropen><span class="cover" style="width:44px;height:44px;border:1px dashed var(--line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);border-radius:22px">${ICON.plus}</span><span class="meta"><span class="t">Añade a tus amigos</span><span class="s">Búscalos por su nombre de usuario</span></span></button></section>`;
-  return h+`<div class="recent">${list.map(f=>`<button class="card frcard${f.st.live?" live":""}" data-friend="${esc(f.id)}"><span class="frav">${avatarHTML(frPhoto(f.id),72,f.username)}${f.st.live?FR_EQ:""}</span><span><span class="t" style="display:block">${esc(f.username)}</span><span class="s" style="display:block">${f.st.song?esc(f.st.song.title):"—"}</span><span class="s w" style="display:block">${esc(f.st.live?"Ahora":f.st.line.replace(/^Escuchó /,""))}</span></span></button>`).join("")}</div></section>`;
+  const add=`<button class="frstory add" data-fropen aria-label="Añadir amigos"><span class="frav"><span class="avatar addav">${ICON.plus}</span></span><span class="n">Añadir</span></button>`;
+  return `<section class="frsec"><div class="sechead"><h2>Amigos</h2><button class="link" data-fropen>${inc?`<span class="reddot" aria-hidden="true"></span>Solicitudes (${inc})`:"Ver todos"}</button></div><div class="recent frstories">${list.map(f=>`<button class="frstory${f.st.live?" live":""}" data-friend="${esc(f.id)}" aria-label="${esc(f.username)}${f.st.live?", escuchando "+esc(f.st.song.title):""}"><span class="frav">${avatarHTML(frPhoto(f.id),60,f.username)}${f.st.live?FR_EQ:""}</span><span class="n">${esc(f.username)}</span>${f.st.live?`<span class="w">${esc(f.st.song.title)}</span>`:""}</button>`).join("")}${add}</div></section>`;
 }
 /* Página de amigos */
 function renderFriends(){
