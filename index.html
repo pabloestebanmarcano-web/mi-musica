@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-10">
+<meta name="app-version" content="2026.10.31-12">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -351,6 +351,17 @@ main section{margin-bottom:32px}
 .ws-bars{display:flex;gap:4px;position:relative;z-index:2}
 .ws-bars i{flex:1;height:3px;border-radius:2px;background:currentColor;opacity:.25}
 .ws-bars i.on{opacity:1}
+.ws-bars i{position:relative;overflow:hidden}
+.ws-bars i.cur{opacity:1;background:color-mix(in srgb,currentColor 28%,transparent)}
+.ws-bars i.cur::after{content:"";position:absolute;inset:0;background:currentColor;transform-origin:left;transform:scaleX(0);animation:wsFill 15s linear forwards}
+.ws.hold .ws-bars i.cur::after,.ws.hold .ws-in *{animation-play-state:paused}
+@keyframes wsFill{to{transform:scaleX(1)}}
+.ws-in>*{animation:wsIn .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--s,0)*.3s)}
+.ws-in .ws-item{animation:wsIn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.7s + var(--d,0)*.55s)}
+.ws-type .w{display:inline-block;white-space:nowrap}
+.ws-type .ch{display:inline-block;opacity:0;transform:translateY(.35em);animation:wsCh .35s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.45s + var(--c,0)*.055s)}
+@keyframes wsCh{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.ws-in>*,.ws-in .ws-item,.ws-type .ch{animation:none;opacity:1;transform:none}}
 .ws-top{display:flex;justify-content:space-between;align-items:center;margin-top:6px;position:relative;z-index:2;font-size:13px;font-weight:600;opacity:.85}
 .ws-x{width:44px;height:44px;border:none;background:none;color:inherit;display:flex;align-items:center;justify-content:center;margin-right:-12px}
 .ws-body{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1;min-height:0;overflow-y:auto;scrollbar-width:none}
@@ -482,6 +493,34 @@ main section{margin-bottom:32px}
 .nowrow:nth-child(-n+3) .n{color:var(--coral)}
 .swbg.r.go{background:var(--coral);color:#fff}
 .bday{background:linear-gradient(120deg,var(--tint),var(--coral-tint))}
+/* ---------- Amigos ---------- */
+.frcall{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:var(--surface);flex-wrap:wrap}
+.frcall .frdots{display:flex}.frcall .frdots .avatar+.avatar{margin-left:-14px;box-shadow:0 0 0 3px var(--surface)}
+.frcall .meta{flex:1;min-width:150px;display:flex;flex-direction:column;gap:2px}
+.frcall .t{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:18px;font-weight:700;letter-spacing:-.2px}
+.frcall .s{font-size:13px;color:var(--muted)}
+.frcall .acts{display:flex;align-items:center;gap:12px}.frcall .btn{height:40px;padding:0 16px;font-size:14px}
+.frcard{width:96px;align-items:center;text-align:center}
+.frcard .t,.frcard .s{text-align:center}.frcard .s.w{font-size:12px}
+.frcard.live .s.w{color:var(--accent);font-weight:600}
+.frav{position:relative;display:inline-flex;flex-shrink:0;border-radius:50%}
+.frcard .frav{padding:3px;border:2px solid transparent}
+.frcard.live .frav{border-color:var(--accent)}
+.freq{position:absolute;right:-2px;bottom:-2px;display:flex;align-items:flex-end;gap:2px;height:22px;padding:5px 5px 4px;border-radius:11px;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+.frav.sm .freq{height:18px;padding:4px;right:-4px;bottom:-4px}
+.freq i{display:block;width:3px;height:100%;border-radius:2px;background:var(--on-accent);transform-origin:bottom;animation:freq 1s ease-in-out infinite}
+.freq i:nth-child(2){animation-delay:-.35s}.freq i:nth-child(3){animation-delay:-.7s}
+@keyframes freq{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@media (prefers-reduced-motion: reduce){.freq i{animation:none;transform:scaleY(.7)}}
+.frrow{display:flex;align-items:center;gap:14px;min-height:58px;padding:6px 0}
+.frrow .meta{flex:1;min-width:0;display:flex;flex-direction:column}
+.frrow .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frrow .s{font-size:13px;color:var(--muted)}
+.btn.sm{height:36px;padding:0 14px;font-size:14px;flex-shrink:0}
+.frhead{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.frnow{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);margin-bottom:10px}
+.frnow .t{font-weight:600}.frnow .s{font-size:14px;color:var(--muted)}
+.pickrow svg{flex-shrink:0}
 </style>
 </head>
 <body>
@@ -843,6 +882,7 @@ function render(){
   if(S.tab==="ajustes"){setHTML(m,S.setView==="manage"?renderManage():S.setView==="dups"?renderDups():renderSettings());renderMini();return}
   if(S.tab==="listas"&&S.autoOpen){setHTML(m,renderAuto());renderMini();return}
   if(S.tab==="listas"&&S.openList){h+=renderList();setHTML(m,h);renderMini();return}
+  if(S.tab==="inicio"&&S.friendsOpen){setHTML(m,renderFriends());renderMini();return}
   if(S.tab==="inicio"&&S.wrapPage&&S.db){setHTML(m,renderWrapPage());renderMini();return}
   if(S.tab==="inicio"&&S.moodOpen&&S.db&&S.ready){setHTML(m,renderMoodPage());renderMini();return}
   if(S.tab==="canciones"&&S.group){const gh=renderGroup();if(gh){setHTML(m,gh);renderMini();return}}
@@ -859,7 +899,7 @@ function render(){
     } else if(!S.songs.length){
       h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en este dispositivo.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
     } else {
-      h+=bdayCard();h+=nowCard();
+      h+=bdayCard();h+=nowCard();h+=(typeof AMI!=="undefined"&&AMI?friendsSection():"");
       const rec=S.recent.map(byId).filter(Boolean).slice(0,10);
       if(rec.length) h+=`<section><div class="sechead"><h2>Escuchado hace poco</h2></div><div class="recent">${rec.map(s=>`<button class="card" data-play="${esc(s.id)}" data-ctx="recent">${art(s,132,16)}<span><span class="t" style="display:block">${esc(s.title)}</span><span class="s" style="display:block">${esc(s.artist||"Artista desconocido")}</span></span></button>`).join("")}</div></section>`;
       h+=moodSection();
@@ -2590,7 +2630,7 @@ function pickPhoto(cb){let inp=$("#photoIn");if(!inp){inp=document.createElement
       c.getContext("2d").drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,320,320);URL.revokeObjectURL(url);
       cb(c.toDataURL("image/jpeg",.85))}catch(e){toast("No se ha podido abrir esa imagen.")}};
   inp.click()}
-function profileSheet(){pPhoto=PROFILE&&PROFILE.photo||"";showSheet(`<h3>Tu perfil</h3><div class="pfhead"><span id="pAv">${avatarHTML(pPhoto,96)}</span><div class="row2"><button class="btn ghost" id="pPhoto">${pPhoto?"Cambiar foto":"Añadir foto"}</button>${pPhoto?`<button class="btn ghost" id="pNoPhoto">Quitar</button>`:""}</div></div><div class="field"><label for="pN">Nombre</label><input id="pN" maxlength="40" value="${esc(PROFILE&&PROFILE.name||"")}" placeholder="Tu nombre"></div><div class="field"><label for="pD">Cumpleaños</label><div style="display:grid;grid-template-columns:1fr 2fr;gap:10px"><select id="pD" aria-label="Día">${dayOpts(PROFILE&&PROFILE.day)}</select><select id="pM" aria-label="Mes">${monthOpts(PROFILE&&PROFILE.month)}</select></div></div><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="saveProfile">Guardar cambios</button></div>`)}
+function profileSheet(){pPhoto=PROFILE&&PROFILE.photo||"";showSheet(`<h3>Tu perfil</h3><div class="pfhead"><span id="pAv">${avatarHTML(pPhoto,96)}</span><div class="row2"><button class="btn ghost" id="pPhoto">${pPhoto?"Cambiar foto":"Añadir foto"}</button>${pPhoto?`<button class="btn ghost" id="pNoPhoto">Quitar</button>`:""}</div></div><div class="field"><label for="pN">Nombre</label><input id="pN" maxlength="40" value="${esc(PROFILE&&PROFILE.name||"")}" placeholder="Tu nombre"></div><div class="field"><label for="pD">Cumpleaños</label><div style="display:grid;grid-template-columns:1fr 2fr;gap:10px"><select id="pD" aria-label="Día">${dayOpts(PROFILE&&PROFILE.day)}</select><select id="pM" aria-label="Mes">${monthOpts(PROFILE&&PROFILE.month)}</select></div></div><button class="pickrow" id="frOpen" style="margin-bottom:6px"><span style="display:flex;flex-direction:column"><span style="font-weight:600">Amigos</span><span style="font-size:13px;color:var(--muted)">Mira qué están escuchando</span></span></button><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="saveProfile">Guardar cambios</button></div>`)}
 function refreshPfHead(){const a=$("#pAv");if(a)a.innerHTML=avatarHTML(pPhoto,96,($("#pN")||{}).value||"");const r=document.querySelector(".pfhead .row2");if(r)r.innerHTML=`<button class="btn ghost" id="pPhoto">${pPhoto?"Cambiar foto":"Añadir foto"}</button>${pPhoto?`<button class="btn ghost" id="pNoPhoto">Quitar</button>`:""}`}
 /* ---------- Deshacer al borrar ---------- */
 function toastUndo(msg,onUndo,onExpire,ms){
@@ -2884,7 +2924,7 @@ document.addEventListener("click",async e=>{
   if(t.closest("#dock nav.tabs")&&$("#dock").classList.contains("compact")){setDock(false);return}
   if(t.id==="dockSearch"){S.tab="canciones";S.openList=null;S.group=null;S.setView=null;render();$("#main").scrollTop=0;setDock(false);const q=$("#q");if(q)q.focus();return}
   if(t.id==="miniNext"){next(false);return}
-  if(d.tab){S.wrapPage=false;S.moodOpen=null;S.autoOpen=null;S.tab=d.tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0;return}
+  if(d.tab){S.wrapPage=false;S.moodOpen=null;S.friendsOpen=false;S.autoOpen=null;S.tab=d.tab;S.openList=null;S.group=null;S.setView=null;S.q="";render();$("#main").scrollTop=0;return}
   if(t.id==="nowReload"||t.id==="nowReload2"){loadNow(true);return}
   if(t.id==="fillMeta"){fillLibrary();return}
   if(t.id==="editProfile"||t.id==="openProfile"){profileSheet();return}
@@ -3174,15 +3214,15 @@ function buildSlides(st,P){
   const hours=min>=120?`Eso son unas ${fmtN(min/60)} horas. `:"";
   sl.push({k:"b",html:`<p class="ws-lead">Has escuchado</p><p class="ws-big" data-count="${min}">${fmtN(min)}</p><p class="ws-h" style="margin:10px 0 0">${min===1?"minuto":"minutos"} de música</p><p class="ws-p">${hours}${st.nDays>1&&st.topDay?`El día que más escuchaste fue el ${dayTxt(st.topDay[0])}, con ${hm(st.topDay[1])}.`:""}</p>`});
   const sz=Math.min(260,Math.max(160,innerWidth-48),Math.round(innerHeight*0.34));
-  sl.push({k:"c",cov:true,html:`<p class="ws-lead">Tu canción ${esc(P.de)}</p><div class="ws-art">${art(tv,sz,22)}</div><h2 class="ws-h" style="margin-bottom:6px">${esc(tv.title)}</h2><p style="font-size:17px;margin:0;opacity:.75">${esc(tv.artist||"Artista desconocido")}</p><p class="ws-p">La pusiste ${top.n} ${top.n===1?"vez":"veces"}, ${hm(top.d)} en total.</p>`});
+  sl.push({k:"c",cov:true,music:top&&top.id,html:`<p class="ws-lead">Tu canción ${esc(P.de)}</p><div class="ws-art">${art(tv,sz,22)}</div><h2 class="ws-h ws-type" style="margin-bottom:6px">${esc(tv.title)}</h2><p style="font-size:17px;margin:0;opacity:.75">${esc(tv.artist||"Artista desconocido")}</p><p class="ws-p">La pusiste ${top.n} ${top.n===1?"vez":"veces"}, ${hm(top.d)} en total.</p>`});
   if(st.songs.length>=3){
     const L=st.songs.slice(0,5);
-    sl.push({k:"b",html:`<h2 class="ws-h">Tus canciones más escuchadas</h2><ol class="ws-rank">${L.map((x,i)=>{const v=songView(x);return `<li><span class="n">${i+1}</span>${art(v,52,10)}<span class="m"><span class="t">${esc(v.title)}</span><span class="s">${esc(v.artist||"Artista desconocido")}</span></span><span class="c">${x.n} ${x.n===1?"vez":"veces"}</span></li>`}).join("")}</ol>`});
+    sl.push({k:"b",music:top&&top.id,html:`<h2 class="ws-h">Tus canciones más escuchadas</h2><ol class="ws-rank">${L.map((x,i)=>{const v=songView(x);return `<li><span class="n">${i+1}</span>${art(v,52,10)}<span class="m"><span class="t">${esc(v.title)}</span><span class="s">${esc(v.artist||"Artista desconocido")}</span></span><span class="c">${x.n} ${x.n===1?"vez":"veces"}</span></li>`}).join("")}</ol>`});
   }
   const A=st.artists[0];
   if(A){
     const more=st.artists.slice(1,5);
-    sl.push({k:"a",html:`<p class="ws-lead">Tu artista ${esc(P.de)}</p><h2 class="ws-big mid">${esc(A.name)}</h2><p class="ws-p">${hm(A.d)} de su música, con ${A.songs.size} ${A.songs.size===1?"canción":"canciones distintas"}.</p>${more.length?`<ol class="ws-rank" style="margin-top:30px">${more.map((x,i)=>`<li><span class="n">${i+2}</span><span class="m"><span class="t">${esc(x.name)}</span></span><span class="c">${hm(x.d)}</span></li>`).join("")}</ol>`:""}`});
+    sl.push({k:"a",art:true,html:`<p class="ws-lead">Tu artista ${esc(P.de)}</p><h2 class="ws-big mid ws-type">${esc(A.name)}</h2><p class="ws-p">${hm(A.d)} de su música, con ${A.songs.size} ${A.songs.size===1?"canción":"canciones distintas"}.</p>${more.length?`<ol class="ws-rank" style="margin-top:30px">${more.map((x,i)=>`<li><span class="n">${i+2}</span><span class="m"><span class="t">${esc(x.name)}</span></span><span class="c">${hm(x.d)}</span></li>`).join("")}</ol>`:""}`});
   }
   if(st.plays>=3){
     const mx=Math.max(...st.hours)||1, hi=st.hours.indexOf(mx);
@@ -3202,12 +3242,53 @@ function buildSlides(st,P){
   if(st.plays>=3)sl.push({k:"c",html:`<div class="ws-facts">${facts.join("")}</div>`});
   const ts=st.songs.slice(0,3).map(songView), ta=st.artists.slice(0,3);
   sl.push({k:"a",last:true,html:`<p class="ws-lead">Tu Wrapped</p><h2 class="ws-h">${esc(P.title)}</h2><div class="ws-covers">${st.songs.slice(0,5).map(x=>art(songView(x),56,10)).join("")}</div><div class="ws-sum"><div><h3>Canciones</h3><ol class="withart">${ts.map(v=>`<li>${art(v,28,6)}<span>${esc(v.title)}</span></li>`).join("")}</ol></div><div><h3>Artistas</h3>${ta.length?`<ol>${ta.map(a=>`<li>${esc(a.name)}</li>`).join("")}</ol>`:`<p style="margin:0;opacity:.75">Sin datos de artista</p>`}</div><div><h3>Minutos</h3><p class="v" style="margin:0">${fmtN(min)}</p></div><div><h3>Tu momento</h3><p class="v" style="margin:0">${esc(cap(st.when.replace(/^(de|por) (la )?/,"")))}</p></div></div><div class="ws-acts"><button class="ws-btn" data-wshare>${ICON.share}Compartir</button><button class="ws-btn ghost" data-wplay>${ICON.play}Reproducir tu top</button><button class="ws-btn ghost" data-wrestart>Ver otra vez</button></div>`});
+  {/* Canciones de fondo: tu artista nº 1 suena en su pantalla y en la final (dos al azar, distintas si puede) */
+    const ids=A?[...A.songs].filter(id=>byId(id)):[],r=()=>ids[Math.random()*ids.length|0];
+    const p1=ids.length?r():(top&&top.id);let p2=ids.length?r():(top&&top.id);
+    for(let k=0;k<8&&ids.length>1&&p2===p1;k++)p2=r();
+    sl.forEach(s=>{if(s.art)s.music=p1;if(s.last)s.music=p2});}
   sl.forEach(s=>s.P=P); sl.top=st.songs.slice(0,25).map(x=>x.id); sl.st=st; sl.topSong=tv;
   return sl;
 }
 
 /* ---------- Wrapped: historia a pantalla completa ---------- */
 let WS=null;
+/* ---------- Wrapped: 15 s por pantalla, animaciones y música ---------- */
+const WS_MS=15000;
+function wsArm(){if(!WS)return;clearTimeout(WS.tm);WS.held=false;WS.left=WS_MS;WS.t0=Date.now();
+  WS.tm=WS.i<WS.slides.length-1?setTimeout(()=>wsGo(1),WS_MS):null;wsMusic()}
+function wsHold(on){if(!WS)return;const w=document.querySelector("#wstory .ws");
+  if(on){if(WS.held)return;WS.held=true;clearTimeout(WS.tm);WS.left-=Date.now()-WS.t0;if(w)w.classList.add("hold")}
+  else{if(!WS.held)return;WS.held=false;WS.t0=Date.now();if(w)w.classList.remove("hold");
+    if(WS.i<WS.slides.length-1)WS.tm=setTimeout(()=>wsGo(1),Math.max(0,WS.left))}}
+function wsDown(e){if(!WS||e.target.closest("button"))return;clearTimeout(WS.ht);WS.ht=setTimeout(()=>{wsHold(true);WS.noclick=true},260)}
+function wsUp(){if(!WS)return;clearTimeout(WS.ht);if(WS.held)wsHold(false)}
+document.addEventListener("visibilitychange",()=>{if(WS)wsHold(document.visibilityState!=="visible")});
+/* Entradas escalonadas: cada bloque, cada nombre de las listas y las letras de los nombres principales */
+function wsAnimate(root){
+  const b=root.querySelector(".ws-body");if(!b)return;
+  [...b.children].forEach((c,i)=>c.style.setProperty("--s",i));
+  root.querySelectorAll(".ws-rank,.ws-sum ol,.ws-facts,.ws-covers").forEach(l=>[...l.children].forEach((li,i)=>{li.classList.add("ws-item");li.style.setProperty("--d",i)}));
+  root.querySelectorAll(".ws-type").forEach(t=>{let c=0;const words=t.textContent.split(/(\s+)/);t.setAttribute("aria-label",t.textContent);
+    t.innerHTML=words.map(w=>/^\s+$/.test(w)?" ":`<span class="w" aria-hidden="true">${[...w].map(ch=>`<span class="ch" style="--c:${c++}">${esc(ch)}</span>`).join("")}</span>`).join("")});
+}
+/* iOS solo deja sonar audio que se ha iniciado con un toque: se «desbloquea» al abrir el Wrapped */
+let WS_SILENT="";
+function wsUnlock(){
+  if(!WS_SILENT){const n=800,buf=new ArrayBuffer(44+n),v=new DataView(buf),s=(o,t)=>[...t].forEach((ch,i)=>v.setUint8(o+i,ch.charCodeAt(0)));
+    s(0,"RIFF");v.setUint32(4,36+n,true);s(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);s(36,"data");v.setUint32(40,n,true);
+    for(let i=0;i<n;i++)v.setUint8(44+i,128);WS_SILENT=URL.createObjectURL(new Blob([buf],{type:"audio/wav"}))}
+  try{const a=WS.au=new Audio();a.setAttribute("playsinline","");a.src=WS_SILENT;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}
+}
+async function wsMusic(){
+  if(!WS)return;const id=WS.slides[WS.i].music;if(!id||id===WS.cur)return;
+  const s=byId(id);if(!s||!s.assetId)return;WS.cur=id;
+  let url="";try{url=typeof loadUrl==="function"?(bu(s.assetId)||await loadUrl(s.assetId)):"/_blob/"+s.assetId}catch(e){}
+  if(!url||!WS||WS.cur!==id)return;
+  const a=WS.au||(WS.au=new Audio());a.setAttribute("playsinline","");
+  a.addEventListener("loadedmetadata",()=>{const d=a.duration;if(isFinite(d)&&d>70)try{a.currentTime=Math.round(d*0.3)}catch(e){}},{once:true});
+  a.src=url;const p=a.play();if(p&&p.catch)p.catch(()=>{});
+}
 function openStory(slides){
   closeStory();
   WS={slides,i:0,back:document.activeElement};
@@ -3217,11 +3298,17 @@ function openStory(slides){
   document.body.appendChild(el);
   document.addEventListener("keydown",wsKey);
   if(slides.topSong)getPal(slides.topSong);
+  /* La música del Wrapped va en su propio reproductor; la que estaba sonando se pausa y vuelve al cerrar */
+  try{WS.resume=!!(typeof audio!=="undefined"&&audio&&!audio.paused);if(WS.resume)audio.pause()}catch(e){}
+  wsUnlock();
+  el.addEventListener("pointerdown",wsDown);el.addEventListener("pointerup",wsUp);el.addEventListener("pointercancel",wsUp);
   showSlide();
   setTimeout(()=>{if(WS&&WS.slides===slides&&!WS.img)WS.img=makeShareFile(slides).catch(()=>null)},600);
 }
 function closeStory(){
   const el=$("#wstory"); if(el)el.remove();
+  if(WS){clearTimeout(WS.tm);clearTimeout(WS.ht);if(WS.au){try{WS.au.pause();WS.au.removeAttribute("src");WS.au.load()}catch(e){}}
+    if(WS.resume)try{audio.play().catch(()=>{})}catch(e){}}
   document.removeEventListener("keydown",wsKey);
   if(WS&&WS.back&&WS.back.focus)try{WS.back.focus()}catch(e){}
   WS=null;
@@ -3246,9 +3333,11 @@ function showSlide(){
   const el=$("#wstory"); if(!el||!WS)return;
   const s=WS.slides[WS.i], n=WS.slides.length;
   const wp=wPal(s);
-  el.innerHTML=`<div class="ws k-${s.k}" style="--wbg:${wp.bg};--wfg:${wp.fg};--wbtn:${wp.btn}"><span class="ws-blob" aria-hidden="true" style="${BLOBPOS[WS.i%BLOBPOS.length]}"></span><div class="ws-bars" aria-hidden="true">${WS.slides.map((_,j)=>`<i class="${j<=WS.i?"on":""}"></i>`).join("")}</div><div class="ws-top"><span>${esc(s.P.title)}, ${WS.i+1} de ${n}</span><span style="display:flex;align-items:center"><button class="ws-x" data-wshare aria-label="Compartir imagen" style="margin-right:0">${ICON.share}</button><button class="ws-x" data-wclose aria-label="Cerrar Wrapped">${ICON.x}</button></span></div><div class="ws-body ws-in">${s.html}</div>${WS.i===0?`<p class="ws-hint">Toca para avanzar</p>`:""}</div>`;
+  el.innerHTML=`<div class="ws k-${s.k}" style="--wbg:${wp.bg};--wfg:${wp.fg};--wbtn:${wp.btn}"><span class="ws-blob" aria-hidden="true" style="${BLOBPOS[WS.i%BLOBPOS.length]}"></span><div class="ws-bars" aria-hidden="true">${WS.slides.map((_,j)=>`<i class="${j<WS.i?"on":j===WS.i?"cur":""}"></i>`).join("")}</div><div class="ws-top"><span>${esc(s.P.title)}, ${WS.i+1} de ${n}</span><span style="display:flex;align-items:center"><button class="ws-x" data-wshare aria-label="Compartir imagen" style="margin-right:0">${ICON.share}</button><button class="ws-x" data-wclose aria-label="Cerrar Wrapped">${ICON.x}</button></span></div><div class="ws-body ws-in">${s.html}</div>${WS.i===0?`<p class="ws-hint">Toca para avanzar</p>`:""}</div>`;
   const b=el.querySelector(".ws-body"); if(b){b.setAttribute("tabindex","-1");b.focus({preventScroll:true})}
   countUp(el);
+  wsAnimate(el);
+  wsArm();
 }
 /* ----- Imagen para compartir (formato historia, 1080 × 1920) ----- */
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
@@ -3313,6 +3402,7 @@ async function wShare(){
 }
 function wsGo(d){if(!WS)return;const i=WS.i+d;if(i<0||i>=WS.slides.length)return;WS.i=i;showSlide()}
 function wsClick(e){
+  if(WS&&WS.noclick){WS.noclick=false;return}
   if(e.target.closest(".ws-share")){if(e.target.closest("[data-wsharex]"))e.target.closest(".ws-share").remove();return}
   const b=e.target.closest("button");
   if(b){
@@ -3415,6 +3505,239 @@ function doUpdate(v){
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-UPD.last>30*60000)checkUpdate(false)});
 /* ---------- Arranque local ---------- */
 render();
+/* ---------- Amigos: qué están escuchando ahora ---------- */
+/* Tus canciones no salen del iPhone. Al servidor (Supabase) solo van tu nombre de usuario,
+   tus amigos y el título y artista de lo que suena, si tienes activado «Compartir lo que escucho». */
+const SB_URL="https://gxfnbsipdlrfclxvfegr.supabase.co"; /* p. ej. "https://abcdefgh.supabase.co" */
+const SB_KEY="sb_publishable_Cw7lgzVxcTZ1hdtkCtkD7A_5BnmuBmu"; /* la clave «anon public» de Supabase */
+const SB_LIB="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js";
+const FR_KEY="mm-amigos";
+var AMI={ok:!!(SB_URL&&SB_KEY),ready:false,me:null,friends:[],incoming:[],outgoing:[],res:[],q:"",mode:"signup",busy:false,err:"",
+  share:localStorage.getItem("frShare")!=="0",hide:localStorage.getItem("frHide")==="1",sig:"",pub:{key:"",at:0,t:null}};
+let SBC=null,SBP=null;
+function sbLoad(){
+  if(SBP)return SBP;
+  SBP=new Promise((res,rej)=>{
+    if(!AMI.ok)return rej(new Error("config"));
+    if(window.supabase&&window.supabase.createClient){SBC=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:FR_KEY}});return res(SBC)}
+    const sc=document.createElement("script");sc.src=SB_LIB;sc.async=true;
+    sc.onload=()=>{try{SBC=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:FR_KEY}});res(SBC)}catch(e){SBP=null;rej(e)}};
+    sc.onerror=()=>{SBP=null;sc.remove();rej(new Error("red"))};
+    document.head.appendChild(sc);
+  });
+  return SBP;
+}
+const frHasSession=()=>{try{return !!localStorage.getItem(FR_KEY)}catch(e){return false}};
+const frEmail=u=>u+"@usuarios.mimusica.app";
+const frClean=u=>String(u||"").trim().toLowerCase().replace(/^@/,"");
+const frValid=u=>/^[a-z0-9_.]{3,20}$/.test(u);
+function frErr(e){
+  const m=String(e&&(e.message||e.error_description||e)||"");
+  if(/already registered|already exists|duplicate key/i.test(m))return "Ese nombre de usuario ya está cogido.";
+  if(/invalid login|invalid credentials/i.test(m))return "Usuario o contraseña incorrectos.";
+  if(/password/i.test(m)&&/6/.test(m))return "La contraseña tiene que tener al menos 6 caracteres.";
+  if(/red|fetch|network|load failed/i.test(m)||!navigator.onLine)return "Sin conexión. Inténtalo cuando tengas internet.";
+  return "Algo ha fallado. Inténtalo de nuevo.";
+}
+function frRerender(){
+  if(S.tab!=="inicio")return;
+  const a=document.activeElement; if(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA")&&!a.closest(".sheet"))return;
+  if(document.querySelector(".sheet-wrap"))return;
+  const st=$("#main").scrollTop;render();$("#main").scrollTop=st;
+}
+let frIniting=null;
+function frInit(){if(!frIniting)frIniting=frInit2().finally(()=>{frIniting=null});return frIniting}
+async function frInit2(){
+  try{
+    const c=await sbLoad();
+    const {data:{session}}=await c.auth.getSession();
+    if(!session){AMI.me=null;AMI.ready=true;frRerender();return}
+    let {data:p}=await c.from("profiles").select("id,username").eq("id",session.user.id).maybeSingle();
+    if(!p){const u=(session.user.email||"").split("@")[0];const r=await c.from("profiles").insert({id:session.user.id,username:u}).select("id,username").single();if(r.error)throw r.error;p=r.data}
+    AMI.me=p;AMI.ready=true;
+    await frRefresh(true);
+    frPublish(true);
+  }catch(e){AMI.ready=true;AMI.err=e&&e.message==="config"?"":frErr(e);frRerender()}
+}
+async function frRefresh(force){
+  if(!SBC||!AMI.me)return;
+  try{
+    const me=AMI.me.id;
+    const {data:fs,error}=await SBC.from("friendships").select("requester,addressee,status");
+    if(error)throw error;
+    const other=f=>f.requester===me?f.addressee:f.requester;
+    const ids=[...new Set((fs||[]).map(other))];
+    let ps=[],np=[];
+    if(ids.length){
+      const r1=await SBC.from("profiles").select("id,username").in("id",ids);ps=r1.data||[];
+      const acc=(fs||[]).filter(f=>f.status==="accepted").map(other);
+      if(acc.length){const r2=await SBC.from("now_playing").select("user_id,title,artist,playing,ends_at,updated_at").in("user_id",acc);np=r2.data||[]}
+    }
+    const name=id=>(ps.find(p=>p.id===id)||{}).username||"usuario";
+    AMI.friends=(fs||[]).filter(f=>f.status==="accepted").map(f=>{const id=other(f);return {id,username:name(id),mine:f.requester===me,np:np.find(n=>n.user_id===id)||null}});
+    AMI.incoming=(fs||[]).filter(f=>f.status==="pending"&&f.addressee===me).map(f=>({id:f.requester,username:name(f.requester)}));
+    AMI.outgoing=(fs||[]).filter(f=>f.status==="pending"&&f.requester===me).map(f=>({id:f.addressee,username:name(f.addressee)}));
+    AMI.err="";
+    const sig=JSON.stringify([AMI.friends,AMI.incoming,AMI.outgoing,Math.floor(Date.now()/60000)]);
+    if(force||sig!==AMI.sig){AMI.sig=sig;frRerender()}
+  }catch(e){AMI.err=frErr(e);if(force)frRerender()}
+}
+/* Estado de un amigo: «ahora» si está sonando y aún no ha terminado la canción */
+function frStatus(n){
+  if(!n||!n.title)return {live:false,line:"Sin actividad todavía",song:null};
+  const end=Date.parse(n.ends_at||0)||0, up=Date.parse(n.updated_at||0)||0;
+  const live=!!n.playing&&Date.now()<end+60000;
+  const last=n.playing?Math.min(end||up,Date.now()):up;
+  return {live,song:n,line:live?"Escuchando ahora":"Escuchó "+frAgo(last)};
+}
+function frAgo(t){const m=Math.max(0,Math.round((Date.now()-t)/60000));if(m<1)return"hace un momento";if(m<60)return`hace ${m} min`;const h=Math.round(m/60);if(h<24)return`hace ${h} h`;const d=Math.round(h/24);return d===1?"ayer":`hace ${d} días`}
+const frNorm=x=>String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(.*?\)|\[.*?\]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+function frMatch(n){
+  if(!n||!n.title)return null;const t=frNorm(n.title),a=frNorm(n.artist);
+  return S.songs.find(s=>frNorm(s.title)===t&&(!a||frNorm(s.artist)===a))||S.songs.find(s=>frNorm(s.title)===t)||null;
+}
+function frSorted(){
+  return AMI.friends.map(f=>({...f,st:frStatus(f.np)})).sort((a,b)=>(b.st.live-a.st.live)||((Date.parse(b.np&&b.np.updated_at||0)||0)-(Date.parse(a.np&&a.np.updated_at||0)||0))||a.username.localeCompare(b.username));
+}
+const FR_EQ=`<span class="freq" aria-hidden="true"><i></i><i></i><i></i></span>`;
+/* Sección de Inicio */
+function friendsSection(){
+  if(!AMI.ok)return "";
+  if(!AMI.me){
+    if(frHasSession()||AMI.hide)return "";
+    return `<section><div class="frcall"><span class="frdots" aria-hidden="true">${avatarHTML("",40,"")}${avatarHTML("",40,"")}</span><span class="meta"><span class="t">Escucha con tus amigos</span><span class="s">Mira qué están escuchando ahora mismo.</span></span><span class="acts"><button class="btn" data-fropen>Empezar</button><button class="link" id="frHide">Ahora no</button></span></div></section>`;
+  }
+  const list=frSorted(), inc=AMI.incoming.length;
+  let h=`<section><div class="sechead"><h2>Tus amigos</h2><button class="link" data-fropen>${inc?`Solicitudes (${inc})`:"Ver todos"}</button></div>`;
+  if(!list.length)return h+`<button class="row" data-fropen><span class="cover" style="width:44px;height:44px;border:1px dashed var(--line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);border-radius:22px">${ICON.plus}</span><span class="meta"><span class="t">Añade a tus amigos</span><span class="s">Búscalos por su nombre de usuario</span></span></button></section>`;
+  return h+`<div class="recent">${list.map(f=>`<button class="card frcard${f.st.live?" live":""}" data-friend="${esc(f.id)}"><span class="frav">${avatarHTML("",72,f.username)}${f.st.live?FR_EQ:""}</span><span><span class="t" style="display:block">${esc(f.username)}</span><span class="s" style="display:block">${f.st.song?esc(f.st.song.title):"—"}</span><span class="s w" style="display:block">${esc(f.st.live?"Ahora":f.st.line.replace(/^Escuchó /,""))}</span></span></button>`).join("")}</div></section>`;
+}
+/* Página de amigos */
+function renderFriends(){
+  let h=`<div class="backline"><button class="iconbtn plain" data-frback aria-label="Volver">${ICON.back}</button></div><div class="top"><h1>Amigos</h1></div>`;
+  if(!AMI.ok)return h+`<div class="empty"><h3>Falta conectar el servidor</h3><p style="margin:0">Para ver a tus amigos hace falta poner la dirección y la clave de Supabase en la app.</p></div>`;
+  if(!AMI.ready)return h+`<p class="status" style="margin-top:0">Conectando…</p>`;
+  if(!AMI.me){
+    const up=AMI.mode==="signup";
+    h+=`<p style="color:var(--muted);margin:-8px 0 20px">Tus canciones no salen de este iPhone. Tus amigos solo ven tu nombre de usuario y lo que estás escuchando.</p>`;
+    h+=`<div class="seg" role="group" aria-label="Cuenta"><button data-frmode="signup" aria-pressed="${up}">Crear cuenta</button><button data-frmode="login" aria-pressed="${!up}">Ya tengo cuenta</button></div>`;
+    h+=`<div class="field"><label for="frU">Nombre de usuario</label><input id="frU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" maxlength="20" placeholder="p. ej. lucia_m"></div>`;
+    h+=`<div class="field"><label for="frP">Contraseña</label><input id="frP" type="password" autocomplete="${up?"new-password":"current-password"}" placeholder="Al menos 6 caracteres"></div>`;
+    if(up)h+=`<p style="font-size:13px;color:var(--muted);margin:-6px 0 16px">Letras, números, punto o guion bajo. Apunta la contraseña: la necesitarás si cambias de móvil.</p>`;
+    h+=`<p id="frMsg" role="alert" style="color:var(--danger);font-size:14px;margin:0 0 12px">${esc(AMI.err)}</p>`;
+    return h+`<button class="btn" id="frGo" style="width:100%"${AMI.busy?" disabled":""}>${AMI.busy?"Un momento…":up?"Crear cuenta":"Entrar"}</button>`;
+  }
+  h+=`<p style="color:var(--muted);margin:-8px 0 18px">Eres <strong style="color:var(--ink)">@${esc(AMI.me.username)}</strong></p>`;
+  h+=`<label class="search"><span class="sr">Buscar amigos</span>${ICON.search}<input id="frQ" type="search" placeholder="Buscar por nombre de usuario" value="${esc(AMI.q)}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label><div id="frRes">${frResHTML()}</div>`;
+  if(AMI.err)h+=`<p class="status" style="margin-top:0;color:var(--danger)">${esc(AMI.err)}</p>`;
+  if(AMI.incoming.length)h+=`<section><div class="sechead"><h2>Solicitudes</h2></div>${AMI.incoming.map(p=>`<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">${esc(p.username)}</span><span class="s">Quiere ser tu amigo</span></span><button class="btn sm" data-fracc="${esc(p.id)}">Aceptar</button><button class="iconbtn plain" data-frdel="${esc(p.id)}" data-frdir="in" aria-label="Rechazar">${ICON.x}</button></div>`).join("")}</section>`;
+  const list=frSorted();
+  h+=`<section><div class="sechead"><h2>Tus amigos</h2></div>${list.length?list.map(f=>`<button class="row" data-friend="${esc(f.id)}"><span class="frav sm">${avatarHTML("",44,f.username)}${f.st.live?FR_EQ:""}</span><span class="meta"><span class="t">${esc(f.username)}</span><span class="s">${f.st.song?`${esc(f.st.song.title)}${f.st.song.artist?" · "+esc(f.st.song.artist):""}`:"Sin actividad todavía"}</span><span class="s"${f.st.live?` style="color:var(--accent)"`:""}>${esc(f.st.song?f.st.line:"")}</span></span></button>`).join(""):`<p style="color:var(--muted);margin:0">Aún no tienes amigos aquí. Búscalos arriba por su nombre de usuario.</p>`}</section>`;
+  if(AMI.outgoing.length)h+=`<section><div class="sechead"><h2>Enviadas</h2></div>${AMI.outgoing.map(p=>`<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">${esc(p.username)}</span><span class="s">Pendiente de que acepte</span></span><button class="btn ghost sm" data-frdel="${esc(p.id)}" data-frdir="out">Cancelar</button></div>`).join("")}</section>`;
+  h+=`<section><button class="pickrow" id="frShare" aria-pressed="${AMI.share}"><span class="check${AMI.share?" on":""}">${AMI.share?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir lo que escucho</span><span style="font-size:13px;color:var(--muted)">${AMI.share?"Tus amigos ven qué canción suena.":"Tus amigos no ven lo que escuchas."}</span></span></button><button class="btn danger" id="frOut" style="margin-top:18px">Cerrar sesión</button></section>`;
+  return h;
+}
+function frResHTML(){
+  const q=frClean(AMI.q);if(!q)return "";
+  if(!AMI.res.length)return `<p style="color:var(--muted);margin:-8px 0 18px">${q.length<2?"Escribe al menos 2 letras.":`No hay nadie llamado «${esc(q)}».`}</p>`;
+  return `<div style="margin:-8px 0 18px">${AMI.res.map(p=>{
+    const isF=AMI.friends.some(f=>f.id===p.id),out=AMI.outgoing.some(f=>f.id===p.id),inc=AMI.incoming.some(f=>f.id===p.id);
+    const b=isF?`<span class="s" style="color:var(--muted);font-size:14px">Amigos</span>`:out?`<span class="s" style="color:var(--muted);font-size:14px">Enviada</span>`:inc?`<button class="btn sm" data-fracc="${esc(p.id)}">Aceptar</button>`:`<button class="btn sm" data-fradd="${esc(p.id)}">Añadir</button>`;
+    return `<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">${esc(p.username)}</span></span>${b}</div>`}).join("")}</div>`;
+}
+let frSearchT=null;
+function frSearch(){
+  clearTimeout(frSearchT);
+  frSearchT=setTimeout(async()=>{
+    const q=frClean(AMI.q);
+    if(q.length<2||!SBC){AMI.res=[];const r=$("#frRes");if(r)r.innerHTML=frResHTML();return}
+    try{
+      const {data,error}=await SBC.from("profiles").select("id,username").ilike("username",q.replace(/[\\%_]/g,"\\$&")+"%").neq("id",AMI.me.id).order("username").limit(12);
+      if(error)throw error;
+      if(frClean(AMI.q)!==q)return;
+      AMI.res=data||[];
+    }catch(e){AMI.res=[]}
+    const r=$("#frRes");if(r)r.innerHTML=frResHTML();
+  },300);
+}
+async function frAuth(){
+  const u=frClean($("#frU")&&$("#frU").value),p=($("#frP")&&$("#frP").value)||"";
+  const msg=t=>{AMI.err=t;const m=$("#frMsg");if(m)m.textContent=t};
+  if(!frValid(u))return msg("El nombre de usuario debe tener de 3 a 20 caracteres: letras, números, punto o guion bajo.");
+  if(p.length<6)return msg("La contraseña tiene que tener al menos 6 caracteres.");
+  AMI.busy=true;msg("");const b=$("#frGo");if(b){b.disabled=true;b.textContent="Un momento…"}
+  try{
+    const c=await sbLoad();
+    if(AMI.mode==="signup"){
+      const {data:taken}=await c.from("profiles").select("id").eq("username",u).maybeSingle();
+      if(taken)throw new Error("already registered");
+      const {data,error}=await c.auth.signUp({email:frEmail(u),password:p});
+      if(error)throw error;
+      if(!data.session)throw new Error("Hay que desactivar «Confirm email» en Supabase.");
+      const r=await c.from("profiles").insert({id:data.user.id,username:u});
+      if(r.error)throw r.error;
+    }else{
+      const {error}=await c.auth.signInWithPassword({email:frEmail(u),password:p});
+      if(error)throw error;
+    }
+    AMI.busy=false;AMI.err="";AMI.hide=false;
+    await frInit();
+    toast(AMI.mode==="signup"?"Cuenta creada":"Sesión iniciada");
+  }catch(e){AMI.busy=false;const t=/Confirm email/.test(e.message||"")?e.message:frErr(e);const bb=$("#frGo");if(bb){bb.disabled=false;bb.textContent=AMI.mode==="signup"?"Crear cuenta":"Entrar"}msg(t)}
+}
+async function frDo(fn,ok){
+  try{const {error}=await fn();if(error)throw error;if(ok)toast(ok);await frRefresh(true);const r=$("#frRes");if(r)r.innerHTML=frResHTML()}
+  catch(e){toast(/duplicate key/i.test(String(e.message))?"Ya le habías enviado una solicitud.":frErr(e))}
+}
+function friendSheet(id){
+  const f=AMI.friends.find(x=>x.id===id);if(!f)return;
+  const st=frStatus(f.np),mine=st.song?frMatch(st.song):null;
+  showSheet(`<div class="frhead"><span class="frav">${avatarHTML("",64,f.username)}${st.live?FR_EQ:""}</span><div style="min-width:0"><h3 style="margin:0">${esc(f.username)}</h3><p style="color:${st.live?"var(--accent)":"var(--muted)"};margin:2px 0 0;font-size:14px">${esc(st.line)}</p></div></div>${st.song?`<div class="frnow"><span class="t">${esc(st.song.title)}</span><span class="s">${esc(st.song.artist||"Artista desconocido")}</span></div>`:""}${mine?`<button class="pickrow" data-frplay="${esc(mine.id)}" style="color:var(--accent);font-weight:600">${ICON.play}<span>Escucharla tú también</span></button>`:st.song?`<p style="color:var(--muted);font-size:14px;margin:0 0 8px">No tienes esta canción en tu biblioteca.</p>`:""}<button class="pickrow" data-frdel="${esc(f.id)}" data-frdir="${f.mine?"out":"in"}" data-frconfirm="1" style="color:var(--danger)">Eliminar de tus amigos</button><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
+}
+/* Publicar lo que suena */
+function frPos(){try{if(ST&&ST.cur)return Math.max(0,audio.currentTime-ST.cur.start);return audio.currentTime||0}catch(e){return 0}}
+function frPublish(force){
+  if(!SBC||!AMI.me)return;
+  const s=current(), playing=!!s&&!audio.paused&&AMI.share;
+  const key=AMI.share?(s?s.id:"-")+"|"+(playing?1:0):"off";
+  const now=Date.now();
+  if(!force&&key===AMI.pub.key&&!(playing&&now-AMI.pub.at>240000))return;
+  if(!force&&now-AMI.pub.at<3000){clearTimeout(AMI.pub.t);AMI.pub.t=setTimeout(()=>frPublish(false),3100);return}
+  AMI.pub.key=key;AMI.pub.at=now;
+  const dur=(s&&s.duration)||(!ST&&isFinite(audio.duration)?audio.duration:0)||240;
+  const row={user_id:AMI.me.id,updated_at:new Date(now).toISOString(),playing};
+  if(!AMI.share){row.title=null;row.artist=null;row.ends_at=null}
+  else if(s){row.title=s.title||"Sin título";row.artist=s.artist||"";row.ends_at=new Date(now+Math.max(5,dur-frPos())*1000).toISOString()}
+  SBC.from("now_playing").upsert(row).then(r=>{if(r.error)AMI.pub.key=""},()=>{AMI.pub.key=""});
+}
+["play","pause","ended","seeked"].forEach(ev=>audio.addEventListener(ev,()=>{if(AMI.me)frPublish(ev==="seeked")}));
+let frTU=0;audio.addEventListener("timeupdate",()=>{const n=Date.now();if(AMI.me&&n-frTU>5000){frTU=n;frPublish(false)}});
+setInterval(()=>{if(AMI.me&&document.visibilityState==="visible"&&S.tab==="inicio")frRefresh(false)},30000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&AMI.me){frRefresh(false);frPublish(false)}});
+addEventListener("online",()=>{if(AMI.ok&&frHasSession()&&!AMI.me)frInit()});
+document.addEventListener("input",e=>{if(e.target.id==="frQ"){AMI.q=e.target.value;frSearch()}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.target.id==="frU"||e.target.id==="frP")){e.preventDefault();if(e.target.id==="frU"){const p=$("#frP");if(p)p.focus()}else frAuth()}});
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if("fropen" in d||t.id==="frOpen"){e.stopPropagation();closeSheet();S.tab="inicio";S.wrapPage=false;S.moodOpen=null;S.friendsOpen=true;render();$("#main").scrollTop=0;if(!AMI.ready)frInit();else if(AMI.me)frRefresh(true);return}
+  if("frback" in d){S.friendsOpen=false;AMI.q="";AMI.res=[];render();$("#main").scrollTop=0;return}
+  if(t.id==="frHide"){AMI.hide=true;try{localStorage.setItem("frHide","1")}catch(_){}render();toast("Puedes añadir amigos desde tu perfil");return}
+  if(d.frmode){AMI.mode=d.frmode;AMI.err="";render();return}
+  if(t.id==="frGo"){frAuth();return}
+  if(d.friend){e.stopPropagation();friendSheet(d.friend);return}
+  if(d.frplay){e.stopPropagation();closeSheet();setQueue([d.frplay],0,"De tus amigos");load(true);return}
+  if(d.fradd){const id=d.fradd;t.disabled=true;frDo(()=>SBC.from("friendships").insert({requester:AMI.me.id,addressee:id}),"Solicitud enviada");return}
+  if(d.fracc){const id=d.fracc;t.disabled=true;frDo(()=>SBC.from("friendships").update({status:"accepted"}).match({requester:id,addressee:AMI.me.id}),"Ahora sois amigos");return}
+  if(d.frdel){
+    e.stopPropagation();
+    if(d.frconfirm&&!confirm("¿Eliminar a este amigo? Dejaréis de ver lo que escucha el otro."))return;
+    closeSheet();const id=d.frdel,out=d.frdir==="out";
+    frDo(()=>SBC.from("friendships").delete().match(out?{requester:AMI.me.id,addressee:id}:{requester:id,addressee:AMI.me.id}),d.frconfirm?"Eliminado de tus amigos":out?"Solicitud cancelada":"Solicitud rechazada");return}
+  if(t.id==="frShare"){AMI.share=!AMI.share;try{localStorage.setItem("frShare",AMI.share?"1":"0")}catch(_){}AMI.pub.key="";frPublish(true);render();return}
+  if(t.id==="frOut"){if(!confirm("¿Cerrar sesión? Tus canciones no se borran."))return;try{await SBC.from("now_playing").upsert({user_id:AMI.me.id,playing:false,updated_at:new Date().toISOString()});await SBC.auth.signOut()}catch(_){}try{localStorage.removeItem(FR_KEY)}catch(_){}AMI.me=null;AMI.friends=[];AMI.incoming=[];AMI.outgoing=[];AMI.mode="login";render();toast("Sesión cerrada");return}
+},true);
+if(AMI.ok&&frHasSession()&&navigator.onLine)setTimeout(frInit,1500);
+
 (async()=>{
   try{
     await idb.init();
