@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-19">
+<meta name="app-version" content="2026.10.31-21">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,6 +236,9 @@ button.next{width:100%;background:none;border:none;border-top:1px solid var(--li
 .ws-share img{max-height:68vh;max-width:100%;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);-webkit-touch-callout:default}
 .ws-share p{margin:0;font-size:15px;text-align:center;max-width:32ch;opacity:.85}
 .ws-share button{height:46px;padding:0 22px;border-radius:23px;border:1.5px solid #fff;background:transparent;color:#fff;font-weight:600}
+.ws-share .ws-sacts{display:flex;gap:12px}
+.ws-share button.go{background:#fff;color:#16141F;min-width:132px}
+.ws-share .ws-load{opacity:.9}
 .player.dragging{transition:none}
 .big{transition:transform .2s ease}
 .qrow{display:flex;align-items:center;gap:10px;min-height:56px}
@@ -521,6 +524,14 @@ main section{margin-bottom:32px}
 .frnow{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);margin-bottom:10px}
 .frnow .t{font-weight:600}.frnow .s{font-size:14px;color:var(--muted)}
 .pickrow svg{flex-shrink:0}
+.cvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-height:46vh;overflow-y:auto;margin-bottom:6px}
+.cvmsg{grid-column:1/-1;color:var(--muted);margin:4px 0 10px;font-size:14px}
+.cvitem{background:none;border:none;padding:0;text-align:left;display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--ink)}
+.cvitem img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:var(--surface);display:block}
+.cvitem .t{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvitem .s{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvitem.busy img{opacity:.4}
+.cvitem:disabled{opacity:.6}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn>svg{flex-shrink:0}
 .songrow .favmark{width:13px;height:13px;margin:0 8px 0 0;vertical-align:0}
@@ -2121,32 +2132,44 @@ async function embedId3(file,meta){
   return new File([hdr,body,file.slice(audioStart)],file.name,{type:file.type||"audio/mpeg"});
 }
 function fileIsMp3(file){return /\.mp3$/i.test(file.name||"")||file.type==="audio/mpeg"}
-function metaClean(s){return String(s||"").replace(/\s*[\(\[][^\)\]]*(official|oficial|video|vídeo|audio|lyric|letra|visuali[sz]er|hd|4k|remaster|explicit)[^\)\]]*[\)\]]/gi,"").replace(/\s+(ft|feat|featuring)\.?\s.*$/i,"").replace(/\s+/g," ").trim()}
+function metaClean(s){return String(s||"").replace(/\s*[\(\[][^\)\]]*(official|oficial|video|vídeo|audio|lyric|letra|visuali[sz]er|hd|4k|remaster|explicit|prod\.?|en vivo|live)[^\)\]]*[\)\]]/gi,"").replace(/\s*[|｜].*$/,"").replace(/\s+-\s+topic$/i,"").replace(/vevo$/i,"").replace(/\s+(official\s+)?(music\s+)?(video|audio)\s*$/i,"").replace(/\s+(ft|feat|featuring)\.?\s.*$/i,"").replace(/["“”«»]/g,"").replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/gu,"").replace(/\s+/g," ").trim()}
 function simil(a,b){a=norm(metaClean(a)).replace(/[^\p{L}\p{N} ]/gu,"");b=norm(metaClean(b)).replace(/[^\p{L}\p{N} ]/gu,"");if(!a||!b)return 0;if(a===b)return 1;if(a.includes(b)||b.includes(a))return .85;const wa=new Set(a.split(" ")),wb=b.split(" ");return wb.filter(w=>wa.has(w)).length/Math.max(wa.size,wb.length)}
 function jsonp(url){return new Promise((res,rej)=>{const cb="__mm"+Math.random().toString(36).slice(2),s=document.createElement("script");
   const done=()=>{clearTimeout(t);try{delete window[cb]}catch(e){}s.remove()};const t=setTimeout(()=>{done();rej(new Error("timeout"))},9000);
   window[cb]=d=>{done();res(d)};s.onerror=()=>{done();rej(new Error("net"))};s.src=url+"&callback="+cb;document.head.appendChild(s)})}
 async function getJson(url){const c=new AbortController(),t=setTimeout(()=>c.abort(),9000);try{const r=await fetch(url,{signal:c.signal});return r.ok?await r.json():null}finally{clearTimeout(t)}}
-async function imgBytes(url){try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);const r=await fetch(url,{signal:c.signal});clearTimeout(t);if(!r.ok)return null;const data=new Uint8Array(await r.arrayBuffer());if(data.length<2000)return null;return{type:3,mime:data[0]===0x89?"image/png":"image/jpeg",data}}catch(e){return null}}
+async function imgBytes(url){const r=await imgBytes0(url);return r||await imgViaCanvas(url)}
+async function imgBytes0(url){try{const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);const r=await fetch(url,{signal:c.signal});clearTimeout(t);if(!r.ok)return null;const data=new Uint8Array(await r.arrayBuffer());if(data.length<2000)return null;return{type:3,mime:data[0]===0x89?"image/png":"image/jpeg",data}}catch(e){return null}}
+/* Sin artista fiable (p. ej. el nombre del canal de YouTube): título casi igual y misma duración */
+function looseMatch(list,title,dur,get){if(!dur)return null;let best=null,bs=0;for(const x of list||[]){const g=get(x);const st=simil(g.title,title);if(st<.85||!g.dur||Math.abs(g.dur-dur)>3)continue;if(st>bs){bs=st;best=x}}return best}
+function imgViaCanvas(url){return new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";const t=setTimeout(()=>res(null),12000);
+  im.onload=()=>{clearTimeout(t);try{const c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext("2d").drawImage(im,0,0);c.toBlob(async b=>{if(!b)return res(null);res({type:3,mime:"image/jpeg",data:new Uint8Array(await b.arrayBuffer())})},"image/jpeg",.9)}catch(e){res(null)}};
+  im.onerror=()=>{clearTimeout(t);res(null)};im.src=url})}
 function bestMatch(list,title,artist,dur,get){let best=null,bs=0;for(const x of list||[]){const g=get(x);const st=simil(g.title,title);if(st<.6)continue;const sa=artist?simil(g.artist,artist):.5;if(artist&&sa<.4)continue;const dd=dur&&g.dur?Math.abs(g.dur-dur):99;const sc=st*2+sa+(dd<4?.6:dd<12?.25:0);if(sc>bs){bs=sc;best=x}}return best}
 /* Busca portada oficial (Apple Music, si no Deezer) y letra sincronizada (LRCLIB) */
 async function findMeta(title,artist,dur,need){
   const out={pic:null,lrc:"",lrcSynced:false};
   const t0=metaClean(title),a0=metaClean(artist);
   let T=t0,A=a0;
-  try{
-    const term=encodeURIComponent((a0?a0+" ":"")+t0);
-    const d=await jsonp(`https://itunes.apple.com/search?term=${term}&media=music&entity=song&limit=10&country=es`);
-    const m=bestMatch(d&&d.results,t0,a0,dur,x=>({title:x.trackName,artist:x.artistName,dur:Math.round((x.trackTimeMillis||0)/1000)}));
-    if(m){T=m.trackName||T;A=m.artistName||A;if(need.cover&&m.artworkUrl100)out.pic=await imgBytes(m.artworkUrl100.replace(/\/\d+x\d+bb\./,"/600x600bb."))}
-  }catch(e){}
+  /* Varias combinaciones: tal cual, y si el título trae «Artista - Canción», separándolo */
+  const tries=[[t0,a0]];
+  const sp=t0.split(/\s+[-–—]\s+/);
+  if(sp.length>=2){tries.push([sp.slice(1).join(" - "),sp[0]]);tries.push([sp[0],sp.slice(1).join(" - ")])}
+  const it=x=>({title:x.trackName,artist:x.artistName,dur:Math.round((x.trackTimeMillis||0)/1000)});
+  const dz=x=>({title:x.title,artist:x.artist&&x.artist.name,dur:x.duration});
+  let am=null,dm=null;
+  for(const [tt,aa] of tries){
+    try{const d=await jsonp(`https://itunes.apple.com/search?term=${encodeURIComponent((aa?aa+" ":"")+tt)}&media=music&entity=song&limit=15&country=es`);
+      am=bestMatch(d&&d.results,tt,aa,dur,it)||looseMatch(d&&d.results,tt,dur,it);}catch(e){}
+    if(am)break;
+  }
+  if(am){T=am.trackName||T;A=am.artistName||A;if(need.cover&&am.artworkUrl100)out.pic=await imgBytes(am.artworkUrl100.replace(/\/\d+x\d+bb\./,"/600x600bb."))}
   if(need.cover&&!out.pic){
-    try{
-      const q=encodeURIComponent((a0?`artist:"${a0}" `:"")+`track:"${t0}"`);
-      const d=await jsonp(`https://api.deezer.com/search?q=${q}&output=jsonp`);
-      const m=bestMatch(d&&d.data,t0,a0,dur,x=>({title:x.title,artist:x.artist&&x.artist.name,dur:x.duration}));
-      if(m&&m.album)out.pic=await imgBytes(m.album.cover_xl||m.album.cover_big);
-    }catch(e){}
+    for(const [tt,aa] of (am?[[T,A],...tries]:tries)){
+      try{const d=await jsonp(`https://api.deezer.com/search?q=${encodeURIComponent((aa?aa+" ":"")+tt)}&output=jsonp`);
+        dm=bestMatch(d&&d.data,tt,aa,dur,dz)||looseMatch(d&&d.data,tt,dur,dz);}catch(e){}
+      if(dm&&dm.album){out.pic=await imgBytes(dm.album.cover_xl||dm.album.cover_big);if(out.pic)break}
+    }
   }
   if(need.lyrics){
     for(const [tt,aa] of [[T,A],[t0,a0]]){
@@ -2163,6 +2186,60 @@ async function findMeta(title,artist,dur,need){
   }
   return out;
 }
+
+/* ---------- Buscar portada a mano: eliges tú entre los resultados ---------- */
+const CV={id:null,items:[]};
+function coverSheet(id){
+  const s=byId(id);if(!s)return;closeSheet();CV.id=id;CV.items=[];
+  const q=metaClean([s.artist,s.title].filter(Boolean).join(" "));
+  showSheet(`<h3 style="margin-bottom:4px">${s.coverId?"Cambiar portada":"Buscar portada"}</h3><p style="color:var(--muted);margin:0 0 14px">${esc(s.title)}</p><div style="display:flex;gap:8px;margin-bottom:14px"><label class="search" style="flex:1;margin:0"><span class="sr">Buscar portada</span>${ICON.search}<input id="cvQ" type="search" value="${esc(q)}" autocomplete="off" enterkeyhint="search"></label><button class="btn sm" id="cvGo" style="height:44px">Buscar</button></div><div id="cvRes" class="cvgrid"></div><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
+  cvSearch(q);
+}
+async function cvSearch(q){
+  const box=$("#cvRes");if(!box)return;q=String(q||"").trim();
+  if(!q){box.innerHTML="";return}
+  if(!navigator.onLine){box.innerHTML=`<p class="cvmsg">Necesitas conexión a internet.</p>`;return}
+  box.innerHTML=`<p class="cvmsg">Buscando…</p>`;
+  const e=encodeURIComponent(q);let fails=0;
+  const [a,d]=await Promise.all([
+    jsonp(`https://itunes.apple.com/search?term=${e}&media=music&entity=song&limit=12&country=es`).catch(()=>{fails++;return null}),
+    jsonp(`https://api.deezer.com/search?q=${e}&limit=12&output=jsonp`).catch(()=>{fails++;return null})]);
+  if(!$("#cvRes"))return;
+  const items=[],seen=new Set();
+  for(const x of (a&&a.results)||[])if(x.artworkUrl100){const big=x.artworkUrl100.replace(/\/\d+x\d+bb\./,"/600x600bb.");const k=big;if(seen.has(k))continue;seen.add(k);items.push({img:x.artworkUrl100.replace(/\/\d+x\d+bb\./,"/200x200bb."),big,title:x.trackName,artist:x.artistName,album:x.collectionName||""})}
+  for(const x of (d&&d.data)||[])if(x.album&&x.album.cover_medium){const k="dz"+x.album.id;if(seen.has(k))continue;seen.add(k);items.push({img:x.album.cover_medium,big:x.album.cover_xl||x.album.cover_big,title:x.title,artist:x.artist&&x.artist.name,album:x.album.title||""})}
+  CV.items=items;
+  if(!items.length){$("#cvRes").innerHTML=`<p class="cvmsg">${fails===2?"No se ha podido conectar con Apple Music ni con Deezer. Prueba más tarde.":"No hay resultados. Prueba a escribir solo el nombre de la canción o del artista."}</p>`;return}
+  $("#cvRes").innerHTML=items.map((x,i)=>`<button class="cvitem" data-cvpick="${i}" aria-label="${esc(x.album||x.title)} de ${esc(x.artist||"")}"><img src="${esc(x.img)}" alt="" loading="lazy"><span class="t">${esc(x.album||x.title)}</span><span class="s">${esc(x.artist||"")}</span></button>`).join("");
+}
+async function applyCover(s,pic){
+  const c=await S.assets.upload(new Blob([pic.data],{type:pic.mime}),{type:pic.mime});
+  const up={coverId:c.id,coverType:c.contentType};let oldAsset="";
+  const cur=current();
+  if(isMp3(s)&&!(cur&&cur.id===s.id)){
+    try{const r=await blobFetch(s.assetId);
+      if(r.ok){const old=new File([await r.blob()],s.file||"cancion.mp3",{type:"audio/mpeg"});
+        const nf=await embedId3(old,{pic});
+        if(nf!==old){const a=await S.assets.upload(nf,{type:"audio/mpeg"});up.assetId=a.id;up.size=a.sizeBytes;oldAsset=s.assetId}}
+    }catch(e){}
+  }
+  await S.db.collection("songs").doc(s.id).update(up);
+  if(oldAsset)S.assets.delete(oldAsset).catch(()=>{});
+}
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button");if(!t)return;const d=t.dataset;
+  if(d.coverfind){e.stopPropagation();coverSheet(d.coverfind);return}
+  if(t.id==="cvGo"){cvSearch(($("#cvQ")||{}).value);return}
+  if(d.cvpick!=null){
+    e.stopPropagation();const x=CV.items[+d.cvpick],s=byId(CV.id);if(!x||!s)return;
+    document.querySelectorAll(".cvitem").forEach(b=>b.disabled=true);t.classList.add("busy");
+    const pic=await imgBytes(x.big)||await imgBytes(x.img);
+    if(!pic){document.querySelectorAll(".cvitem").forEach(b=>b.disabled=false);t.classList.remove("busy");toast("No se ha podido descargar esa portada. Prueba con otra.");return}
+    try{await applyCover(s,pic);closeSheet();toast(isMp3(s)?"Portada guardada en la canción":"Portada guardada")}
+    catch(err){document.querySelectorAll(".cvitem").forEach(b=>b.disabled=false);t.classList.remove("busy");toast("No se ha podido guardar la portada.")}
+    return}
+},true);
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="cvQ"){e.preventDefault();cvSearch(e.target.value)}});
 function metaSummary(c,l){const p=[];if(c)p.push(c===1?"1 portada":c+" portadas");if(l)p.push(l===1?"1 letra":l+" letras");return p.length?p.join(" y ")+(c+l===1?" añadida":" añadidas"):""}
 /* Completar las canciones que ya están en la biblioteca */
 async function fillLibrary(){
@@ -2211,7 +2288,7 @@ async function uploadFiles(files,opts){
     try{
       const tags=await readTags(f);
       const fromName=cleanName(f.name);
-      const title=(tags.title||"").trim()||fromName.title;
+      const title=(tags.title||"").trim()||metaClean(fromName.title)||fromName.title;
       const artist=(tags.artist||"").trim()||fromName.artist;
       const album=(tags.album||"").trim();
       const key=norm(title)+"|"+norm(artist);
@@ -2261,6 +2338,7 @@ function songMenu(id){
   <button class="pickrow" data-moodedit="${esc(id)}">Estado de ánimo</button>
   ${S.openList?`<button class="pickrow" data-removefrom="${esc(id)}">Quitar de esta lista</button>`:""}
   <button class="pickrow" data-edit="${esc(id)}">Editar título, artista y álbum</button>
+  ${META_HERE?`<button class="pickrow" data-coverfind="${esc(id)}">${s.coverId?"Cambiar portada":"Buscar portada"}</button>`:""}
   <button class="pickrow" data-delete="${esc(id)}" style="color:var(--danger)">Borrar de tu música</button>
   <div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
 }
@@ -3494,19 +3572,27 @@ async function makeShareFile(slides){
 }
 async function wShare(){
   if(!WS)return;
-  if(!WS.img)WS.img=makeShareFile(WS.slides);
-  const r=await WS.img; if(!r){toast("No se ha podido crear la imagen.");return}
-  try{if(navigator.canShare&&navigator.canShare({files:[r.file]})){await navigator.share({files:[r.file]}); /* sin título: así iOS enseña la miniatura de la imagen */return}}
-  catch(e){if(e&&e.name==="AbortError")return}
   const w=$("#wstory .ws"); if(!w)return;
-  const d=document.createElement("div"); d.className="ws-share";
-  d.innerHTML=`<img src="${r.url}" alt="Resumen de tu Wrapped"><p>Mantén pulsada la imagen y elige «Guardar en Fotos» o «Compartir».</p><button data-wsharex>Cerrar</button>`;
+  w.querySelectorAll(".ws-share").forEach(x=>x.remove());
+  const d=document.createElement("div"); d.className="ws-share"; d.setAttribute("role","dialog"); d.setAttribute("aria-label","Vista previa de la imagen");
+  d.innerHTML=`<p class="ws-load" role="status">Creando la imagen…</p>`;
   w.appendChild(d);
+  if(!WS.img)WS.img=makeShareFile(WS.slides);
+  const r=await WS.img;
+  if(!d.isConnected)return;
+  if(!r){WS.img=null;d.innerHTML=`<p>No se ha podido crear la imagen.</p><div class="ws-sacts"><button data-wsharex>Cerrar</button></div>`;return}
+  const can=!!(navigator.canShare&&navigator.canShare({files:[r.file]}));
+  d.innerHTML=`<img src="${r.url}" alt="Resumen de tu Wrapped">${can?"":`<p>Mantén pulsada la imagen y elige «Guardar en Fotos» o «Compartir».</p>`}<div class="ws-sacts"><button data-wsharex>Cerrar</button>${can?`<button class="go" data-wsharego>Compartir</button>`:""}</div>`;
+}
+async function wShareGo(){
+  const r=WS&&WS.img?await WS.img:null; if(!r)return;
+  try{await navigator.share({files:[r.file]}) /* sin título: así iOS enseña la miniatura de la imagen */}
+  catch(e){if(!e||e.name!=="AbortError")toast("No se ha podido compartir. Mantén pulsada la imagen para guardarla.")}
 }
 function wsGo(d){if(!WS)return;const i=WS.i+d;if(i<0||i>=WS.slides.length)return;WS.i=i;showSlide()}
 function wsClick(e){
   if(WS&&WS.noclick){WS.noclick=false;return}
-  if(e.target.closest(".ws-share")){if(e.target.closest("[data-wsharex]"))e.target.closest(".ws-share").remove();return}
+  if(e.target.closest(".ws-share")){if(e.target.closest("[data-wsharex]"))e.target.closest(".ws-share").remove();else if(e.target.closest("[data-wsharego]"))wShareGo();return}
   const b=e.target.closest("button");
   if(b){
     if(b.hasAttribute("data-wclose")){closeStory();return}
