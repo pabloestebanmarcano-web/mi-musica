@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-27">
+<meta name="app-version" content="2026.10.31-28">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -530,6 +530,16 @@ main section{margin-bottom:32px}
 .frnow{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);margin-bottom:10px}
 .frnow .t{font-weight:600}.frnow .s{font-size:14px;color:var(--muted)}
 .pickrow svg{flex-shrink:0}
+.donp{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.4}
+.donrow{display:flex;flex-wrap:wrap;gap:8px}
+.donchip{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 18px;border-radius:21px;background:var(--tint);color:var(--accent);font-weight:700;font-size:15px;text-decoration:none}
+.donchip.other{background:var(--accent);color:var(--on-accent)}
+.donnote{margin:10px 0 0;font-size:13px;color:var(--muted)}
+.doncard{display:flex;align-items:center;gap:14px;padding:16px;border-radius:20px;background:var(--tint);flex-wrap:wrap}
+.doncard .meta{flex:1;min-width:180px;display:flex;flex-direction:column;gap:3px}
+.doncard .t{font-weight:700;font-size:16px}.doncard .s{font-size:13px;color:var(--muted)}
+.doncard .acts{display:flex;align-items:center;gap:12px}
+.doncard .btn{height:40px;padding:0 16px;font-size:14px;text-decoration:none}
 /* Las filas que no se ven no se dibujan: la lista va igual de fluida con 100 que con 5.000 canciones */
 .songrow{content-visibility:auto;contain-intrinsic-size:auto 58px}
 .nowrow{content-visibility:auto;contain-intrinsic-size:auto 64px}
@@ -1040,6 +1050,7 @@ function render(){
       const latest=[...S.songs].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,4);
       h+=`<section><div class="sechead"><h2>Añadidas hace poco</h2><button class="link" data-goto="canciones">Ver todas</button></div>${latest.map(s=>songRow(s,"latest")).join("")}</section>`;
       h+=wrapCard();
+      h+=donateCard();
     }
   } else if(S.tab==="canciones"){
     h+=`<label class="search"><span class="sr">Buscar en tu biblioteca</span>${ICON.search}<input id="q" type="search" placeholder="Buscar" value="${esc(S.q)}" autocomplete="off"></label>`;
@@ -1108,6 +1119,7 @@ function renderSettings(){
     <button class="setrow setbtn" id="openDups"><span class="lab">Canciones repetidas<small>${dupSummary()}</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
     <button class="setrow setbtn" id="cleanOrphans"><span class="lab">Limpiar archivos sueltos<small>Borra archivos que ya no usa ninguna canción</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
   </div>
+  <div class="setgroup"><h2>Apoya Mi música</h2>${donateBox()}</div>
   <div class="setgroup"><h2>App</h2>
     <button class="setrow setbtn" id="checkUpd"><span class="lab">Buscar actualizaciones<small>Versión ${esc(APP_VER)}${UPD.checking?" · comprobando…":""}</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
   </div>`;
@@ -2987,6 +2999,25 @@ applyRot();
 addEventListener("orientationchange",()=>setTimeout(applyRot,50));
 try{screen.orientation&&screen.orientation.addEventListener("change",applyRot)}catch(e){}
 try{matchMedia(LANDQ).addEventListener("change",applyRot)}catch(e){}
+/* ---------- Donaciones (PayPal) ---------- */
+const DONATE_URL="https://www.paypal.me/pabloesteeban";
+try{if(!localStorage.getItem("firstUse"))localStorage.setItem("firstUse",String(Date.now()))}catch(e){}
+function donateBox(){
+  const a=(n,l)=>`<a class="donchip" href="${DONATE_URL}/${n}EUR" target="_blank" rel="noopener" data-donated>${l}</a>`;
+  return `<p class="donp">Mi música es gratis y sin anuncios. Si te gusta, puedes invitarme a un café para ayudar a mantenerla.</p><div class="donrow">${a(2,"2 €")}${a(5,"5 €")}${a(10,"10 €")}<a class="donchip other" href="${DONATE_URL}" target="_blank" rel="noopener" data-donated>Otra cantidad</a></div><p class="donnote">Se abre PayPal. Gracias de verdad 💚</p>`;
+}
+/* Aviso en Inicio: una sola vez, tras dos semanas de uso */
+function donateCard(){
+  let first=0,seen=false;try{first=+localStorage.getItem("firstUse")||0;seen=localStorage.getItem("donateSeen")==="1"}catch(e){}
+  if(seen||!first||Date.now()-first<14*864e5)return "";
+  return `<section><div class="doncard"><span class="meta"><span class="t">¿Te está gustando Mi música?</span><span class="s">Es gratis y sin anuncios. Si quieres, puedes invitarme a un café.</span></span><span class="acts"><a class="btn" href="${DONATE_URL}" target="_blank" rel="noopener" data-donated>Invitar a un café</a><button class="link" id="donLater">Ahora no</button></span></div></section>`;
+}
+onTap(e=>{
+  const a=e.target.closest("[data-donated]");
+  if(a){try{localStorage.setItem("donateSeen","1")}catch(_){}setTimeout(()=>{if(S.tab==="inicio")render()},800);return}
+  const t=e.target.closest("#donLater");
+  if(t){try{localStorage.setItem("donateSeen","1")}catch(_){}render();toast("Lo tienes en Ajustes si cambias de idea")}
+});
 const FAVMARK='<svg class="favmark" viewBox="0 0 24 24" fill="currentColor" aria-label="Favorita" role="img"><path d="M12 3.6l2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.6l-5.1 2.7.97-5.68L3.75 9.6l5.7-.83z"/></svg>';
 /* ---------- Notificaciones de versión nueva ---------- */
 const PUSH_HERE=true; /* false en la versión online: allí no hay notificaciones */
