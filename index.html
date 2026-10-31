@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-26">
+<meta name="app-version" content="2026.10.31-27">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -534,6 +534,10 @@ main section{margin-bottom:32px}
 .songrow{content-visibility:auto;contain-intrinsic-size:auto 58px}
 .nowrow{content-visibility:auto;contain-intrinsic-size:auto 64px}
 html{touch-action:pan-x pan-y}
+/* La página en sí nunca se mueve ni se ensancha: solo se desplaza el contenido de dentro.
+   Si algo se salía por un lado, el iPhone encogía toda la app para que cupiera. */
+html,body{overflow:hidden;overscroll-behavior:none;max-width:100%}
+main{overflow-x:hidden;overscroll-behavior-x:none}
 .pop-wrap{position:fixed;inset:0;z-index:45}
 .pop{position:absolute;width:min(290px,84vw);max-height:min(74vh,640px);overflow-y:auto;border-radius:30px;padding:6px 0;color:var(--ink);background:color-mix(in srgb,var(--bg) 74%,transparent);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);box-shadow:0 24px 70px rgba(0,0,0,.28),0 0 0 .5px color-mix(in srgb,var(--ink) 18%,transparent);animation:popin .24s cubic-bezier(.2,.9,.25,1.15)}
 @keyframes popin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
