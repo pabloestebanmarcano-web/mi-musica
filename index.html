@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-16">
+<meta name="app-version" content="2026.10.31-17">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -521,6 +521,12 @@ main section{margin-bottom:32px}
 .frnow{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);margin-bottom:10px}
 .frnow .t{font-weight:600}.frnow .s{font-size:14px;color:var(--muted)}
 .pickrow svg{flex-shrink:0}
+.frreq{padding:6px 16px 8px;border-radius:20px;background:var(--surface)}
+.frreq h2{font-size:15px;font-weight:600;margin:10px 0 2px}
+.frreq .avatar{background:var(--bg)}
+.reddot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:6px;vertical-align:1px}
+nav.tabs button[data-tab]{position:relative}
+nav.tabs button.frdot::after{content:"";position:absolute;top:6px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 2px var(--bg)}
 .rcode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;font-weight:600;letter-spacing:1px;text-align:center;padding:18px 12px;border-radius:16px;background:var(--surface);margin-bottom:8px;user-select:all;-webkit-user-select:all;overflow-wrap:anywhere}
 </style>
 </head>
@@ -876,6 +882,7 @@ function render(){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
   {const ds=$("#dockSearch");if(ds)ds.setAttribute("aria-current",S.tab==="canciones"?"page":"false");const nv=document.querySelector("nav.tabs");if(nv)nv.classList.toggle("none",S.tab==="canciones")}
   syncPill();
+  {const tb=document.querySelector('nav.tabs button[data-tab="inicio"]');if(tb)tb.classList.toggle("frdot",typeof AMI!=="undefined"&&!!AMI&&!!AMI.me&&AMI.incoming.length>0)}
   if(S.ready&&S.db&&!welcomeChecked)setTimeout(welcomeCheck,0);
   let h="";
   const titles={inicio:homeTitle(),canciones:"Canciones",listas:"Listas",ajustes:"Ajustes",ahora:"Ahora"};
@@ -899,9 +906,9 @@ function render(){
       const lh=lyricHits();if(r.length||!lh.length)h+=`<section><div class="sechead"><h2>Resultados</h2></div>${r.length?r.map(s=>songRow(s,"search")).join(""):`<p style="color:var(--muted)">No hay canciones que coincidan con «${esc(S.q)}».</p>`}</section>`;h+=lyrSection(lh);
     } else if(!S.songs.length){
       h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en este dispositivo.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
-      h+=(typeof AMI!=="undefined"&&AMI?`<div style="height:24px"></div>`+recoveryCard()+friendsSection():"");
+      h+=(typeof AMI!=="undefined"&&AMI?`<div style="height:24px"></div>`+requestsCard()+recoveryCard()+friendsSection():"");
     } else {
-      h+=bdayCard();h+=nowCard();h+=(typeof AMI!=="undefined"&&AMI?recoveryCard()+friendsSection():"");
+      h+=bdayCard();h+=nowCard();h+=(typeof AMI!=="undefined"&&AMI?requestsCard()+recoveryCard()+friendsSection():"");
       const rec=S.recent.map(byId).filter(Boolean).slice(0,10);
       if(rec.length) h+=`<section><div class="sechead"><h2>Escuchado hace poco</h2></div><div class="recent">${rec.map(s=>`<button class="card" data-play="${esc(s.id)}" data-ctx="recent">${art(s,132,16)}<span><span class="t" style="display:block">${esc(s.title)}</span><span class="s" style="display:block">${esc(s.artist||"Artista desconocido")}</span></span></button>`).join("")}</div></section>`;
       h+=moodSection();
@@ -3621,6 +3628,7 @@ async function frRefresh(force){
     AMI.incoming=(fs||[]).filter(f=>f.status==="pending"&&f.addressee===me).map(f=>({id:f.requester,username:name(f.requester)}));
     AMI.outgoing=(fs||[]).filter(f=>f.status==="pending"&&f.requester===me).map(f=>({id:f.addressee,username:name(f.addressee)}));
     frLoadAvatars(AMI.friends.map(f=>f.id));
+    frNotice();
     AMI.err="";
     const sig=JSON.stringify([AMI.friends,AMI.incoming,AMI.outgoing,Math.floor(Date.now()/60000)]);
     if(force||sig!==AMI.sig){AMI.sig=sig;frRerender()}
@@ -3643,6 +3651,24 @@ function frMatch(n){
 function frSorted(){
   return AMI.friends.map(f=>({...f,st:frStatus(f.np)})).sort((a,b)=>(b.st.live-a.st.live)||((Date.parse(b.np&&b.np.updated_at||0)||0)-(Date.parse(a.np&&a.np.updated_at||0)||0))||a.username.localeCompare(b.username));
 }
+/* Avisos dentro de la app: solicitudes nuevas y solicitudes aceptadas */
+function frNotice(){
+  if(!AMI.me)return;
+  const k="frSeen:"+AMI.me.id;let seen=null;try{seen=JSON.parse(localStorage.getItem(k)||"null")}catch(e){}
+  if(seen){
+    const acc=AMI.friends.filter(f=>f.mine&&!seen.f.includes(f.id)),inc=AMI.incoming.filter(p=>!seen.i.includes(p.id));
+    const name=x=>"@"+x.username;
+    if(acc.length)toast(acc.length===1?`${name(acc[0])} ha aceptado tu solicitud`:`${acc.length} personas han aceptado tu solicitud`,4500);
+    else if(inc.length)toast(inc.length===1?`${name(inc[0])} quiere ser tu amigo`:`Tienes ${inc.length} solicitudes de amistad`,4500);
+  }
+  try{localStorage.setItem(k,JSON.stringify({f:AMI.friends.map(f=>f.id),i:AMI.incoming.map(p=>p.id)}))}catch(e){}
+  const tb=document.querySelector('nav.tabs button[data-tab="inicio"]');if(tb)tb.classList.toggle("frdot",AMI.incoming.length>0);
+}
+function requestsCard(){
+  if(!AMI.me||!AMI.incoming.length)return "";
+  const l=AMI.incoming.slice(0,3),more=AMI.incoming.length-l.length;
+  return `<section><div class="frreq"><h2>${AMI.incoming.length===1?"Solicitud de amistad":"Solicitudes de amistad"}</h2>${l.map(p=>`<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">@${esc(p.username)}</span><span class="s">Quiere ser tu amigo</span></span><button class="btn sm" data-fracc="${esc(p.id)}">Aceptar</button><button class="iconbtn plain" data-frdel="${esc(p.id)}" data-frdir="in" aria-label="Rechazar a ${esc(p.username)}">${ICON.x}</button></div>`).join("")}${more?`<button class="link" data-fropen>Ver ${more} más</button>`:""}</div></section>`;
+}
 const FR_EQ=`<span class="freq" aria-hidden="true"><i></i><i></i><i></i></span>`;
 /* Sección de Inicio */
 function friendsSection(){
@@ -3652,7 +3678,7 @@ function friendsSection(){
     return `<section><div class="frcall"><span class="frdots" aria-hidden="true">${avatarHTML("",40,"")}${avatarHTML("",40,"")}</span><span class="meta"><span class="t">Escucha con tus amigos</span><span class="s">Mira qué están escuchando ahora mismo.</span></span><span class="acts"><button class="btn" data-fropen>Empezar</button><button class="link" id="frHide">Ahora no</button></span></div></section>`;
   }
   const list=frSorted(), inc=AMI.incoming.length;
-  let h=`<section><div class="sechead"><h2>Tus amigos</h2><button class="link" data-fropen>${inc?`Solicitudes (${inc})`:"Ver todos"}</button></div>`;
+  let h=`<section><div class="sechead"><h2>Tus amigos</h2><button class="link" data-fropen>${inc?`<span class="reddot" aria-hidden="true"></span>Solicitudes (${inc})`:"Ver todos"}</button></div>`;
   if(!list.length)return h+`<button class="row" data-fropen><span class="cover" style="width:44px;height:44px;border:1px dashed var(--line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);border-radius:22px">${ICON.plus}</span><span class="meta"><span class="t">Añade a tus amigos</span><span class="s">Búscalos por su nombre de usuario</span></span></button></section>`;
   return h+`<div class="recent">${list.map(f=>`<button class="card frcard${f.st.live?" live":""}" data-friend="${esc(f.id)}"><span class="frav">${avatarHTML(frPhoto(f.id),72,f.username)}${f.st.live?FR_EQ:""}</span><span><span class="t" style="display:block">${esc(f.username)}</span><span class="s" style="display:block">${f.st.song?esc(f.st.song.title):"—"}</span><span class="s w" style="display:block">${esc(f.st.live?"Ahora":f.st.line.replace(/^Escuchó /,""))}</span></span></button>`).join("")}</div></section>`;
 }
