@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-3">
+<meta name="app-version" content="2026.11.01-4">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -256,7 +256,8 @@ button.next{width:100%;background:none;border:none;border-top:1px solid var(--li
 .ws-share img{max-height:68vh;max-width:100%;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.5);-webkit-touch-callout:default}
 .ws-share p{margin:0;font-size:15px;text-align:center;max-width:32ch;opacity:.85}
 .ws-share button{height:46px;padding:0 22px;border-radius:23px;border:1.5px solid #fff;background:transparent;color:#fff;font-weight:600}
-.ws-share .ws-sacts{display:flex;gap:12px}
+.ws-share .ws-sacts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:340px}
+.ws-share button.wide{flex-basis:100%}
 .ws-share button.go{background:#fff;color:#16141F;min-width:132px}
 .ws-share .ws-load{opacity:.9}
 .player.dragging{transition:none}
@@ -3925,7 +3926,30 @@ async function wShare(){
   if(!d.isConnected)return;
   if(!r){WS.img=null;d.innerHTML=`<p>No se ha podido crear la imagen.</p><div class="ws-sacts"><button data-wsharex>Cerrar</button></div>`;return}
   const can=!!(navigator.canShare&&navigator.canShare({files:[r.file]}));
-  d.innerHTML=`<img src="${r.url}" alt="Resumen de tu Wrapped">${can?"":`<p>Mantén pulsada la imagen y elige «Guardar en Fotos» o «Compartir».</p>`}<div class="ws-sacts"><button data-wsharex>Cerrar</button>${can?`<button class="go" data-wsharego>Compartir</button>`:""}</div>`;
+  const st=!!(typeof AMI!=="undefined"&&AMI&&AMI.me&&SBC);
+  d.innerHTML=`<img src="${r.url}" alt="Resumen de tu Wrapped">${can?"":`<p>Mantén pulsada la imagen y elige «Guardar en Fotos» o «Compartir».</p>`}<div class="ws-sacts">${st?`<button class="go wide" data-wsstory>Subir a tu historia</button>`:""}<button data-wsharex>Cerrar</button>${can?`<button class="${st?"":"go"}" data-wsharego>Compartir</button>`:""}</div>`;
+}
+/* Subir el Wrapped a tu historia: la imagen del resumen + 15 s de tu canción más escuchada */
+async function wStoryPublish(btn){
+  if(!WS||!AMI.me||!SBC)return;
+  if(SV.mine.length>=ST_LIMIT){toast("Ya tienes 2 historias activas. Borra una para subir otra.");return}
+  const P=WS.slides[0].P,top=WS.slides.topSong,song=top&&byId(top.id);
+  btn.disabled=true;btn.textContent="Subiendo…";
+  try{
+    const r=await WS.img;if(!r)throw new Error("imagen");
+    const image=await svSmallImage(r.file);
+    let audioUrl=null;
+    if(song){try{
+      let start=svChorusStart(song);
+      if(start==null)start=await svEnergyStart(song,songDur(song.id));
+      if(start==null)start=Math.max(0,songDur(song.id)*.3);
+      audioUrl=await toDataURL(await svClip(song,start));
+    }catch(e){audioUrl=null}}
+    const {error}=await SBC.from("stories").insert({user_id:AMI.me.id,kind:"wrapped",title:"Wrapped "+cap(P.title||""),artist:top?`suena «${top.title}»`:"",image,audio:audioUrl});
+    if(error)throw error;
+    await storiesLoad();btn.textContent="Subida a tu historia";
+    toast("Wrapped subido a tu historia · tus amigos lo verán 24 h");
+  }catch(e){btn.disabled=false;btn.textContent="Subir a tu historia";toast(/LIMIT|máximo|2 historias/i.test(String(e&&e.message))?"Ya tienes 2 historias activas. Borra una para subir otra.":frErr(e))}
 }
 async function wShareGo(){
   const r=WS&&WS.img?await WS.img:null; if(!r)return;
@@ -3935,7 +3959,7 @@ async function wShareGo(){
 function wsGo(d){if(!WS)return;const i=WS.i+d;if(i<0||i>=WS.slides.length)return;WS.i=i;showSlide()}
 function wsClick(e){
   if(WS&&WS.noclick){WS.noclick=false;return}
-  if(e.target.closest(".ws-share")){if(e.target.closest("[data-wsharex]"))e.target.closest(".ws-share").remove();else if(e.target.closest("[data-wsharego]"))wShareGo();return}
+  if(e.target.closest(".ws-share")){if(e.target.closest("[data-wsharex]"))e.target.closest(".ws-share").remove();else if(e.target.closest("[data-wsharego]"))wShareGo();else if(e.target.closest("[data-wsstory]"))wStoryPublish(e.target.closest("[data-wsstory]"));return}
   const b=e.target.closest("button");
   if(b){
     if(b.hasAttribute("data-wclose")){closeStory();return}
@@ -4530,6 +4554,28 @@ async function svViewsOpen(id){
     list.innerHTML=(k?`<p class="sv-vsum">${SV_HEART_ON}<span>${k===1?"A 1 persona le gusta":`A ${k} personas les gusta`}</span></p>`:"")+v.map(x=>{const n=names.get(x.viewer_id)||"Usuario";return `<div class="sv-vrow">${avatarHTML(frPhoto(x.viewer_id),40,n)}<span class="sv-vn"><b>${esc(n)}</b><small>${esc(frAgo(Date.parse(x.viewed_at)))}</small></span>${x.liked?`<span class="sv-vh" role="img" aria-label="Le gusta">${SV_HEART_ON}</span>`:""}</div>`}).join("");
   }catch(e){const list=p.querySelector(".sv-vlist");if(list)list.innerHTML=`<p class="fs-hint">No se ha podido cargar la lista. Comprueba tu conexión.</p>`}
 }
+const SVP={on:false};
+document.addEventListener("touchstart",e=>{
+  const p=e.target.closest&&e.target.closest(".sv-views");if(!p||e.touches.length!==1)return;
+  const list=p.querySelector(".sv-vlist");
+  Object.assign(SVP,{on:true,p,list,y:e.touches[0].clientY,dy:0,drag:false,fromList:!!(list&&list.contains(e.target))});
+},{passive:true});
+document.addEventListener("touchmove",e=>{
+  if(!SVP.on)return;const y=e.touches[0].clientY,dy=y-SVP.y;
+  if(!SVP.drag){
+    if(dy>6&&(!SVP.fromList||SVP.list.scrollTop<=0)){SVP.drag=true;SVP.y=y}
+    else if(Math.abs(dy)>6){SVP.on=false;return}
+    else return;
+  }
+  e.preventDefault();SVP.dy=Math.max(0,y-SVP.y);SVP.p.style.animation="none";SVP.p.style.transition="none";SVP.p.style.transform=`translateY(${SVP.dy}px)`;
+},{passive:false});
+function svpEnd(cancel){
+  if(!SVP.on)return;SVP.on=false;if(!SVP.drag)return;const p=SVP.p;
+  p.style.transition="transform .22s ease-out";
+  if(!cancel&&SVP.dy>80){p.style.transform="translateY(110%)";setTimeout(svViewsClose,200)}else p.style.transform="";
+}
+document.addEventListener("touchend",()=>svpEnd(false));
+document.addEventListener("touchcancel",()=>svpEnd(true));
 function svViewsClose(){document.querySelectorAll(".sv-wrap .sv-views").forEach(x=>x.remove());svResume()}
 function svStep(dir){
   const st=SV.stories.get(SV.list[SV.ui])||[];
@@ -4557,7 +4603,7 @@ document.addEventListener("pointermove",e=>{
   if(!SVG.on)return;SVG.dx=e.clientX-SVG.x;SVG.dy=e.clientY-SVG.y;
   if(!SVG.ax&&Math.hypot(SVG.dx,SVG.dy)>10){SVG.ax=Math.abs(SVG.dy)>Math.abs(SVG.dx)?"y":"x";clearTimeout(SVG.tm);svPause()}
   const w=SVG.w;
-  if(SVG.ax==="y"){const d=Math.max(0,SVG.dy);w.style.transform=`translateY(${d}px) scale(${Math.max(.86,1-d/1600)})`;w.style.borderRadius=Math.min(24,d/5)+"px";w.classList.add("drag")}
+  if(SVG.ax==="y"){const d=SVG.dy;if(d>=0){w.style.transform=`translateY(${d}px) scale(${Math.max(.86,1-d/1600)})`;w.style.borderRadius=Math.min(24,d/5)+"px"}else{w.style.transform=`translateY(${Math.max(d,-90)*.25}px)`;w.style.borderRadius=""}w.classList.add("drag")}
   else if(SVG.ax==="x"){w.style.transform=`translateX(${SVG.dx*.4}px)`;w.classList.add("drag")}
 });
 function svGestEnd(e,cancel){
@@ -4567,7 +4613,9 @@ function svGestEnd(e,cancel){
   if(cancel){back();svResume();return}
   if(SVG.ax==="y"){
     if(SVG.dy>110){w.classList.add("snap");w.style.transform="translateY(100vh) scale(.86)";setTimeout(svClose,200);return}
-    back();svResume();return;
+    back();
+    if(SVG.dy<-60&&SV.list[SV.ui]===AMI.me.id){const it=(SV.stories.get(AMI.me.id)||[])[SV.si];if(it){svViewsOpen(it.id);return}}
+    svResume();return;
   }
   if(SVG.ax==="x"){back();if(Math.abs(SVG.dx)>60)svUserStep(SVG.dx<0?1:-1);else svResume();return}
   if(SVG.hold){svResume();return}
