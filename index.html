@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.10.31-14">
+<meta name="app-version" content="2026.10.31-16">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -521,6 +521,7 @@ main section{margin-bottom:32px}
 .frnow{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:16px;background:var(--surface);margin-bottom:10px}
 .frnow .t{font-weight:600}.frnow .s{font-size:14px;color:var(--muted)}
 .pickrow svg{flex-shrink:0}
+.rcode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;font-weight:600;letter-spacing:1px;text-align:center;padding:18px 12px;border-radius:16px;background:var(--surface);margin-bottom:8px;user-select:all;-webkit-user-select:all;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -898,8 +899,9 @@ function render(){
       const lh=lyricHits();if(r.length||!lh.length)h+=`<section><div class="sechead"><h2>Resultados</h2></div>${r.length?r.map(s=>songRow(s,"search")).join(""):`<p style="color:var(--muted)">No hay canciones que coincidan con «${esc(S.q)}».</p>`}</section>`;h+=lyrSection(lh);
     } else if(!S.songs.length){
       h+=`<div class="empty"><h3>Tu biblioteca está vacía</h3><p style="margin:0 0 16px">Sube tus archivos de audio y se guardarán en este dispositivo.</p><button class="btn" id="addSongs2">Subir canciones</button></div>`;
+      h+=(typeof AMI!=="undefined"&&AMI?`<div style="height:24px"></div>`+recoveryCard()+friendsSection():"");
     } else {
-      h+=bdayCard();h+=nowCard();h+=(typeof AMI!=="undefined"&&AMI?friendsSection():"");
+      h+=bdayCard();h+=nowCard();h+=(typeof AMI!=="undefined"&&AMI?recoveryCard()+friendsSection():"");
       const rec=S.recent.map(byId).filter(Boolean).slice(0,10);
       if(rec.length) h+=`<section><div class="sechead"><h2>Escuchado hace poco</h2></div><div class="recent">${rec.map(s=>`<button class="card" data-play="${esc(s.id)}" data-ctx="recent">${art(s,132,16)}<span><span class="t" style="display:block">${esc(s.title)}</span><span class="s" style="display:block">${esc(s.artist||"Artista desconocido")}</span></span></button>`).join("")}</div></section>`;
       h+=moodSection();
@@ -944,6 +946,9 @@ function renderSettings(){
   </div>
   ${typeof AMI!=="undefined"&&AMI&&AMI.me?`<div class="setgroup"><h2>Cuenta</h2>
     <div class="setrow"><span class="lab">@${esc(AMI.me.username)}<small>Tu perfil y tu Wrapped se guardan en tu cuenta</small></span><button class="btn danger" id="frOut" style="height:40px;flex-shrink:0">Cerrar sesión</button></div>
+    <button class="setrow setbtn" id="accPw"><span class="lab">Cambiar contraseña</span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
+    <button class="setrow setbtn" id="accCode"><span class="lab">Código de recuperación<small${AMI.hasCode===false?' style="color:var(--danger)"':""}>${AMI.hasCode?"Creado. Si lo pierdes, crea uno nuevo":AMI.hasCode===false?"Sin crear: si olvidas la contraseña, perderás tu cuenta":"Para recuperar tu cuenta si olvidas la contraseña"}</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
+    <button class="setrow setbtn" id="accDel"><span class="lab" style="color:var(--danger)">Borrar cuenta<small>Elimina tu cuenta y tus datos del servidor</small></span>${ICON.back.replace('d="M15 6l-6 6 6 6"','d="M9 6l6 6-6 6"')}</button>
   </div>`:""}
   <div class="setgroup"><h2>Apariencia</h2>
     <div class="setrow"><span class="lab">Tema</span>${seg("theme",[["auto","Auto"],["light","Claro"],["dark","Oscuro"]])}</div>
@@ -2608,18 +2613,19 @@ async function welcomeCheck(){
 }
 function dayOpts(sel){let o=`<option value="">Día</option>`;for(let i=1;i<=31;i++)o+=`<option value="${i}"${+sel===i?" selected":""}>${i}</option>`;return o}
 function monthOpts(sel){return `<option value="">Mes</option>`+MESES.map((m,i)=>`<option value="${i+1}"${+sel===i+1?" selected":""}>${m}</option>`).join("")}
-function showWelcome(){W={step:0,name:"",day:"",month:""};let el=document.querySelector(".welcome");if(!el){el=document.createElement("div");el.className="welcome";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","Bienvenida");document.body.appendChild(el);el.addEventListener("click",welcomeClick);el.addEventListener("input",welcomeInput);el.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="wName"){e.preventDefault();wNext()}else if(e.key==="Enter"&&e.target.id==="wU"){e.preventDefault();const pp=document.querySelector("#wP");if(pp)pp.focus()}else if(e.key==="Enter"&&e.target.id==="wP"){e.preventDefault();W.step==="signup"?wSignup():wLogin()}})}wRender()}
+function showWelcome(){W={step:0,name:"",day:"",month:""};let el=document.querySelector(".welcome");if(!el){el=document.createElement("div");el.className="welcome";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","Bienvenida");document.body.appendChild(el);el.addEventListener("click",welcomeClick);el.addEventListener("input",welcomeInput);el.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="wName"){e.preventDefault();wNext()}else if(e.key==="Enter"&&e.target.id==="wU"){e.preventDefault();const pp=document.querySelector("#wP");if(pp)pp.focus()}else if(e.key==="Enter"&&e.target.id==="wC"){e.preventDefault();const pp=document.querySelector("#wP");if(pp)pp.focus()}else if(e.key==="Enter"&&e.target.id==="wP"){e.preventDefault();W.step==="signup"?wSignup():W.step==="recover"?wRecover():wLogin()}})}wRender()}
 function wRender(){
   const el=document.querySelector(".welcome");if(!el||!W)return;
   const last=3,hasSongs=S.songs.length>0,acct=typeof AMI!=="undefined"&&AMI&&AMI.ok;let b="",a="";
   if(W.step===0){b=`<h1 class="hello">Hola<span class="dot">.</span></h1><p>Esta es tu música, guardada en tu dispositivo. Antes de empezar, cuéntanos un par de cosas.</p>`;if(acct){b=`<h1 class="hello">Hola<span class="dot">.</span></h1><p>Esta es tu música, guardada en tu dispositivo. Para empezar, crea tu cuenta: así no pierdes tu perfil ni tu Wrapped y puedes ver qué escuchan tus amigos.</p>`;a=`<button class="btn" data-w="signup">Crear cuenta</button><button class="btn ghost" data-w="login">Ya tengo cuenta</button>`}else a=`<button class="btn" data-w="next">Empezar</button>`}
   else if(W.step==="signup"){b=`<h1>Crea tu cuenta</h1><p>Tu nombre de usuario es para que tus amigos te encuentren. Es distinto de tu nombre: no sale en el saludo.</p><label class="sr" for="wU">Nombre de usuario</label><input class="big" id="wU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" maxlength="20" placeholder="Nombre de usuario" value="${esc(W.u||"")}" style="margin-bottom:12px"><label class="sr" for="wP">Contraseña</label><input class="big" id="wP" type="password" autocomplete="new-password" placeholder="Contraseña (mín. 6)"><p style="font-size:14px;color:var(--muted);margin-top:12px">Letras, números, punto o guion bajo. Apunta la contraseña: la necesitarás si cambias de móvil.</p><p id="wMsg" role="alert" style="color:var(--danger);font-size:15px;min-height:22px;margin-top:6px">${esc(W.err||"")}</p>`;a=`<button class="btn" data-w="dosignup"${W.busy?" disabled":""}>${W.busy?"Creando…":"Crear cuenta"}</button><button class="btn ghost" data-w="back0">Volver</button>`}
-  else if(W.step==="login"){b=`<h1>Inicia sesión</h1><p>Recuperarás tu nombre, tu foto, tu cumpleaños y tu Wrapped. Tus canciones tendrás que volver a subirlas a este dispositivo.</p><label class="sr" for="wU">Nombre de usuario</label><input class="big" id="wU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" maxlength="20" placeholder="Nombre de usuario" value="${esc(W.u||"")}" style="margin-bottom:12px"><label class="sr" for="wP">Contraseña</label><input class="big" id="wP" type="password" autocomplete="current-password" placeholder="Contraseña"><p id="wMsg" role="alert" style="color:var(--danger);font-size:15px;min-height:22px;margin-top:12px">${esc(W.err||"")}</p>`;a=`<button class="btn" data-w="dologin"${W.busy?" disabled":""}>${W.busy?"Entrando…":"Entrar"}</button><button class="btn ghost" data-w="back0">Volver</button>`}
+  else if(W.step==="login"){b=`<h1>Inicia sesión</h1><p>Recuperarás tu nombre, tu foto, tu cumpleaños y tu Wrapped. Tus canciones tendrás que volver a subirlas a este dispositivo.</p><label class="sr" for="wU">Nombre de usuario</label><input class="big" id="wU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" maxlength="20" placeholder="Nombre de usuario" value="${esc(W.u||"")}" style="margin-bottom:12px"><label class="sr" for="wP">Contraseña</label><input class="big" id="wP" type="password" autocomplete="current-password" placeholder="Contraseña"><p id="wMsg" role="alert" style="color:var(--danger);font-size:15px;min-height:22px;margin-top:12px">${esc(W.err||"")}</p>`;a=`<button class="btn" data-w="dologin"${W.busy?" disabled":""}>${W.busy?"Entrando…":"Entrar"}</button><button class="btn ghost" data-w="forgot">He olvidado la contraseña</button><button class="link" data-w="back0" style="align-self:center">Volver</button>`}
+  else if(W.step==="recover"){b=`<h1>Nueva contraseña</h1><p>Escribe tu usuario y tu código de recuperación, y elige una contraseña nueva.</p><label class="sr" for="wU">Nombre de usuario</label><input class="big" id="wU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" maxlength="20" placeholder="Nombre de usuario" value="${esc(W.u||"")}" style="margin-bottom:12px"><label class="sr" for="wC">Código de recuperación</label><input class="big" id="wC" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="off" maxlength="24" placeholder="XXXX-XXXX-XXXX-XXXX" value="${esc(W.c||"")}" style="margin-bottom:12px"><label class="sr" for="wP">Contraseña nueva</label><input class="big" id="wP" type="password" autocomplete="new-password" placeholder="Contraseña nueva"><p id="wMsg" role="alert" style="color:var(--danger);font-size:15px;min-height:22px;margin-top:12px">${esc(W.err||"")}</p>`;a=`<button class="btn" data-w="dorecover"${W.busy?" disabled":""}>${W.busy?"Un momento…":"Cambiar contraseña"}</button><button class="btn ghost" data-w="login">Volver</button>`}
   else if(W.step===1){b=`<button class="avbtn" data-w="photo" style="width:88px;height:88px;margin-bottom:22px" aria-label="${W.photo?"Cambiar foto":"Añadir foto"}">${avatarHTML(W.photo,88,W.name)}</button><h1>¿Cómo te llamas?</h1><p>Lo usaremos para saludarte y en tu Wrapped. Toca el círculo para poner una foto, si quieres.</p><label class="sr" for="wName">Tu nombre</label><input class="big" id="wName" maxlength="40" autocomplete="given-name" autocapitalize="words" placeholder="Tu nombre" value="${esc(W.name)}">`;a=`<button class="btn" data-w="next" ${W.name.trim()?"":"disabled"}>Continuar</button>`}
   else if(W.step===2){b=`<h1>¿Cuándo es tu cumpleaños?</h1><p>Solo el día y el mes. Ese día te espera una sorpresa en Inicio.</p><div class="bdrow"><label class="sr" for="wDay">Día</label><select class="big" id="wDay">${dayOpts(W.day)}</select><label class="sr" for="wMonth">Mes</label><select class="big" id="wMonth">${monthOpts(W.month)}</select></div>`;a=`<button class="btn" data-w="next" ${W.day&&W.month?"":"disabled"}>Continuar</button><button class="btn ghost" data-w="skipstep">Prefiero no decirlo</button>`}
   else{const n=W.name.trim();b=`<h1>${hasSongs?`Todo listo${n?", "+esc(n):""}.`:`Sube tus primeras canciones${n?", "+esc(n):""}`}</h1><p>${hasSongs?"Tu música te está esperando.":"Elige archivos de audio de tu dispositivo, una carpeta o un .zip. Puedes hacerlo también más tarde con el botón + de Inicio."}</p>`;a=hasSongs?`<button class="btn" data-w="finish">Ir a mi música</button>`:`<button class="btn" data-w="upload">Subir canciones</button><button class="btn ghost" data-w="finish">Más tarde</button>`}
   el.innerHTML=`<div class="wtop"><div class="dots" aria-hidden="true">${[0,1,2,3].map(i=>`<span class="${i===(typeof W.step==="number"?W.step:0)?"on":""}"></span>`).join("")}</div>${typeof W.step==="number"&&W.step>0&&W.step<last?`<button class="skip" data-w="skipall">Saltar</button>`:""}</div><div class="wbody" key="${W.step}">${b}</div><div class="wacts">${a}</div>`;
-  const inp=el.querySelector("#wName")||((W.step==="login"||W.step==="signup")&&!W.u?el.querySelector("#wU"):null);if(inp)setTimeout(()=>{try{inp.focus()}catch(e){}},350);
+  const inp=el.querySelector("#wName")||((W.step==="login"||W.step==="signup"||W.step==="recover")&&!W.u?el.querySelector("#wU"):null);if(inp)setTimeout(()=>{try{inp.focus()}catch(e){}},350);
 }
 function wSignup(){wLogin("signup")}
 async function wLogin(mode){
@@ -2638,7 +2644,7 @@ async function wLogin(mode){
 }
 function wNext(){if(W.step===1&&!W.name.trim())return;W.step++;wRender()}
 function wClose(){saveProfile({name:W.name,day:W.day,month:W.month,photo:W.photo||""});W=null;const el=document.querySelector(".welcome");if(el)el.remove();render()}
-function welcomeInput(e){const t=e.target;if(t.id==="wU"){W.u=t.value;return}if(t.id==="wName"){W.name=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!W.name.trim()}else if(t.id==="wDay"||t.id==="wMonth"){W[t.id==="wDay"?"day":"month"]=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!(W.day&&W.month)}}
+function welcomeInput(e){const t=e.target;if(t.id==="wU"){W.u=t.value;return}if(t.id==="wC"){W.c=t.value;return}if(t.id==="wName"){W.name=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!W.name.trim()}else if(t.id==="wDay"||t.id==="wMonth"){W[t.id==="wDay"?"day":"month"]=t.value;const b=document.querySelector('.welcome [data-w="next"]');if(b)b.disabled=!(W.day&&W.month)}}
 function welcomeClick(e){const b=e.target.closest("[data-w]");if(!b||b.disabled)return;e.stopPropagation();const w=b.dataset.w;
   if(w==="next")wNext();
   else if(w==="login"){W.step="login";W.err="";wRender()}
@@ -2646,6 +2652,8 @@ function welcomeClick(e){const b=e.target.closest("[data-w]");if(!b||b.disabled)
   else if(w==="dologin")wLogin();
   else if(w==="signup"){W.step="signup";W.err="";wRender()}
   else if(w==="dosignup")wSignup();
+  else if(w==="forgot"){W.step="recover";W.err="";wRender()}
+  else if(w==="dorecover")wRecover();
   else if(w==="skipstep"){W.day="";W.month="";wNext()}
   else if(w==="skipall"){if(W.step<2&&!W.name.trim()){W.step=3}else W.step=3;wRender()}
   else if(w==="finish")wClose();
@@ -3588,6 +3596,7 @@ async function frInit2(){
     let {data:p}=await c.from("profiles").select("id,username").eq("id",session.user.id).maybeSingle();
     if(!p){const u=(session.user.email||"").split("@")[0];const r=await c.from("profiles").insert({id:session.user.id,username:u}).select("id,username").single();if(r.error)throw r.error;p=r.data}
     AMI.me=p;AMI.ready=true;
+    c.rpc("has_recovery_code").then(r=>{if(!r.error){AMI.hasCode=!!r.data;frRerender()}},()=>{});
     await frRefresh(true);
     frPublish(true);
     await cloudSync();
@@ -3705,11 +3714,14 @@ async function frLogout(){
     if(CL.dirty.size||Object.keys(pend).length)throw new Error("red");
   }catch(e){toast("No se ha podido guardar todo en tu cuenta. Inténtalo con mejor conexión.");return}
   try{await SBC.from("now_playing").upsert({user_id:AMI.me.id,playing:false,updated_at:new Date().toISOString()});await SBC.auth.signOut()}catch(_){}
+  await frLocalReset();
+}
+async function frLocalReset(){
   try{localStorage.removeItem(FR_KEY);localStorage.removeItem("profile");localStorage.removeItem("frAv");localStorage.removeItem("cloudDirty")}catch(_){}
   try{const snap=await S.db.collection("plays").get();for(const d of snap.docs)await S.db.doc("plays/"+d.id).delete();await S.db.doc("state/profile").delete()}catch(_){}
   PROFILE=null;FAV={};CL.dirty.clear();for(const y in WR.data)delete WR.data[y];S.loop=[];
   AMI.me=null;AMI.friends=[];AMI.incoming=[];AMI.outgoing=[];AMI.pub.key="";
-  S.friendsOpen=false;S.tab="inicio";S.setView=null;render();showWelcome();
+  AMI.hasCode=null;S.friendsOpen=false;S.tab="inicio";S.setView=null;render();showWelcome();
 }
 async function frSignIn(mode,u,p){
   const c=await sbLoad();
@@ -3794,6 +3806,62 @@ document.addEventListener("click",async e=>{
   if(t.id==="frOut"){if(!confirm("¿Cerrar sesión? Tus canciones se quedan en este iPhone. Tu perfil y tu Wrapped se quedan guardados en tu cuenta."))return;frLogout();return}
 },true);
 if(AMI.ok&&frHasSession()&&navigator.onLine)setTimeout(frInit,1500);
+
+/* ---------- Cuenta: contraseña, código de recuperación y borrar cuenta ---------- */
+const RC_AB="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function rcNew(){const b=new Uint8Array(16);crypto.getRandomValues(b);const c=[...b].map(x=>RC_AB[x&31]).join("");return c.match(/.{4}/g).join("-")}
+const rcClean=c=>String(c||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+async function frCheckPw(pw){const {error}=await SBC.auth.signInWithPassword({email:frEmail(AMI.me.username),password:pw});if(error)throw error}
+function pwSheet(){showSheet(`<h3>Cambiar contraseña</h3><div class="field"><label for="pwOld">Contraseña actual</label><input id="pwOld" type="password" autocomplete="current-password"></div><div class="field"><label for="pwNew">Contraseña nueva</label><input id="pwNew" type="password" autocomplete="new-password" placeholder="Al menos 6 caracteres"></div><p id="accMsg" role="alert" style="color:var(--danger);font-size:14px;margin:0 0 8px"></p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="pwSave">Guardar</button></div>`)}
+function codeSheet(){showSheet(`<h3>Código de recuperación</h3><p style="color:var(--muted);margin:0 0 16px">Si olvidas la contraseña, con tu usuario y este código podrás poner una nueva. Guárdalo fuera de la app: en Notas, en una captura o apuntado en papel.${AMI.hasCode?" Al crear uno nuevo, el anterior deja de servir.":""}</p><p id="accMsg" role="alert" style="color:var(--danger);font-size:14px;margin:0 0 8px"></p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="codeGo">${AMI.hasCode?"Crear uno nuevo":"Crear código"}</button></div>`)}
+function codeShow(code){closeSheet();showSheet(`<h3>Tu código</h3><p style="color:var(--muted);margin:0 0 14px">Guárdalo ahora: no podrás volver a verlo.</p><div class="rcode" aria-label="Código de recuperación">${esc(code)}</div><div class="actions"><button class="btn ghost" id="codeCopy" data-code="${esc(code)}">Copiar</button><button class="btn" data-closesheet>Ya lo he guardado</button></div>`)}
+function delSheet(){showSheet(`<h3 style="color:var(--danger)">Borrar cuenta</h3><p style="color:var(--muted);margin:0 0 14px">Se borrarán del servidor tu usuario, tus amigos, tu perfil y tu Wrapped. No se puede deshacer. Tus canciones se quedan en este iPhone.</p><div class="field"><label for="delPw">Escribe tu contraseña para confirmarlo</label><input id="delPw" type="password" autocomplete="current-password"></div><p id="accMsg" role="alert" style="color:var(--danger);font-size:14px;margin:0 0 8px"></p><div class="actions"><button class="btn ghost" data-closesheet>Cancelar</button><button class="btn" id="delGo" style="background:var(--danger)">Borrar mi cuenta</button></div>`)}
+const accMsg=t=>{const m=$("#accMsg");if(m)m.textContent=t};
+function recoveryCard(){
+  if(!AMI.me||AMI.hasCode!==false)return "";
+  return `<section><div class="frcall"><span class="meta"><span class="t">Protege tu cuenta</span><span class="s">Crea un código para recuperarla si olvidas la contraseña.</span></span><span class="acts"><button class="btn" id="accCode">Crear código</button></span></div></section>`;
+}
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button");if(!t||!t.id)return;
+  if(t.id==="accPw"){pwSheet();return}
+  if(t.id==="accCode"){codeSheet();return}
+  if(t.id==="accDel"){delSheet();return}
+  if(t.id==="codeCopy"){try{await navigator.clipboard.writeText(t.dataset.code);toast("Código copiado")}catch(_){toast("Mantén pulsado el código para copiarlo")}return}
+  if(t.id==="pwSave"){
+    const o=$("#pwOld").value,n=$("#pwNew").value;
+    if(n.length<6)return accMsg("La contraseña nueva tiene que tener al menos 6 caracteres.");
+    t.disabled=true;
+    try{await frCheckPw(o);const {error}=await SBC.auth.updateUser({password:n});if(error)throw error;closeSheet();toast("Contraseña cambiada")}
+    catch(err){t.disabled=false;accMsg(/invalid/i.test(String(err.message))?"La contraseña actual no es correcta.":frErr(err))}
+    return}
+  if(t.id==="codeGo"){
+    t.disabled=true;const code=rcNew();
+    try{const {error}=await SBC.rpc("set_recovery_code",{p_code:rcClean(code)});if(error)throw error;AMI.hasCode=true;codeShow(code);frRerender()}
+    catch(err){t.disabled=false;accMsg(frErr(err))}
+    return}
+  if(t.id==="delGo"){
+    t.disabled=true;
+    try{await frCheckPw($("#delPw").value);const {error}=await SBC.rpc("delete_my_account");if(error)throw error;
+      try{await SBC.auth.signOut()}catch(_){}
+      closeSheet();await frLocalReset();toast("Cuenta borrada")}
+    catch(err){t.disabled=false;accMsg(/invalid/i.test(String(err.message))?"La contraseña no es correcta.":frErr(err))}
+    return}
+});
+async function wRecover(){
+  const u=frClean(($("#wU")||{}).value),c=rcClean(($("#wC")||{}).value),pw=($("#wP")||{}).value||"";W.u=u;W.c=($("#wC")||{}).value||"";
+  if(!u||!c){W.err="Escribe tu usuario y tu código.";wRender();return}
+  if(pw.length<6){W.err="La contraseña nueva tiene que tener al menos 6 caracteres.";wRender();return}
+  W.busy=true;W.err="";wRender();
+  try{
+    const cl=await sbLoad();
+    const {data,error}=await cl.rpc("reset_password_with_code",{p_username:u,p_code:c,p_password:pw});
+    if(error)throw error;
+    if(!data){W.busy=false;W.err="Usuario o código incorrectos. Tras 5 intentos fallidos hay que esperar una hora.";wRender();return}
+    W.c="";await frSignIn("login",u,pw);AMI.hasCode=false;W.busy=false;
+    if(PROFILE&&PROFILE.done){W=null;const el=document.querySelector(".welcome");if(el)el.remove();render();toast("Contraseña cambiada. Crea un código nuevo en Ajustes.",5000);return}
+    W.step=1;W.name="";wRender();
+  }catch(e){W.busy=false;W.err=frErr(e);wRender()}
+}
 /* ---------- Cuenta en la nube: perfil, foto y escuchas del Wrapped ---------- */
 /* Las canciones siguen solo en el iPhone. Se guardan en Supabase tu nombre, cumpleaños y foto
    (user_profile, avatars) y tus escuchas por día (play_days), igual que en la colección local "plays". */
