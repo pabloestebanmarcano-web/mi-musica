@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-1">
+<meta name="app-version" content="2026.11.01-3">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -571,8 +571,38 @@ main section{margin-bottom:32px}
 .sv-vrow{display:flex;align-items:center;gap:12px;padding:8px 0}
 .sv-vn{flex:1;min-width:0;display:flex;flex-direction:column}.sv-vn b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-vn small{font-size:12px;opacity:.65}
 .sv-vh{display:flex;color:var(--coral)}.sv-vh svg{width:22px;height:22px}
-.sv-tap{position:absolute;top:70px;bottom:80px;width:35%;background:none;border:none;z-index:1}
-.sv-tap.l{left:0}.sv-tap.r{right:0;width:65%}
+.nw-wrap{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);animation:nwfade .25s ease-out}
+.nw{width:100%;max-width:480px;background:var(--bg);color:var(--ink);border-radius:28px 28px 0 0;padding:14px 24px calc(22px + env(safe-area-inset-bottom,0px));animation:nwup .35s cubic-bezier(.2,.8,.2,1);max-height:92vh;overflow-y:auto}
+@media (min-width:600px){.nw-wrap{align-items:center}.nw{border-radius:28px;padding-bottom:24px}}
+@keyframes nwfade{from{opacity:0}to{opacity:1}}
+@keyframes nwup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.nw-art{display:block;width:220px;height:184px;margin:0 auto 4px}
+.nw h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:27px;line-height:1.1;margin:0 0 8px;text-align:center;letter-spacing:-.01em}
+.nw .lead{margin:0 auto 18px;max-width:34ch;text-align:center;color:var(--muted);font-size:15px;line-height:1.45}
+.nw ul{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:14px}
+.nw li{display:flex;align-items:center;gap:14px;font-size:15px;line-height:1.35}
+.nw li .ic{width:40px;height:40px;border-radius:20px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nw li .ic svg{width:20px;height:20px}
+.nw .btn{width:100%}
+.nw .btn+.btn{margin-top:8px}
+.nw-ring{transform-box:fill-box;transform-origin:center;stroke-dasharray:345;stroke-dashoffset:345;animation:nwdraw 1.1s .25s cubic-bezier(.6,0,.3,1) forwards,nwspin 9s 1.4s linear infinite}
+@keyframes nwdraw{to{stroke-dashoffset:0}}
+@keyframes nwspin{to{transform:rotate(360deg)}}
+.nw-eq rect{transform-box:fill-box;transform-origin:center bottom;animation:nweq .9s ease-in-out infinite alternate}
+.nw-eq rect:nth-child(2){animation-delay:-.3s}.nw-eq rect:nth-child(3){animation-delay:-.6s}.nw-eq rect:nth-child(4){animation-delay:-.15s}
+@keyframes nweq{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+.nw-pop{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:nwpop .5s cubic-bezier(.3,1.6,.5,1) forwards}
+.nw-pop.a{animation-delay:1.25s}.nw-pop.b{animation-delay:1.45s}.nw-pop.c{animation-delay:1.65s}
+@keyframes nwpop{to{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.nw-wrap,.nw,.nw-ring,.nw-eq rect,.nw-pop{animation:none!important}.nw-ring{stroke-dashoffset:0}.nw-pop{transform:none}}
+.sv-touch{position:absolute;left:0;right:0;top:70px;bottom:80px;z-index:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.sv-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0}
+.sv-img img{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none}
+.sv-wrap .sv-bars,.sv-wrap .sv-head,.sv-wrap .sv-foot{transition:opacity .2s}
+.sv-wrap.hold .sv-bars,.sv-wrap.hold .sv-head,.sv-wrap.hold .sv-foot{opacity:0}
+.sv-wrap.snap{transition:transform .22s ease-out,border-radius .22s ease-out}
+.sv-wrap.drag,.sv-wrap.snap{overflow:hidden}
+@media (prefers-reduced-motion: reduce){.sv-wrap.snap{transition:none}}
 .donp{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.4}
 .donrow{display:flex;flex-wrap:wrap;gap:8px}
 .donchip{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 18px;border-radius:21px;background:var(--tint);color:var(--accent);font-weight:700;font-size:15px;text-decoration:none}
@@ -4432,7 +4462,7 @@ async function svRender(){
   <div class="sv-head">${avatarHTML(u.photo,34,u.name)}<span class="sv-who"><b>${esc(u.name)}</b><small>${esc(frAgo(Date.parse(it.created_at)).replace("hace ",""))}</small></span>${mine?`<button class="fs-x" data-stdel="${esc(it.id)}" aria-label="Borrar esta historia">${PICON.trash}</button>`:""}<button class="fs-x" data-svclose aria-label="Cerrar">${ICON.x}</button></div>
   <div class="sv-img" id="svImg"><p class="fs-hint">Cargando…</p></div>
   ${svFoot(it,mine)}
-  <button class="sv-tap l" data-svprev aria-label="Anterior"></button><button class="sv-tap r" data-svnext aria-label="Siguiente"></button>`;
+  <div class="sv-touch" aria-hidden="true"></div><button class="sv-sr" data-svprev>Historia anterior</button><button class="sv-sr" data-svnext>Historia siguiente</button>`;
   SV.seen.add(it.id);svSaveSeen();
   if(mine)svCount(it.id);else svMark(it.id);
   try{
@@ -4507,6 +4537,50 @@ function svStep(dir){
   else{if(SV.si>0)SV.si--;else if(SV.ui>0){SV.ui--;SV.si=Math.max(0,(SV.stories.get(SV.list[SV.ui])||[]).length-1)}else{SV.t=performance.now();if(SV.audio){SV.audio.currentTime=0}return}}
   svRender();
 }
+/* --- Gestos como en Instagram: tocar, mantener, deslizar --- */
+function svUserStep(dir){
+  const n=SV.ui+dir;
+  if(n<0){svResume();return}
+  if(n>=SV.list.length){svClose();return}
+  SV.ui=n;const st=SV.stories.get(SV.list[n])||[];
+  SV.si=dir>0?Math.max(0,st.findIndex(x=>!SV.seen.has(x.id))):0;svRender();
+}
+const SVG={on:false};
+document.addEventListener("pointerdown",e=>{
+  const z=e.target.closest&&e.target.closest(".sv-touch");if(!z||!e.isPrimary)return;
+  const w=z.closest(".sv-wrap");if(!w)return;
+  Object.assign(SVG,{on:true,x:e.clientX,y:e.clientY,dx:0,dy:0,ax:null,hold:false,w});
+  try{z.setPointerCapture(e.pointerId)}catch(_){}
+  clearTimeout(SVG.tm);SVG.tm=setTimeout(()=>{if(SVG.on&&!SVG.ax){SVG.hold=true;svPause();w.classList.add("hold")}},220);
+});
+document.addEventListener("pointermove",e=>{
+  if(!SVG.on)return;SVG.dx=e.clientX-SVG.x;SVG.dy=e.clientY-SVG.y;
+  if(!SVG.ax&&Math.hypot(SVG.dx,SVG.dy)>10){SVG.ax=Math.abs(SVG.dy)>Math.abs(SVG.dx)?"y":"x";clearTimeout(SVG.tm);svPause()}
+  const w=SVG.w;
+  if(SVG.ax==="y"){const d=Math.max(0,SVG.dy);w.style.transform=`translateY(${d}px) scale(${Math.max(.86,1-d/1600)})`;w.style.borderRadius=Math.min(24,d/5)+"px";w.classList.add("drag")}
+  else if(SVG.ax==="x"){w.style.transform=`translateX(${SVG.dx*.4}px)`;w.classList.add("drag")}
+});
+function svGestEnd(e,cancel){
+  if(!SVG.on)return;SVG.on=false;clearTimeout(SVG.tm);
+  const w=SVG.w;w.classList.remove("hold","drag");
+  const back=()=>{w.classList.add("snap");w.style.transform="";w.style.borderRadius="";setTimeout(()=>w.classList.remove("snap"),240)};
+  if(cancel){back();svResume();return}
+  if(SVG.ax==="y"){
+    if(SVG.dy>110){w.classList.add("snap");w.style.transform="translateY(100vh) scale(.86)";setTimeout(svClose,200);return}
+    back();svResume();return;
+  }
+  if(SVG.ax==="x"){back();if(Math.abs(SVG.dx)>60)svUserStep(SVG.dx<0?1:-1);else svResume();return}
+  if(SVG.hold){svResume();return}
+  const r=w.getBoundingClientRect();svStep(e.clientX-r.left<r.width*.3?-1:1);
+}
+document.addEventListener("pointerup",e=>svGestEnd(e,false));
+document.addEventListener("pointercancel",e=>svGestEnd(e,true));
+document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".sv-wrap"))e.preventDefault()});
+document.addEventListener("visibilitychange",()=>{
+  if(!document.querySelector(".sv-wrap"))return;
+  if(document.hidden){if(!SV.held){svPause();SV.bg=true}}
+  else if(SV.bg){SV.bg=false;svResume()}
+});
 function svClose(){
   cancelAnimationFrame(SV.raf);if(SV.audio){try{SV.audio.pause()}catch(e){}}
   document.querySelectorAll(".sv-wrap").forEach(x=>x.remove());
@@ -4533,6 +4607,55 @@ onTap(async e=>{
 document.addEventListener("input",e=>{if(e.target.id==="stStart"&&SV.draft){SV.draft.start=+e.target.value;svStopPrev();svLabel()}});
 document.addEventListener("keydown",e=>{if(!document.querySelector(".sv-wrap"))return;if(document.querySelector(".sv-views")){if(e.key==="Escape")svViewsClose();return}if(e.key==="Escape")svClose();else if(e.key==="ArrowRight")svStep(1);else if(e.key==="ArrowLeft")svStep(-1)});
 function svFsClose(){SV.storyMode=false;svStopPrev();if(SV.resume&&!document.querySelector(".sv-wrap")){SV.resume=false;audio.play().catch(()=>{})}}
+
+/* ---------- Aviso de novedad: historias (una vez por móvil, solo durante esta actualización) ---------- */
+const NEWS_KEY="news:historias",NEWS_UNTIL=Date.parse("2026-11-16T00:00:00");
+function newsArt(){
+  return `<svg class="nw-art" viewBox="0 0 220 184" aria-hidden="true">
+  <defs><linearGradient id="nwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--coral)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs>
+  <circle cx="110" cy="96" r="55" fill="none" stroke="var(--line)" stroke-width="5"/>
+  <circle class="nw-ring" cx="110" cy="96" r="55" fill="none" stroke="url(#nwg)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="110" cy="96" r="45" style="fill:var(--tint)"/>
+  <g class="nw-eq" style="fill:var(--accent)"><rect x="89" y="76" width="8" height="40" rx="4"/><rect x="101" y="76" width="8" height="40" rx="4"/><rect x="113" y="76" width="8" height="40" rx="4"/><rect x="125" y="76" width="8" height="40" rx="4"/></g>
+  <g class="nw-pop a"><circle cx="170" cy="44" r="19" style="fill:var(--coral)"/><path d="M170 53s-8-4.8-9.6-9.6c-1.1-3.4 1-6.6 4.3-6.6 2.1 0 3.9 1.1 5.3 3 1.4-1.9 3.2-3 5.3-3 3.3 0 5.4 3.2 4.3 6.6C178 48.2 170 53 170 53z" fill="#fff"/></g>
+  <g class="nw-pop b"><rect x="22" y="58" width="50" height="28" rx="14" style="fill:var(--surface);stroke:var(--line)"/><text x="47" y="77" text-anchor="middle" font-family="Figtree,system-ui,sans-serif" font-weight="600" font-size="14" style="fill:var(--ink)">15 s</text></g>
+  <g class="nw-pop c"><circle cx="162" cy="150" r="16" style="fill:var(--surface);stroke:var(--line)"/><path d="M152 150s4-6.5 10-6.5 10 6.5 10 6.5-4 6.5-10 6.5-10-6.5-10-6.5z" fill="none" style="stroke:var(--ink)" stroke-width="1.8"/><circle cx="162" cy="150" r="2.6" style="fill:var(--ink)"/></g>
+  </svg>`;
+}
+function newsShow(){
+  try{localStorage.setItem(NEWS_KEY,"1")}catch(e){}
+  const el=document.createElement("div");el.className="nw-wrap";el.id="newsStories";
+  el.innerHTML=`<div class="nw" role="dialog" aria-modal="true" aria-labelledby="nwT">${newsArt()}
+  <h2 id="nwT">Ya puedes subir historias</h2>
+  <p class="lead">Comparte con tus amigos lo que estás escuchando, con su música sonando.</p>
+  <ul>
+    <li><span class="ic">${ICON.lyrics}</span><span>Elige 15 segundos de una canción y ponle la letra o la portada.</span></li>
+    <li><span class="ic">${PICON.story}</span><span>Solo la ven tus amigos y desaparece a las 24 horas.</span></li>
+    <li><span class="ic">${SV_EYE}</span><span>Mira quién la ha visto y a quién le ha gustado.</span></li>
+  </ul>
+  <button class="btn" data-nwgo>Subir mi primera historia</button>
+  <button class="btn ghost" data-nwclose>Ahora no</button></div>`;
+  document.body.appendChild(el);
+  const b=el.querySelector("[data-nwgo]");if(b)setTimeout(()=>b.focus({preventScroll:true}),50);
+}
+function newsClose(){const el=$("#newsStories");if(el)el.remove()}
+onTap(e=>{
+  const w=e.target.closest&&e.target.closest("#newsStories");if(!w)return;
+  e.stopPropagation();
+  if(e.target===w||e.target.closest("[data-nwclose]")){newsClose();return}
+  if(e.target.closest("[data-nwgo]")){newsClose();const c=current();if(c){storyStart(c.id);return}toast("Abre el menú ··· de una canción y elige «Subir a tu historia»");return}
+},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#newsStories"))newsClose()});
+(function newsWatch(){
+  let seen=false;try{seen=!!localStorage.getItem(NEWS_KEY)}catch(e){}
+  if(seen||Date.now()>=NEWS_UNTIL)return;
+  const iv=setInterval(()=>{
+    if(Date.now()>=NEWS_UNTIL){clearInterval(iv);return}
+    if(document.hidden||!SBC||!AMI.me)return;
+    if(S.playerOpen||document.querySelector(".welcome,.sheet-wrap,.pop-wrap,.fs-wrap,.ws-wrap,.nw-wrap"))return;
+    clearInterval(iv);setTimeout(newsShow,600);
+  },1500);
+})();
 /* ---------- Cuenta: contraseña, código de recuperación y borrar cuenta ---------- */
 const RC_AB="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 function rcNew(){const b=new Uint8Array(16);crypto.getRandomValues(b);const c=[...b].map(x=>RC_AB[x&31]).join("");return c.match(/.{4}/g).join("-")}
