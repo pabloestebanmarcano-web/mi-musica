@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-16">
+<meta name="app-version" content="2026.11.01-18">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -599,6 +599,9 @@ main section{margin-bottom:32px}
 .cmp-sh svg{width:15px;height:15px}
 .cmp.msg{gap:12px}.cmp.msg .s{font-size:14px}
 @media (prefers-reduced-motion: reduce){.cmp-ring .fg{transition:none}}
+.fc-hero img{width:96px;height:96px;border-radius:16px;object-fit:cover;flex-shrink:0;background:var(--surface)}
+.fc-head .fc-re{display:inline-flex;align-items:center;gap:5px;border:none;background:none;padding:0;font:inherit;font-size:13px;color:var(--muted)}
+.fc-head .fc-re svg{width:14px;height:14px}
 .fc{margin:0 0 30px}
 .fc-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 12px}
 .fc-head h2{margin:0;font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:22px;letter-spacing:-.01em}
@@ -763,7 +766,7 @@ nav.tabs button.frdot::after{background:var(--coral)}
   <nav class="tabs glass" aria-label="Secciones">
     <button data-tab="inicio" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>Inicio</button>
     <button data-tab="listas"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8M19 15v6M16 18h6"/></svg>Listas</button>
-      <button data-tab="ahora"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>Ahora</button>
+      <button data-tab="ahora"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 20V9h6v11M3 20v-6h6M15 20v-8h6v8M2 20h20"/></svg>Tops</button>
       <button data-tab="ajustes"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</button>
   </nav>
   <button class="round glass" id="dockSearch" aria-label="Buscar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
@@ -2944,29 +2947,42 @@ function nowLocal(x){let best=null,bs=0;for(const s of S.songs){const st=simil(s
 function nowRows(stale){
   return `<div class="nowlist${stale?" stale":""}">${NOW.items.map((x,i)=>{const s=nowLocal(x);return `<button class="nowrow${s?"":" miss"}" data-nowplay="${i}" aria-label="${esc(x.name)} de ${esc(x.artist)}${s?", en tu música":", no la tienes"}"><span class="n">${i+1}</span>${x.art?`<img src="${esc(x.art)}" alt="" loading="lazy">`:`<span class="cover" style="width:52px;height:52px;background:var(--surface)"></span>`}<span class="meta"><span class="t">${esc(x.name)}</span><span class="s">${esc(x.artist)}</span></span>${s?`<span class="have">En tu música</span>`:""}</button>`}).join("")}</div>`;
 }
-function nowSeg(){if(typeof AMI==="undefined"||!AMI||!AMI.me||!AMI.ok)return "espana";let v=null;try{v=localStorage.getItem("nowSeg")}catch(e){}return v==="espana"?"espana":"amigos"}
+function nowSeg(){if(typeof AMI==="undefined"||!AMI||!AMI.me||!AMI.ok)return "espana";let v=null;try{v=localStorage.getItem("nowSeg")}catch(e){}return v==="espana"||v==="app"?v:"amigos"}
 onTap(e=>{const b=e.target.closest&&e.target.closest("[data-nowseg]");if(!b)return;e.stopPropagation();try{localStorage.setItem("nowSeg",b.dataset.nowseg)}catch(_){}render();window.scrollTo(0,0)},true);
 function renderNow(){
-  const fr=nowSeg()==="amigos";
-  let h=`<div class="top"><h1>Ahora</h1>${NOW_HERE&&!fr?`<button class="iconbtn" id="nowReload" aria-label="Actualizar">${NOW_ICON.reload}</button>`:""}</div>`;
-  if(typeof AMI!=="undefined"&&AMI&&AMI.me&&AMI.ok)h+=`<div class="seg" role="group" aria-label="Qué ver"><button data-nowseg="amigos" aria-pressed="${fr}">Tus amigos</button><button data-nowseg="espana" aria-pressed="${!fr}">España</button></div>`;
-  if(fr)return h+fcSection();
-  if(!NOW_HERE){
-    return h+`<div class="empty nowoff">${NOW_ICON.off}<h3>Solo en la app instalada</h3><p style="margin:0">Aquí se ve lo más escuchado en España en Apple Music. Esta versión no puede conectarse a Apple, así que la pestaña funciona en la app instalada en tu dispositivo.</p></div>`;
-  }
-  if(!navigator.onLine||NOW.fail==="offline"){
-    h+=`<div class="empty nowoff" role="status">${NOW_ICON.off}<h3>Sin conexión</h3><p style="margin:0">Conéctate a internet para ver lo que se escucha ahora. Tu música sigue funcionando sin conexión.</p></div>`;
-    if(NOW.items&&NOW.items.length)h+=`<p class="nowsub" style="margin-top:0">Última lista cargada, ${nowAgo(NOW.at)}</p>`+nowRows(true);
-    return h;
-  }
-  if(NOW.fail==="source"&&!NOW.items){
-    return h+`<div class="empty nowoff">${NOW_ICON.off}<h3>No se puede cargar el ranking</h3><p style="margin:0 0 16px">Deezer no ha respondido. Prueba otra vez en un rato.</p><button class="btn" id="nowReload2">Reintentar</button></div>`;
-  }
-  if(!NOW.items){setTimeout(()=>loadNow(false),0);return h+`<p class="status" role="status">Cargando lo más escuchado…</p>`}
-  h+=`<p class="nowsub">${NOW.loading?"Actualizando…":`${NOW.src==="Deezer España"?"Lo más escuchado en España en Deezer":NOW.src==="Deezer"?"Lo más escuchado ahora en Deezer":"Lo más escuchado en España"}, actualizado ${nowAgo(NOW.at)}`}</p>`;
-  if(!NOW.loading&&Date.now()-NOW.at>10*60000)setTimeout(()=>loadNow(false),0);
-  return h+nowRows(false);
+  const sg=nowSeg();
+  let h=`<div class="top"><h1>Tops</h1></div>`;
+  if(typeof AMI!=="undefined"&&AMI&&AMI.me&&AMI.ok)h+=`<div class="seg" role="group" aria-label="Qué ver"><button data-nowseg="amigos" aria-pressed="${sg==="amigos"}">Amigos</button><button data-nowseg="app" aria-pressed="${sg==="app"}">Toda la app</button><button data-nowseg="espana" aria-pressed="${sg==="espana"}">España</button></div>`;
+  if(sg==="amigos")return h+fcSection();
+  if(sg==="app")return h+atSection();
+  return h+esSection();
 }
+function esSection(){
+  const sub=NOW.items&&NOW_HERE&&navigator.onLine?`<button class="fc-re" id="nowReload" aria-label="Actualizar la lista">${NOW.loading?"Actualizando…":(t=>t.charAt(0).toUpperCase()+t.slice(1))(nowAgo(NOW.at))}${NOW_ICON.reload}</button>`:`<span>Ahora mismo</span>`;
+  const head=`<div class="fc-head"><h2>Top de España</h2>${sub}</div>`;
+  const box=t=>`<section class="fc">${head}<div class="fc-empty">${t}</div></section>`;
+  if(!NOW_HERE)return box("Esta lista solo funciona en la app instalada en tu dispositivo.");
+  const off=!navigator.onLine||NOW.fail==="offline";
+  if(off&&!(NOW.items&&NOW.items.length))return box("Sin conexión. Conéctate a internet para ver lo que se escucha en España. Tu música sigue funcionando sin conexión.");
+  if(NOW.fail==="source"&&!NOW.items)return `<section class="fc">${head}<div class="fc-empty">Deezer no ha respondido. Prueba otra vez en un rato.<br><button class="btn sm" id="nowReload2">Reintentar</button></div></section>`;
+  if(!NOW.items){setTimeout(()=>loadNow(false),0);return `<section class="fc">${head}<p class="status" role="status">Cargando lo más escuchado…</p></section>`}
+  if(!off&&!NOW.loading&&Date.now()-NOW.at>10*60000)setTimeout(()=>loadNow(false),0);
+  // Movimiento respecto a hace una semana
+  const k=x=>(String(x.name)+"|"+String(x.artist)).toLowerCase();
+  let base=null;try{base=JSON.parse(localStorage.getItem("esBase")||"null")}catch(e){}
+  const pos={};NOW.items.forEach((x,i)=>pos[k(x)]=i+1);
+  if(!base||Date.now()-base.at>7*864e5)try{localStorage.setItem("esBase",JSON.stringify({at:Date.now(),pos}))}catch(e){}
+  const mv=(x,i)=>{if(!base||!base.pos||base===null)return undefined;const b=base.pos[k(x)];return b?b-(i+1):"new"};
+  const useMv=base&&Date.now()-base.at>36e5;
+  const [one,...rest]=NOW.items,lim=window.__esAll?rest:rest.slice(0,9);
+  const img=(x,z)=>x.art?`<img src="${esc(x.art)}" alt="" loading="lazy">`:`<span class="cover" style="width:${z}px;height:${z}px;background:var(--surface);border-radius:${z>60?16:10}px"></span>`;
+  const l1=nowLocal(one);
+  const hero=`<button class="fc-hero${l1?"":" miss"}" data-nowplay="0" aria-label="Número 1: ${esc(one.name)} de ${esc(one.artist)}${l1?"":". No la tienes"}">${img(one,96)}<span class="meta"><span class="k">Nº 1 en España ${useMv?fcMove(mv(one,0)):""}</span><span class="t">${esc(one.name)}</span><span class="s">${esc(one.artist)}</span></span></button>`;
+  const rows=lim.map((x,j)=>{const i=j+1,l=nowLocal(x);return `<button class="nowrow${l?"":" miss"}" data-nowplay="${i}" aria-label="${i+1}: ${esc(x.name)} de ${esc(x.artist)}${l?"":", no la tienes"}"><span class="fc-rk"><b>${i+1}</b>${useMv?fcMove(mv(x,i)):""}</span>${img(x,52)}<span class="meta"><span class="t">${esc(x.name)}</span><span class="s">${esc(x.artist)}</span></span></button>`}).join("");
+  const more=rest.length>9?`<button class="btn ghost sm fc-more" data-esmore>${window.__esAll?"Ver menos":`Ver el top ${NOW.items.length}`}</button>`:"";
+  return `<section class="fc">${head}${hero}<div class="nowlist${off?" stale":""}">${rows}</div>${more}</section>`;
+}
+onTap(e=>{const b=e.target.closest&&e.target.closest("[data-esmore]");if(!b)return;e.stopPropagation();window.__esAll=!window.__esAll;render()},true);
 addEventListener("online",()=>{NOW.fail="";if(S.tab==="ahora"){render();loadNow(true)}});
 addEventListener("offline",()=>{NOW.fail="offline";if(S.tab==="ahora")render()});
 /* ---------- Bienvenida (primera vez) y perfil ---------- */
@@ -5075,6 +5091,43 @@ onTap(e=>{
     }catch(err){toast(frErr(err))}
     svResume();
   });
+},true);
+
+/* ---------- Top de toda la app (esta semana, anónimo: sin usuarios ni cifras) ---------- */
+const AT={at:0,loading:false,items:null,err:false,all:false};
+async function atLoad(){
+  if(AT.loading||!SBC||!AMI.me)return;AT.loading=true;
+  try{
+    const {data,error}=await SBC.rpc("app_top_week");if(error)throw error;
+    const items=(data||[]).map(o=>({k:o.k,t:o.t||"",a:o.a||""})).filter(o=>o.t);
+    items.forEach(o=>{o.local=frMatch({title:o.t,artist:o.a})});
+    const key="atBase:"+AMI.me.id;let base=null;try{base=JSON.parse(localStorage.getItem(key)||"null")}catch(e){}
+    const pos={};items.forEach((o,i)=>pos[o.k]=i+1);
+    if(base&&base.pos)items.forEach((o,i)=>{const b=base.pos[o.k];o.mv=b?b-(i+1):"new"});
+    if(!base||Date.now()-base.at>7*864e5)try{localStorage.setItem(key,JSON.stringify({at:Date.now(),pos}))}catch(e){}
+    AT.items=items;AT.err=false;
+  }catch(e){AT.err=true}
+  AT.at=Date.now();AT.loading=false;
+  if(S.tab==="ahora")render();
+}
+function atSection(){
+  const head=`<div class="fc-head"><h2>Top de Mi música</h2><span>Esta semana</span></div>`;
+  if(!AT.loading&&(!AT.items||Date.now()-AT.at>10*6e4))setTimeout(atLoad,0);
+  if(!AT.items)return `<section class="fc">${head}<p class="status" role="status">${AT.err?"No se ha podido cargar el top de la app.":"Cargando el top de la app…"}</p></section>`;
+  if(!AT.items.length)return `<section class="fc">${head}<div class="fc-empty">Todavía no hay suficientes datos esta semana. Aparecerán cuando la gente escuche música con la última versión de la app.</div></section>`;
+  const [one,...rest]=AT.items,lim=AT.all?rest:rest.slice(0,9);
+  const cov=o=>art(o.local||{id:o.k,title:o.t,artist:o.a},o===one?96:52,o===one?16:10);
+  const hero=`<button class="fc-hero${one.local?"":" miss"}" data-atplay="0" aria-label="Número 1: ${esc(one.t)} de ${esc(one.a||"artista desconocido")}${one.local?"":". No la tienes"}">${cov(one)}<span class="meta"><span class="k">Nº 1 esta semana ${fcMove(one.mv)}</span><span class="t">${esc(one.t)}</span><span class="s">${esc(one.a||"Artista desconocido")}</span></span></button>`;
+  const rows=lim.map((o,j)=>{const i=j+2;return `<button class="nowrow${o.local?"":" miss"}" data-atplay="${i-1}" aria-label="${i}: ${esc(o.t)} de ${esc(o.a||"artista desconocido")}${o.local?"":", no la tienes"}"><span class="fc-rk"><b>${i}</b>${fcMove(o.mv)}</span>${cov(o)}<span class="meta"><span class="t">${esc(o.t)}</span><span class="s">${esc(o.a||"Artista desconocido")}</span></span></button>`}).join("");
+  const more=rest.length>9?`<button class="btn ghost sm fc-more" data-atmore>${AT.all?"Ver menos":`Ver el top ${AT.items.length}`}</button>`:"";
+  return `<section class="fc">${head}${hero}<div class="nowlist">${rows}</div>${more}</section>`;
+}
+onTap(e=>{
+  const b=e.target.closest&&e.target.closest("[data-atplay],[data-atmore]");if(!b)return;e.stopPropagation();
+  if(b.hasAttribute("data-atmore")){AT.all=!AT.all;render();return}
+  const i=+b.dataset.atplay,o=AT.items&&AT.items[i];if(!o)return;
+  if(!o.local){toast(`No tienes «${o.t}» en tu música`);return}
+  setQueue(AT.items.slice(i).filter(x=>x.local).map(x=>x.local.id),0,"Top de Mi música");load(true);
 },true);
 /* ---------- Avisos de actividad: historias nuevas de amigos y me gusta en las tuyas ---------- */
 const ACT_HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 20s-7.2-4.4-9-8.9C1.8 7.8 3.9 4.6 7.2 4.6c2 0 3.5 1.1 4.8 2.8 1.3-1.7 2.8-2.8 4.8-2.8 3.3 0 5.4 3.2 4.2 6.5C19.2 15.6 12 20 12 20z"/></svg>';
