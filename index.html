@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-9">
+<meta name="app-version" content="2026.11.01-11">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,6 +595,8 @@ main section{margin-bottom:32px}
 .cmp-tx .l{font-weight:700;font-size:16px;line-height:1.2}
 .cmp-tx .s{font-size:13px;color:var(--muted);line-height:1.4}
 .cmp-tx .s b{color:var(--ink);font-weight:600}
+.cmp-sh{margin-top:6px;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:16px;border:none;background:var(--accent);color:var(--on-accent);font:inherit;font-size:13px;font-weight:600}
+.cmp-sh svg{width:15px;height:15px}
 .cmp.msg{gap:12px}.cmp.msg .s{font-size:14px}
 @media (prefers-reduced-motion: reduce){.cmp-ring .fg{transition:none}}
 .fc{margin:0 0 30px}
@@ -4772,7 +4774,8 @@ async function tasteShow(f){
     if((fr.d.artists||[]).length<3||(fr.d.plays||0)<15){tasteMsg(cur,`@${esc(f.username)} aún ha escuchado poca música para calcularlo.`);return}
     const r=tasteScore(me,{artists:fr.d.artists||[],songs:fr.d.songs||[]}),C=2*Math.PI*32;
     const det=[r.artists.length?`Os gusta a los dos: <b>${r.artists.map(a=>esc(a.n)).join(", ")}</b>`:"No coincidís en ningún artista de vuestro top… todavía.",r.song?`Canción en común: <b>«${esc(r.song.t)}»</b>`:""].filter(Boolean).join("<br>");
-    cur.innerHTML=`<div class="cmp" role="group" aria-label="Compatibilidad musical: ${r.pct} por ciento"><span class="cmp-ring"><svg viewBox="0 0 76 76" aria-hidden="true"><defs><linearGradient id="cmpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--coral)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs><circle cx="38" cy="38" r="32" fill="none" stroke="var(--line)" stroke-width="7"/><circle class="fg" cx="38" cy="38" r="32" fill="none" stroke="url(#cmpg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><b aria-hidden="true"><span class="cmp-n">0</span><small>%</small></b></span><span class="cmp-tx"><span class="k">Compatibilidad musical</span><span class="l">${tasteLabel(r.pct)}</span><span class="s">${det}</span></span></div>`;
+    cur.innerHTML=`<div class="cmp" role="group" aria-label="Compatibilidad musical: ${r.pct} por ciento"><span class="cmp-ring"><svg viewBox="0 0 76 76" aria-hidden="true"><defs><linearGradient id="cmpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--coral)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs><circle cx="38" cy="38" r="32" fill="none" stroke="var(--line)" stroke-width="7"/><circle class="fg" cx="38" cy="38" r="32" fill="none" stroke="url(#cmpg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><b aria-hidden="true"><span class="cmp-n">0</span><small>%</small></b></span><span class="cmp-tx"><span class="k">Compatibilidad musical</span><span class="l">${tasteLabel(r.pct)}</span><span class="s">${det}</span><button class="cmp-sh" data-cmpshare>${CMP_SHARE}Compartir</button></span></div>`;
+    TASTE.last={f,r};
     const fg=cur.querySelector(".fg"),nEl=cur.querySelector(".cmp-n"),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
     if(reduce){fg.style.strokeDashoffset=C*(1-r.pct/100);nEl.textContent=r.pct;return}
     requestAnimationFrame(()=>requestAnimationFrame(()=>{fg.style.strokeDashoffset=C*(1-r.pct/100)}));
@@ -4921,6 +4924,74 @@ async function svClipLight(s,start){
     return blob.size>1000&&blob.size<raw.size?blob:raw;
   }catch(e){return raw}
 }
+
+/* ---------- Imagen para compartir la compatibilidad (formato historia 1080 × 1920) ---------- */
+const CMP_SHARE=PI('<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>');
+async function tasteImage(f,r){
+  try{await Promise.all([document.fonts.load('700 120px "Bricolage Grotesque"'),document.fonts.load('600 40px "Figtree"'),document.fonts.load('500 40px "Figtree"')])}catch(e){}
+  const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const F='"Figtree",system-ui,sans-serif',D='"Bricolage Grotesque",system-ui,sans-serif';
+  const local=r.song?frMatch({title:r.song.t,artist:r.song.a}):null;
+  const tp=local&&local.coverId?((await getPal(local))||genPal(local.id)):genPal(f.id);
+  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,"#160F2E");g.addColorStop(1,tp.f3);x.fillStyle=g;x.fillRect(0,0,W,H);
+  const blob=(cx,cy,rad,col,a)=>{const rg=x.createRadialGradient(cx,cy,0,cx,cy,rad);rg.addColorStop(0,col);rg.addColorStop(1,"rgba(0,0,0,0)");x.globalAlpha=a;x.fillStyle=rg;x.fillRect(0,0,W,H);x.globalAlpha=1};
+  blob(960,240,760,tp.v[0],.8);blob(90,700,680,"#FF4F9A",.55);blob(1000,1350,700,"#FF9966",.45);blob(160,1800,760,tp.v[1],.7);
+  x.fillStyle="#fff";x.textAlign="center";
+  x.font=`600 38px ${F}`;x.globalAlpha=.85;x.fillText("Mi música · Compatibilidad musical",W/2,175);x.globalAlpha=1;
+  // Dos fotos que se cruzan
+  const face=async(cx,cy,R,photo,name)=>{
+    x.save();x.beginPath();x.arc(cx,cy,R+12,0,Math.PI*2);x.fillStyle="#fff";x.fill();x.beginPath();x.arc(cx,cy,R,0,Math.PI*2);x.clip();
+    const im=photo?await loadImg(photo):null;
+    if(im){const s0=Math.min(im.width,im.height);x.drawImage(im,(im.width-s0)/2,(im.height-s0)/2,s0,s0,cx-R,cy-R,2*R,2*R)}
+    else{const v=genPal(name||"x"),gg=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R);gg.addColorStop(0,v.v[0]);gg.addColorStop(1,v.f3);x.fillStyle=gg;x.fillRect(cx-R,cy-R,2*R,2*R);x.fillStyle="#fff";x.font=`700 ${Math.round(R*.9)}px ${D}`;x.textBaseline="middle";x.fillText((name||"?").replace("@","").charAt(0).toUpperCase(),cx,cy+6);x.textBaseline="alphabetic"}
+    x.restore();
+  };
+  const me=AMI.me.username||"yo";
+  await face(395,440,165,PROFILE&&PROFILE.photo,me);
+  await face(685,440,165,frPhoto(f.id),f.username);
+  // Porcentaje
+  x.fillStyle="#fff";x.font=`700 280px ${D}`;const pw=x.measureText(String(r.pct)).width;x.font=`700 120px ${D}`;const sw=x.measureText("%").width;
+  const px=(W-(pw+sw+10))/2;x.textAlign="left";x.font=`700 280px ${D}`;x.fillText(String(r.pct),px,925);x.font=`700 120px ${D}`;x.fillText("%",px+pw+10,925);x.textAlign="center";
+  fitFont(x,tasteLabel(r.pct),W-160,72,48,700,D);x.fillText(tasteLabel(r.pct),W/2,1022);
+  x.font=`500 42px ${F}`;x.globalAlpha=.85;x.fillText(fitTxt(x,`@${me} y @${f.username}`,W-160),W/2,1090);x.globalAlpha=1;
+  // Caja con lo que tenéis en común
+  let y=1145;const bx=84,bw=W-168;
+  const rows=r.artists.length;const bh=(rows?86+rows*62+(r.song?70:0):0)+(r.song?180:0)+40;
+  if(bh){x.fillStyle="rgba(255,255,255,.14)";rr(x,bx,y,bw,bh,40);x.fill();x.fillStyle="#fff";x.textAlign="left";let yy=y+74;
+    if(rows){x.font=`600 32px ${F}`;x.globalAlpha=.8;x.fillText("Os gusta a los dos",bx+48,yy);x.globalAlpha=1;yy+=12;
+      r.artists.forEach(a=>{yy+=62;x.font=`700 52px ${D}`;x.fillText(fitTxt(x,a.n,bw-96),bx+48,yy)});yy+=82}
+    if(r.song){x.font=`600 32px ${F}`;x.globalAlpha=.8;x.fillText("Vuestra canción en común",bx+48,yy);x.globalAlpha=1;
+      const cy2=yy+28;await drawCover(x,local||{id:r.song.k,title:r.song.t},bx+48,cy2,110,20);x.fillStyle="#fff";x.textAlign="left";
+      x.font=`700 46px ${D}`;x.fillText(fitTxt(x,r.song.t,bw-230),bx+186,cy2+50);x.font=`500 34px ${F}`;x.globalAlpha=.8;x.fillText(fitTxt(x,r.song.a||"",bw-230),bx+186,cy2+96);x.globalAlpha=1}
+  }
+  // Pie para que otros la descubran
+  x.textAlign="center";x.fillStyle="#fff";x.font=`600 38px ${F}`;x.fillText("¿Cuánto te pareces a tus amigos?",W/2,1748);
+  x.font=`500 32px ${F}`;x.globalAlpha=.75;x.fillText(fitTxt(x,(location.host+location.pathname).replace(/\/index\.html$/,"").replace(/\/$/,""),W-160),W/2,1800);x.globalAlpha=1;
+  const bl=await new Promise(res=>c.toBlob(res,"image/jpeg",.92));
+  return {file:new File([bl],`compatibilidad-${String(f.username).replace(/[^a-z0-9]+/gi,"-").toLowerCase()}.jpg`,{type:"image/jpeg"}),url:URL.createObjectURL(bl)};
+}
+onTap(async e=>{
+  const b=e.target.closest&&e.target.closest("[data-cmpshare]");if(!b||!TASTE.last)return;e.stopPropagation();
+  const {f,r}=TASTE.last;b.disabled=true;const old=b.innerHTML;b.textContent="Creando…";
+  const img=await tasteImage(f,r).catch(()=>null);b.disabled=false;b.innerHTML=old;
+  if(!img){toast("No se ha podido crear la imagen.");return}
+  closeSheet();if(SHIMG)URL.revokeObjectURL(SHIMG.url);SHIMG=img;previewFs(img,{id:f.id,title:`Compatibilidad con @${f.username}`},false);
+  const row=document.querySelector(".fs-wrap .fs-bot>div");
+  if(row){row.insertAdjacentHTML("afterbegin",`<button class="btn fs-ghost" data-cmpstory>Subir a tu historia</button>`);TASTE.shot={f,r,img}}
+},true);
+/* Subir la compatibilidad a tu historia de la app, con vuestra canción en común sonando */
+onTap(async e=>{
+  const b=e.target.closest&&e.target.closest("[data-cmpstory]");if(!b||!TASTE.shot)return;e.stopPropagation();
+  if(SV.mine.length>=ST_LIMIT){toast("Ya tienes 2 historias activas. Borra una para subir otra.");return}
+  const {f,r,img}=TASTE.shot;b.disabled=true;b.textContent="Subiendo…";
+  try{
+    const image=await svSmallImage(img.file);
+    const song=r.song?frMatch({title:r.song.t,artist:r.song.a}):null;let clip=null;
+    if(song){try{let st=svChorusStart(song);if(st==null)st=await svEnergyStart(song,songDur(song.id));if(st==null)st=Math.max(0,songDur(song.id)*.3);clip=await svClipLight(song,st)}catch(err){clip=null}}
+    await svPublishRow({kind:"compat",title:`${r.pct} % compatibles con @${f.username}`,artist:r.song?`suena «${r.song.t}»`:""},await (await fetch(image)).blob(),clip);
+    await storiesLoad();b.textContent="Subida a tu historia";toast("Subida a tu historia · tus amigos la verán 24 h");
+  }catch(err){b.disabled=false;b.textContent="Subir a tu historia";toast(/LIMIT|máximo|2 historias/i.test(String(err&&err.message))?"Ya tienes 2 historias activas. Borra una para subir otra.":frErr(err))}
+},true);
 /* ---------- Avisos de actividad: historias nuevas de amigos y me gusta en las tuyas ---------- */
 const ACT_HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 20s-7.2-4.4-9-8.9C1.8 7.8 3.9 4.6 7.2 4.6c2 0 3.5 1.1 4.8 2.8 1.3-1.7 2.8-2.8 4.8-2.8 3.3 0 5.4 3.2 4.2 6.5C19.2 15.6 12 20 12 20z"/></svg>';
 const ACT={q:[],busy:false};
