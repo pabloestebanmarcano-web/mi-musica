@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-13">
+<meta name="app-version" content="2026.11.01-16">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2944,8 +2944,13 @@ function nowLocal(x){let best=null,bs=0;for(const s of S.songs){const st=simil(s
 function nowRows(stale){
   return `<div class="nowlist${stale?" stale":""}">${NOW.items.map((x,i)=>{const s=nowLocal(x);return `<button class="nowrow${s?"":" miss"}" data-nowplay="${i}" aria-label="${esc(x.name)} de ${esc(x.artist)}${s?", en tu música":", no la tienes"}"><span class="n">${i+1}</span>${x.art?`<img src="${esc(x.art)}" alt="" loading="lazy">`:`<span class="cover" style="width:52px;height:52px;background:var(--surface)"></span>`}<span class="meta"><span class="t">${esc(x.name)}</span><span class="s">${esc(x.artist)}</span></span>${s?`<span class="have">En tu música</span>`:""}</button>`}).join("")}</div>`;
 }
+function nowSeg(){if(typeof AMI==="undefined"||!AMI||!AMI.me||!AMI.ok)return "espana";let v=null;try{v=localStorage.getItem("nowSeg")}catch(e){}return v==="espana"?"espana":"amigos"}
+onTap(e=>{const b=e.target.closest&&e.target.closest("[data-nowseg]");if(!b)return;e.stopPropagation();try{localStorage.setItem("nowSeg",b.dataset.nowseg)}catch(_){}render();window.scrollTo(0,0)},true);
 function renderNow(){
-  let h=`<div class="top"><h1>Ahora</h1>${NOW_HERE?`<button class="iconbtn" id="nowReload" aria-label="Actualizar">${NOW_ICON.reload}</button>`:""}</div>`+fcSection();
+  const fr=nowSeg()==="amigos";
+  let h=`<div class="top"><h1>Ahora</h1>${NOW_HERE&&!fr?`<button class="iconbtn" id="nowReload" aria-label="Actualizar">${NOW_ICON.reload}</button>`:""}</div>`;
+  if(typeof AMI!=="undefined"&&AMI&&AMI.me&&AMI.ok)h+=`<div class="seg" role="group" aria-label="Qué ver"><button data-nowseg="amigos" aria-pressed="${fr}">Tus amigos</button><button data-nowseg="espana" aria-pressed="${!fr}">España</button></div>`;
+  if(fr)return h+fcSection();
   if(!NOW_HERE){
     return h+`<div class="empty nowoff">${NOW_ICON.off}<h3>Solo en la app instalada</h3><p style="margin:0">Aquí se ve lo más escuchado en España en Apple Music. Esta versión no puede conectarse a Apple, así que la pestaña funciona en la app instalada en tu dispositivo.</p></div>`;
   }
@@ -4277,7 +4282,7 @@ function renderFriends(){
   const list=frSorted();
   h+=`<section><div class="sechead"><h2>Tus amigos</h2></div>${list.length?list.map(f=>`<button class="row" data-friend="${esc(f.id)}"><span class="frav sm">${avatarHTML(frPhoto(f.id),44,f.username)}${f.st.live?FR_EQ:""}</span><span class="meta"><span class="t">${esc(f.username)}</span><span class="s">${f.st.song?`${esc(f.st.song.title)}${f.st.song.artist?" · "+esc(f.st.song.artist):""}`:"Sin actividad todavía"}</span><span class="s"${f.st.live?` style="color:var(--accent)"`:""}>${esc(f.st.song?f.st.line:"")}</span></span></button>`).join(""):`<p style="color:var(--muted);margin:0">Aún no tienes amigos aquí. Búscalos arriba por su nombre de usuario.</p>`}</section>`;
   if(AMI.outgoing.length)h+=`<section><div class="sechead"><h2>Enviadas</h2></div>${AMI.outgoing.map(p=>`<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">${esc(p.username)}</span><span class="s">Pendiente de que acepte</span></span><button class="btn ghost sm" data-frdel="${esc(p.id)}" data-frdir="out">Cancelar</button></div>`).join("")}</section>`;
-  h+=`<section><button class="pickrow" id="frShare" aria-pressed="${AMI.share}"><span class="check${AMI.share?" on":""}">${AMI.share?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir lo que escucho</span><span style="font-size:13px;color:var(--muted)">${AMI.share?"Tus amigos ven qué canción suena.":"Tus amigos no ven lo que escuchas."}</span></span></button><button class="pickrow" id="frTaste" aria-pressed="${tasteOn()}"><span class="check${tasteOn()?" on":""}">${tasteOn()?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir mis gustos</span><span style="font-size:13px;color:var(--muted)">${tasteOn()?"Tus amigos ven vuestro porcentaje de compatibilidad.":"No se calcula la compatibilidad con nadie."}</span></span></button></section>`;
+  h+=`<section><button class="pickrow" id="frShare" aria-pressed="${AMI.share}"><span class="check${AMI.share?" on":""}">${AMI.share?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir lo que escucho</span><span style="font-size:13px;color:var(--muted)">${AMI.share?"Tus amigos ven qué canción suena.":"Tus amigos no ven lo que escuchas."}</span></span></button><p class="pickrow" style="cursor:default"><span class="check on" aria-hidden="true">${ICON.check}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartes tus gustos</span><span style="font-size:13px;color:var(--muted)">Tus artistas y canciones más escuchados se usan para la compatibilidad y el Top de tus amigos. Solo los ven tus amigos.</span></span></p></section>`;
   return h;
 }
 function frResHTML(){
@@ -4402,7 +4407,7 @@ onTap(async e=>{
     if(d.frconfirm&&!confirm("¿Eliminar a este amigo? Dejaréis de ver lo que escucha el otro."))return;
     closeSheet();const id=d.frdel,out=d.frdir==="out";
     frDo(()=>SBC.from("friendships").delete().match(out?{requester:AMI.me.id,addressee:id}:{requester:id,addressee:AMI.me.id}),d.frconfirm?"Eliminado de tus amigos":out?"Solicitud cancelada":"Solicitud rechazada");return}
-  if(t.id==="frTaste"){tasteToggle();return}
+  if(t.id==="frTaste")return;
   if(t.id==="frShare"){AMI.share=!AMI.share;try{localStorage.setItem("frShare",AMI.share?"1":"0")}catch(_){}AMI.pub.key="";frPublish(true);render();return}
   if(t.id==="frOut"){if(!confirm("¿Cerrar sesión? Tus canciones se quedan en este iPhone. Tu perfil y tu Wrapped se quedan guardados en tu cuenta."))return;frLogout();return}
 },true);
@@ -4735,7 +4740,7 @@ function svFsClose(){SV.storyMode=false;svStopPrev();if(SV.resume&&!document.que
    Cada app sube un resumen pequeño (artistas y canciones más escuchados de los últimos 6 meses,
    con nombres normalizados). Solo lo leen tus amigos. Tu historial completo sigue siendo privado. */
 const TASTE={mine:null,cache:new Map()};
-const tasteOn=()=>{try{return localStorage.getItem("tasteShare")!=="0"}catch(e){return true}};
+const tasteOn=()=>true;
 const tKey=(t,a)=>frNorm(t)+"|"+frNorm((splitArtists(a||"")[0])||a||"");
 async function tasteBuild(){
   const now=Date.now(),from=now-180*864e5,y=new Date().getFullYear();
