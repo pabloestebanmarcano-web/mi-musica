@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-5">
+<meta name="app-version" content="2026.11.01-7">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -584,6 +584,19 @@ main section{margin-bottom:32px}
 .acth svg{width:11px;height:11px}
 .actt b{font-weight:700}
 @media (prefers-reduced-motion: reduce){.frstory.story.fresh .frav{animation:none}.actb{transition:opacity .2s;opacity:0;transform:none}.actb.in{opacity:1}}
+.cmp{display:flex;align-items:center;gap:16px;padding:14px 16px;margin:0 0 14px;border-radius:20px;background:var(--surface)}
+.cmp-ring{position:relative;width:76px;height:76px;flex-shrink:0}
+.cmp-ring svg{width:76px;height:76px;transform:rotate(-90deg)}
+.cmp-ring .fg{transition:stroke-dashoffset 1.2s cubic-bezier(.3,.7,.2,1)}
+.cmp-ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Bricolage Grotesque",system-ui,sans-serif;font-size:21px;font-variant-numeric:tabular-nums}
+.cmp-ring b small{font-size:13px;margin-left:1px}
+.cmp-tx{min-width:0;display:flex;flex-direction:column;gap:3px}
+.cmp-tx .k{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.cmp-tx .l{font-weight:700;font-size:16px;line-height:1.2}
+.cmp-tx .s{font-size:13px;color:var(--muted);line-height:1.4}
+.cmp-tx .s b{color:var(--ink);font-weight:600}
+.cmp.msg{gap:12px}.cmp.msg .s{font-size:14px}
+@media (prefers-reduced-motion: reduce){.cmp-ring .fg{transition:none}}
 .nw-wrap{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);animation:nwfade .25s ease-out}
 .nw{width:100%;max-width:480px;background:var(--bg);color:var(--ink);border-radius:28px 28px 0 0;padding:14px 24px calc(22px + env(safe-area-inset-bottom,0px));animation:nwup .35s cubic-bezier(.2,.8,.2,1);max-height:92vh;overflow-y:auto}
 @media (min-width:600px){.nw-wrap{align-items:center}.nw{border-radius:28px;padding-bottom:24px}}
@@ -605,7 +618,7 @@ main section{margin-bottom:32px}
 .nw-eq rect:nth-child(2){animation-delay:-.3s}.nw-eq rect:nth-child(3){animation-delay:-.6s}.nw-eq rect:nth-child(4){animation-delay:-.15s}
 @keyframes nweq{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
 .nw-pop{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:nwpop .5s cubic-bezier(.3,1.6,.5,1) forwards}
-.nw-pop.a{animation-delay:1.25s}.nw-pop.b{animation-delay:1.45s}.nw-pop.c{animation-delay:1.65s}
+.nw-pop.a{animation-delay:1.25s}.nw-pop.b{animation-delay:1.45s}.nw-pop.c{animation-delay:1.65s}.nw-pop.d{animation-delay:1.85s}
 @keyframes nwpop{to{transform:scale(1)}}
 @media (prefers-reduced-motion: reduce){.nw-wrap,.nw,.nw-ring,.nw-eq rect,.nw-pop{animation:none!important}.nw-ring{stroke-dashoffset:0}.nw-pop{transform:none}}
 .sv-touch{position:absolute;left:0;right:0;top:70px;bottom:80px;z-index:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -4226,7 +4239,7 @@ function renderFriends(){
   const list=frSorted();
   h+=`<section><div class="sechead"><h2>Tus amigos</h2></div>${list.length?list.map(f=>`<button class="row" data-friend="${esc(f.id)}"><span class="frav sm">${avatarHTML(frPhoto(f.id),44,f.username)}${f.st.live?FR_EQ:""}</span><span class="meta"><span class="t">${esc(f.username)}</span><span class="s">${f.st.song?`${esc(f.st.song.title)}${f.st.song.artist?" · "+esc(f.st.song.artist):""}`:"Sin actividad todavía"}</span><span class="s"${f.st.live?` style="color:var(--accent)"`:""}>${esc(f.st.song?f.st.line:"")}</span></span></button>`).join(""):`<p style="color:var(--muted);margin:0">Aún no tienes amigos aquí. Búscalos arriba por su nombre de usuario.</p>`}</section>`;
   if(AMI.outgoing.length)h+=`<section><div class="sechead"><h2>Enviadas</h2></div>${AMI.outgoing.map(p=>`<div class="frrow">${avatarHTML("",44,p.username)}<span class="meta"><span class="t">${esc(p.username)}</span><span class="s">Pendiente de que acepte</span></span><button class="btn ghost sm" data-frdel="${esc(p.id)}" data-frdir="out">Cancelar</button></div>`).join("")}</section>`;
-  h+=`<section><button class="pickrow" id="frShare" aria-pressed="${AMI.share}"><span class="check${AMI.share?" on":""}">${AMI.share?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir lo que escucho</span><span style="font-size:13px;color:var(--muted)">${AMI.share?"Tus amigos ven qué canción suena.":"Tus amigos no ven lo que escuchas."}</span></span></button></section>`;
+  h+=`<section><button class="pickrow" id="frShare" aria-pressed="${AMI.share}"><span class="check${AMI.share?" on":""}">${AMI.share?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir lo que escucho</span><span style="font-size:13px;color:var(--muted)">${AMI.share?"Tus amigos ven qué canción suena.":"Tus amigos no ven lo que escuchas."}</span></span></button><button class="pickrow" id="frTaste" aria-pressed="${tasteOn()}"><span class="check${tasteOn()?" on":""}">${tasteOn()?ICON.check:""}</span><span style="display:flex;flex-direction:column"><span style="font-weight:600">Compartir mis gustos</span><span style="font-size:13px;color:var(--muted)">${tasteOn()?"Tus amigos ven vuestro porcentaje de compatibilidad.":"No se calcula la compatibilidad con nadie."}</span></span></button></section>`;
   return h;
 }
 function frResHTML(){
@@ -4307,8 +4320,9 @@ async function frDo(fn,ok){
 }
 function friendSheet(id){
   const f=AMI.friends.find(x=>x.id===id);if(!f)return;
+  setTimeout(()=>tasteShow(f),0);
   const st=frStatus(f.np),mine=st.song?frMatch(st.song):null;
-  showSheet(`<div class="frhead"><span class="frav">${avatarHTML(frPhoto(f.id),64,f.username)}${st.live?FR_EQ:""}</span><div style="min-width:0"><h3 style="margin:0">${esc(f.username)}</h3><p style="color:${st.live?"var(--accent)":"var(--muted)"};margin:2px 0 0;font-size:14px">${esc(st.line)}</p></div></div>${st.song?`<div class="frnow"><span class="t">${esc(st.song.title)}</span><span class="s">${esc(st.song.artist||"Artista desconocido")}</span></div>`:""}${mine?`<button class="pickrow" data-frplay="${esc(mine.id)}" style="color:var(--accent);font-weight:600">${ICON.play}<span>Escucharla tú también</span></button>`:st.song?`<p style="color:var(--muted);font-size:14px;margin:0 0 8px">No tienes esta canción en tu biblioteca.</p>`:""}<button class="pickrow" data-frdel="${esc(f.id)}" data-frdir="${f.mine?"out":"in"}" data-frconfirm="1" style="color:var(--danger)">Eliminar de tus amigos</button><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
+  showSheet(`<div class="frhead"><span class="frav">${avatarHTML(frPhoto(f.id),64,f.username)}${st.live?FR_EQ:""}</span><div style="min-width:0"><h3 style="margin:0">${esc(f.username)}</h3><p style="color:${st.live?"var(--accent)":"var(--muted)"};margin:2px 0 0;font-size:14px">${esc(st.line)}</p></div></div><div id="frCmp" data-uid="${esc(f.id)}"></div>${st.song?`<div class="frnow"><span class="t">${esc(st.song.title)}</span><span class="s">${esc(st.song.artist||"Artista desconocido")}</span></div>`:""}${mine?`<button class="pickrow" data-frplay="${esc(mine.id)}" style="color:var(--accent);font-weight:600">${ICON.play}<span>Escucharla tú también</span></button>`:st.song?`<p style="color:var(--muted);font-size:14px;margin:0 0 8px">No tienes esta canción en tu biblioteca.</p>`:""}<button class="pickrow" data-frdel="${esc(f.id)}" data-frdir="${f.mine?"out":"in"}" data-frconfirm="1" style="color:var(--danger)">Eliminar de tus amigos</button><div class="actions"><button class="btn ghost" data-closesheet>Cerrar</button></div>`);
 }
 /* Publicar lo que suena */
 function frPos(){try{if(ST&&ST.cur)return Math.max(0,audio.currentTime-ST.cur.start);return audio.currentTime||0}catch(e){return 0}}
@@ -4350,6 +4364,7 @@ onTap(async e=>{
     if(d.frconfirm&&!confirm("¿Eliminar a este amigo? Dejaréis de ver lo que escucha el otro."))return;
     closeSheet();const id=d.frdel,out=d.frdir==="out";
     frDo(()=>SBC.from("friendships").delete().match(out?{requester:AMI.me.id,addressee:id}:{requester:id,addressee:AMI.me.id}),d.frconfirm?"Eliminado de tus amigos":out?"Solicitud cancelada":"Solicitud rechazada");return}
+  if(t.id==="frTaste"){tasteToggle();return}
   if(t.id==="frShare"){AMI.share=!AMI.share;try{localStorage.setItem("frShare",AMI.share?"1":"0")}catch(_){}AMI.pub.key="";frPublish(true);render();return}
   if(t.id==="frOut"){if(!confirm("¿Cerrar sesión? Tus canciones se quedan en este iPhone. Tu perfil y tu Wrapped se quedan guardados en tu cuenta."))return;frLogout();return}
 },true);
@@ -4671,6 +4686,74 @@ document.addEventListener("keydown",e=>{if(!document.querySelector(".sv-wrap"))r
 function svFsClose(){SV.storyMode=false;svStopPrev();if(SV.resume&&!document.querySelector(".sv-wrap")){SV.resume=false;audio.play().catch(()=>{})}}
 
 
+
+/* ---------- Compatibilidad musical con amigos ----------
+   Cada app sube un resumen pequeño (artistas y canciones más escuchados de los últimos 6 meses,
+   con nombres normalizados). Solo lo leen tus amigos. Tu historial completo sigue siendo privado. */
+const TASTE={mine:null,cache:new Map()};
+const tasteOn=()=>{try{return localStorage.getItem("tasteShare")!=="0"}catch(e){return true}};
+const tKey=(t,a)=>frNorm(t)+"|"+frNorm((splitArtists(a||"")[0])||a||"");
+async function tasteBuild(){
+  const now=Date.now(),from=now-180*864e5,y=new Date().getFullYear();
+  let list=[];
+  for(const yy of [y-1,y]){if(new Date(yy,11,31).getTime()<from)continue;try{list=list.concat(await fetchYear(yy))}catch(e){}}
+  list=list.filter(e=>e.t>=from);
+  const st=wStats(list);
+  const artists=st.artists.slice(0,40).map(a=>({k:frNorm(a.name),n:a.name,w:Math.max(1,Math.round(a.d/60))})).filter(a=>a.k);
+  const songs=st.songs.slice(0,40).map(x=>({k:tKey(x.title,x.artist),t:x.title,a:x.artist,w:x.n})).filter(x=>x.k.length>1);
+  return {artists,songs,plays:list.length};
+}
+async function tasteSync(force){
+  if(!SBC||!AMI.me||!S.db||!tasteOn())return;
+  const k="tasteAt:"+AMI.me.id;let at=0;try{at=+localStorage.getItem(k)||0}catch(e){}
+  if(!force&&TASTE.mine&&Date.now()-at<6*36e5)return;
+  try{
+    TASTE.mine=await tasteBuild();
+    if(!force&&Date.now()-at<6*36e5)return;
+    const {error}=await SBC.from("taste_summary").upsert({user_id:AMI.me.id,artists:TASTE.mine.artists,songs:TASTE.mine.songs,plays:TASTE.mine.plays,updated_at:new Date().toISOString()});
+    if(!error)try{localStorage.setItem(k,String(Date.now()))}catch(e){}
+  }catch(e){}
+}
+async function tasteToggle(){
+  const on=!tasteOn();try{localStorage.setItem("tasteShare",on?"1":"0")}catch(e){}
+  if(on){tasteSync(true);toast("Tus amigos ya pueden ver vuestra compatibilidad")}
+  else{TASTE.cache.clear();try{localStorage.removeItem("tasteAt:"+AMI.me.id)}catch(e){}
+    try{await SBC.from("taste_summary").delete().eq("user_id",AMI.me.id)}catch(e){}
+    toast("Has dejado de compartir tus gustos")}
+  render();
+}
+function tasteScore(a,b){
+  const vec=l=>{const m=new Map();for(const o of l)m.set(o.k,(m.get(o.k)||0)+o.w);return m};
+  const cos=(x,y)=>{const A=vec(x),B=vec(y);let d=0,na=0,nb=0;for(const[k,v]of A){const u=Math.sqrt(v);na+=u*u;if(B.has(k))d+=u*Math.sqrt(B.get(k))}for(const v of B.values())nb+=v;return na&&nb?d/Math.sqrt(na*nb):0};
+  const raw=.75*cos(a.artists,b.artists)+.25*cos(a.songs,b.songs);
+  const shared=(x,y,n)=>{const tx=x.reduce((s,o)=>s+o.w,0)||1,ty=y.reduce((s,o)=>s+o.w,0)||1,B=new Map(y.map(o=>[o.k,o.w]));
+    return x.filter(o=>B.has(o.k)).map(o=>({...o,sc:Math.min(o.w/tx,B.get(o.k)/ty)})).sort((p,q)=>q.sc-p.sc).slice(0,n)};
+  return {pct:Math.round(100*Math.min(1,Math.pow(raw,.55))),artists:shared(a.artists,b.artists,3),song:shared(a.songs,b.songs,1)[0]||null};
+}
+const tasteLabel=p=>p>=85?"Almas gemelas musicales":p>=65?"Gustos muy parecidos":p>=45?"Tenéis bastante en común":p>=25?"Algo en común":"Polos opuestos";
+function tasteMsg(el,txt){el.innerHTML=`<div class="cmp msg"><span class="cmp-tx"><span class="k">Compatibilidad musical</span><span class="s">${txt}</span></span></div>`}
+async function tasteShow(f){
+  const el=document.getElementById("frCmp");if(!el||el.dataset.uid!==f.id)return;
+  if(!tasteOn()){tasteMsg(el,"Activa «Compartir mis gustos» en la página de Amigos para ver vuestra compatibilidad.");return}
+  tasteMsg(el,"Calculando…");
+  try{
+    if(!TASTE.mine)TASTE.mine=await tasteBuild();
+    let fr=TASTE.cache.get(f.id);
+    if(!fr||Date.now()-fr.at>10*6e4){const {data,error}=await SBC.from("taste_summary").select("artists,songs,plays").eq("user_id",f.id).maybeSingle();if(error)throw error;fr={at:Date.now(),d:data};TASTE.cache.set(f.id,fr)}
+    const cur=document.getElementById("frCmp");if(!cur||cur.dataset.uid!==f.id)return;
+    if(!fr.d){tasteMsg(cur,`@${esc(f.username)} todavía no comparte sus gustos. Cuando actualice la app aparecerá aquí.`);return}
+    const me=TASTE.mine;
+    if(me.artists.length<3||me.plays<15){tasteMsg(cur,"Escucha un poco más de música para poder calcular vuestra compatibilidad.");return}
+    if((fr.d.artists||[]).length<3||(fr.d.plays||0)<15){tasteMsg(cur,`@${esc(f.username)} aún ha escuchado poca música para calcularlo.`);return}
+    const r=tasteScore(me,{artists:fr.d.artists||[],songs:fr.d.songs||[]}),C=2*Math.PI*32;
+    const det=[r.artists.length?`Os gusta a los dos: <b>${r.artists.map(a=>esc(a.n)).join(", ")}</b>`:"No coincidís en ningún artista de vuestro top… todavía.",r.song?`Canción en común: <b>«${esc(r.song.t)}»</b>`:""].filter(Boolean).join("<br>");
+    cur.innerHTML=`<div class="cmp" role="group" aria-label="Compatibilidad musical: ${r.pct} por ciento"><span class="cmp-ring"><svg viewBox="0 0 76 76" aria-hidden="true"><defs><linearGradient id="cmpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--coral)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs><circle cx="38" cy="38" r="32" fill="none" stroke="var(--line)" stroke-width="7"/><circle class="fg" cx="38" cy="38" r="32" fill="none" stroke="url(#cmpg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><b aria-hidden="true"><span class="cmp-n">0</span><small>%</small></b></span><span class="cmp-tx"><span class="k">Compatibilidad musical</span><span class="l">${tasteLabel(r.pct)}</span><span class="s">${det}</span></span></div>`;
+    const fg=cur.querySelector(".fg"),nEl=cur.querySelector(".cmp-n"),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(reduce){fg.style.strokeDashoffset=C*(1-r.pct/100);nEl.textContent=r.pct;return}
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{fg.style.strokeDashoffset=C*(1-r.pct/100)}));
+    const t0=performance.now(),step=t=>{const p=Math.min(1,(t-t0)/1200),e=1-Math.pow(1-p,3);nEl.textContent=Math.round(r.pct*e);if(p<1&&nEl.isConnected)requestAnimationFrame(step)};requestAnimationFrame(step);
+  }catch(e){const cur=document.getElementById("frCmp");if(cur&&cur.dataset.uid===f.id)tasteMsg(cur,"No se ha podido calcular ahora. Comprueba tu conexión.")}
+}
 /* ---------- Avisos de actividad: historias nuevas de amigos y me gusta en las tuyas ---------- */
 const ACT_HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 20s-7.2-4.4-9-8.9C1.8 7.8 3.9 4.6 7.2 4.6c2 0 3.5 1.1 4.8 2.8 1.3-1.7 2.8-2.8 4.8-2.8 3.3 0 5.4 3.2 4.2 6.5C19.2 15.6 12 20 12 20z"/></svg>';
 const ACT={q:[],busy:false};
@@ -4744,7 +4827,8 @@ function actNext(){
 setInterval(()=>{if(AMI.me&&SBC&&document.visibilityState==="visible"&&S.tab!=="inicio")storiesLoad()},45000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&AMI.me&&SBC)storiesLoad()});
 /* ---------- Aviso de novedad: historias (una vez por móvil, solo durante esta actualización) ---------- */
-const NEWS_KEY="news:historias",NEWS_UNTIL=Date.parse("2026-11-16T00:00:00");
+const NEWS_KEY="news:2026-11",NEWS_UNTIL=Date.parse("2026-11-16T00:00:00");
+const NW_VENN=PI('<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>');
 function newsArt(){
   return `<svg class="nw-art" viewBox="0 0 220 184" aria-hidden="true">
   <defs><linearGradient id="nwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--coral)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs>
@@ -4754,6 +4838,7 @@ function newsArt(){
   <g class="nw-eq" style="fill:var(--accent)"><rect x="89" y="76" width="8" height="40" rx="4"/><rect x="101" y="76" width="8" height="40" rx="4"/><rect x="113" y="76" width="8" height="40" rx="4"/><rect x="125" y="76" width="8" height="40" rx="4"/></g>
   <g class="nw-pop a"><circle cx="170" cy="44" r="19" style="fill:var(--coral)"/><path d="M170 53s-8-4.8-9.6-9.6c-1.1-3.4 1-6.6 4.3-6.6 2.1 0 3.9 1.1 5.3 3 1.4-1.9 3.2-3 5.3-3 3.3 0 5.4 3.2 4.3 6.6C178 48.2 170 53 170 53z" fill="#fff"/></g>
   <g class="nw-pop b"><rect x="22" y="58" width="50" height="28" rx="14" style="fill:var(--surface);stroke:var(--line)"/><text x="47" y="77" text-anchor="middle" font-family="Figtree,system-ui,sans-serif" font-weight="600" font-size="14" style="fill:var(--ink)">15 s</text></g>
+  <g class="nw-pop d"><rect x="18" y="128" width="58" height="28" rx="14" style="fill:var(--accent)"/><text x="47" y="147" text-anchor="middle" font-family="Figtree,system-ui,sans-serif" font-weight="700" font-size="14" style="fill:var(--on-accent)">87 %</text></g>
   <g class="nw-pop c"><circle cx="162" cy="150" r="16" style="fill:var(--surface);stroke:var(--line)"/><path d="M152 150s4-6.5 10-6.5 10 6.5 10 6.5-4 6.5-10 6.5-10-6.5-10-6.5z" fill="none" style="stroke:var(--ink)" stroke-width="1.8"/><circle cx="162" cy="150" r="2.6" style="fill:var(--ink)"/></g>
   </svg>`;
 }
@@ -4764,9 +4849,10 @@ function newsShow(){
   <h2 id="nwT">Ya puedes subir historias</h2>
   <p class="lead">Comparte con tus amigos lo que estás escuchando, con su música sonando.</p>
   <ul>
-    <li><span class="ic">${ICON.lyrics}</span><span>Elige 15 segundos de una canción y ponle la letra o la portada.</span></li>
-    <li><span class="ic">${PICON.story}</span><span>Solo la ven tus amigos y desaparece a las 24 horas.</span></li>
-    <li><span class="ic">${SV_EYE}</span><span>Mira quién la ha visto y a quién le ha gustado.</span></li>
+    <li><span class="ic">${ICON.lyrics}</span><span>Elige 15 segundos de una canción y ponle la letra o la portada. Solo la ven tus amigos durante 24 horas.</span></li>
+    <li><span class="ic">${PICON.story}</span><span>Sube también tu Wrapped, con tu canción más escuchada sonando.</span></li>
+    <li><span class="ic">${SV_EYE}</span><span>Mira quién ha visto tu historia y a quién le ha gustado.</span></li>
+    <li><span class="ic">${NW_VENN}</span><span>Nuevo: entra en el perfil de un amigo y descubre vuestro porcentaje de compatibilidad musical.</span></li>
   </ul>
   <button class="btn" data-nwgo>Subir mi primera historia</button>
   <button class="btn ghost" data-nwclose>Ahora no</button></div>`;
@@ -4928,6 +5014,7 @@ async function cloudSync(){
     if(p||c)frRerender();
   }catch(e){}
   CL.busy=false;
+  tasteSync(false);
 }
 /* Fotos de los amigos: solo se descargan cuando cambian */
 let FAV={};try{FAV=JSON.parse(localStorage.getItem("frAv")||"{}")||{}}catch(e){FAV={}}
