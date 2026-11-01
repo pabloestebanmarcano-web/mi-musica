@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-12">
+<meta name="app-version" content="2026.11.01-13">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4551,7 +4551,7 @@ async function svRender(){
   let w=document.querySelector(".sv-wrap");
   if(!w){w=document.createElement("div");w.className="fs-wrap sv-wrap";w.setAttribute("role","dialog");w.setAttribute("aria-modal","true");$("#overlay").appendChild(w)}
   w.innerHTML=`<div class="sv-bars">${st.map((x,i)=>`<span><i style="width:${i<SV.si?100:0}%"></i></span>`).join("")}</div>
-  <div class="sv-head">${avatarHTML(u.photo,34,u.name)}<span class="sv-who"><b>${esc(u.name)}</b><small>${esc(frAgo(Date.parse(it.created_at)).replace("hace ",""))}${it.repost_from?` · compartida de <span data-uname="${esc(it.repost_from)}">@…</span>`:""}</small></span>${mine?`<button class="fs-x" data-stdel="${esc(it.id)}" aria-label="Borrar esta historia">${PICON.trash}</button>`:""}<button class="fs-x" data-svclose aria-label="Cerrar">${ICON.x}</button></div>
+  <div class="sv-head">${avatarHTML(u.photo,34,u.name)}<span class="sv-who"><b>${esc(u.name)}</b><small>${esc(frAgo(Date.parse(it.created_at)).replace("hace ",""))}${it.repost_from?` · compartida de <span data-uname="${esc(it.repost_from)}">@…</span>`:""}</small></span>${mine&&!it.repost_of?`<button class="fs-x" data-svmention="${esc(it.id)}" aria-label="Mencionar a amigos en esta historia" style="font-weight:700;font-size:17px">@</button>`:""}${mine?`<button class="fs-x" data-stdel="${esc(it.id)}" aria-label="Borrar esta historia">${PICON.trash}</button>`:""}<button class="fs-x" data-svclose aria-label="Cerrar">${ICON.x}</button></div>
   <div class="sv-img" id="svImg"><p class="fs-hint">Cargando…</p></div>
   ${(it.mentions||[]).length?`<div class="sv-mns" aria-label="Menciones">${it.mentions.map(m=>`<span class="sv-mn" data-uname="${esc(m)}">@…</span>`).join("")}</div>`:""}
   ${!mine&&(it.mentions||[]).includes(AMI.me.id)?`<div class="sv-rprow">${svRpBtn(it)}</div>`:""}
@@ -5032,10 +5032,13 @@ async function svRepost(btn,id){
   svResume();
 }
 // Selector de amigos para mencionar (hasta 5)
-function mnOpen(){
-  const w=document.querySelector(".fs-wrap");if(!w||!SV.draft)return;
+const MN={sel:new Set(),done:null};
+function mnOpen(w,cur,done){
+  w=w||document.querySelector(".fs-wrap:not(.sv-wrap)");if(!w)return;
+  if(!done){if(!SV.draft)return;cur=SV.draft.mentions||[];done=ids=>{SV.draft.mentions=ids;mnChips()}}
   w.querySelectorAll(".mn-panel").forEach(x=>x.remove());
-  const sel=new Set(SV.draft.mentions||[]),list=(AMI.friends||[]).slice().sort((a,b)=>a.username.localeCompare(b.username));
+  MN.sel=new Set(cur||[]);MN.done=done;
+  const sel=MN.sel,list=(AMI.friends||[]).slice().sort((a,b)=>a.username.localeCompare(b.username));
   const p=document.createElement("div");p.className="mn-panel";p.setAttribute("role","dialog");p.setAttribute("aria-label","Mencionar a amigos");
   p.innerHTML=`<div class="sv-vhead"><b>Mencionar a amigos</b><button class="fs-x" data-mndone aria-label="Listo">${ICON.check}</button></div><p class="mn-sub">Hasta 5. Les avisaremos y podrán añadirla a su historia.</p><div class="sv-vlist">${list.length?list.map(f=>`<button class="mn-row" data-mnpick="${esc(f.id)}" aria-pressed="${sel.has(f.id)}">${avatarHTML(frPhoto(f.id),40,f.username)}<span class="sv-vn"><b>@${esc(f.username)}</b></span><span class="check${sel.has(f.id)?" on":""}">${sel.has(f.id)?ICON.check:""}</span></button>`).join(""):`<p class="fs-hint">Todavía no tienes amigos para mencionar.</p>`}</div>`;
   w.appendChild(p);
@@ -5044,10 +5047,29 @@ function mnChips(){const l=$("#stMnL");if(!l||!SV.draft)return;l.innerHTML=(SV.d
 onTap(e=>{
   const b=e.target.closest&&e.target.closest("[data-mnpick],[data-mndone],[data-svrepost]");if(!b)return;e.stopPropagation();
   if(b.dataset.svrepost){if(!b.disabled)svRepost(b,b.dataset.svrepost);return}
-  if(b.hasAttribute("data-mndone")){document.querySelectorAll(".mn-panel").forEach(x=>x.remove());mnChips();return}
-  const id=b.dataset.mnpick,m=SV.draft.mentions||(SV.draft.mentions=[]),i=m.indexOf(id);
-  if(i>=0)m.splice(i,1);else{if(m.length>=5){toast("Puedes mencionar a 5 amigos como máximo");return}m.push(id)}
-  const on=m.includes(id);b.setAttribute("aria-pressed",String(on));const c=b.querySelector(".check");if(c){c.classList.toggle("on",on);c.innerHTML=on?ICON.check:""}
+  if(b.hasAttribute("data-mndone")){document.querySelectorAll(".mn-panel").forEach(x=>x.remove());const fn=MN.done;MN.done=null;if(fn)fn([...MN.sel]);return}
+  const id=b.dataset.mnpick,m=MN.sel;
+  if(m.has(id))m.delete(id);else{if(m.size>=5){toast("Puedes mencionar a 5 amigos como máximo");return}m.add(id)}
+  const on=m.has(id);b.setAttribute("aria-pressed",String(on));const c=b.querySelector(".check");if(c){c.classList.toggle("on",on);c.innerHTML=on?ICON.check:""}
+},true);
+
+/* Mencionar a amigos en una historia ya publicada */
+onTap(e=>{
+  const b=e.target.closest&&e.target.closest("[data-svmention]");if(!b)return;e.stopPropagation();
+  const it=SV.mine.find(x=>x.id===b.dataset.svmention),w=document.querySelector(".sv-wrap");if(!it||!w)return;
+  svPause();
+  mnOpen(w,it.mentions||[],async ids=>{
+    const before=JSON.stringify([...(it.mentions||[])].sort()),after=JSON.stringify([...ids].sort());
+    if(before===after){svResume();return}
+    try{
+      const {error}=await SBC.rpc("story_set_mentions",{story:it.id,m:ids});if(error)throw error;
+      it.mentions=ids;const added=ids.filter(x=>!JSON.parse(before).includes(x)).length;
+      toast(added?(added===1?"Mención añadida · le avisaremos":"Menciones añadidas · les avisaremos"):"Menciones actualizadas");
+      if(document.querySelector(".sv-wrap")){const old=w.querySelector(".sv-mns");if(old)old.remove();
+        if(ids.length){w.querySelector(".sv-img").insertAdjacentHTML("afterend",`<div class="sv-mns" aria-label="Menciones">${ids.map(m=>`<span class="sv-mn" data-uname="${esc(m)}">@…</span>`).join("")}</div>`);svFillNames(w)}}
+    }catch(err){toast(frErr(err))}
+    svResume();
+  });
 },true);
 /* ---------- Avisos de actividad: historias nuevas de amigos y me gusta en las tuyas ---------- */
 const ACT_HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 20s-7.2-4.4-9-8.9C1.8 7.8 3.9 4.6 7.2 4.6c2 0 3.5 1.1 4.8 2.8 1.3-1.7 2.8-2.8 4.8-2.8 3.3 0 5.4 3.2 4.2 6.5C19.2 15.6 12 20 12 20z"/></svg>';
