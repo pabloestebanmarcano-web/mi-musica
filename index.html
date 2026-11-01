@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Mi música">
 <meta name="theme-color" content="#FFFFFF">
 <title>Mi música</title>
-<meta name="app-version" content="2026.11.01-4">
+<meta name="app-version" content="2026.11.01-5">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -572,6 +572,18 @@ main section{margin-bottom:32px}
 .sv-vrow{display:flex;align-items:center;gap:12px;padding:8px 0}
 .sv-vn{flex:1;min-width:0;display:flex;flex-direction:column}.sv-vn b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-vn small{font-size:12px;opacity:.65}
 .sv-vh{display:flex;color:var(--coral)}.sv-vh svg{width:22px;height:22px}
+.frstory .frav{position:relative}
+.stlk{position:absolute;right:-6px;bottom:-4px;display:flex;align-items:center;gap:2px;padding:2px 6px 2px 5px;border-radius:10px;background:var(--coral);color:#fff;font-size:11px;font-weight:700;line-height:14px;box-shadow:0 0 0 2.5px var(--bg)}
+.stlk svg{width:10px;height:10px}
+.frstory.story.fresh .frav{animation:stpulse 1.8s ease-out 3}
+@keyframes stpulse{0%{box-shadow:0 0 0 0 var(--coral)}70%{box-shadow:0 0 0 10px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
+.actb{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:66;max-width:460px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:22px;border:1px solid var(--glass-edge);background:var(--bg);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:var(--glass-sh);color:var(--ink);text-align:left;font-size:15px;line-height:1.3;transform:translateY(calc(-100% - 40px));transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.actb.in{transform:none}
+.actav{position:relative;flex-shrink:0;display:flex}
+.acth{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
+.acth svg{width:11px;height:11px}
+.actt b{font-weight:700}
+@media (prefers-reduced-motion: reduce){.frstory.story.fresh .frav{animation:none}.actb{transition:opacity .2s;opacity:0;transform:none}.actb.in{opacity:1}}
 .nw-wrap{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);animation:nwfade .25s ease-out}
 .nw{width:100%;max-width:480px;background:var(--bg);color:var(--ink);border-radius:28px 28px 0 0;padding:14px 24px calc(22px + env(safe-area-inset-bottom,0px));animation:nwup .35s cubic-bezier(.2,.8,.2,1);max-height:92vh;overflow-y:auto}
 @media (min-width:600px){.nw-wrap{align-items:center}.nw{border-radius:28px;padding-bottom:24px}}
@@ -4158,7 +4170,7 @@ function frMatch(n){
   return S.songs.find(s=>frNorm(s.title)===t&&(!a||frNorm(s.artist)===a))||S.songs.find(s=>frNorm(s.title)===t)||null;
 }
 function frSorted(){
-  return AMI.friends.map(f=>({...f,st:frStatus(f.np)})).sort((a,b)=>(b.st.live-a.st.live)||((Date.parse(b.np&&b.np.updated_at||0)||0)-(Date.parse(a.np&&a.np.updated_at||0)||0))||a.username.localeCompare(b.username));
+  return AMI.friends.map(f=>({...f,st:frStatus(f.np)})).sort((a,b)=>(svUnseen(b.id)-svUnseen(a.id))||(b.st.live-a.st.live)||((Date.parse(b.np&&b.np.updated_at||0)||0)-(Date.parse(a.np&&a.np.updated_at||0)||0))||a.username.localeCompare(b.username));
 }
 /* Avisos dentro de la app: solicitudes nuevas y solicitudes aceptadas */
 function frNotice(){
@@ -4171,7 +4183,7 @@ function frNotice(){
     else if(inc.length)toast(inc.length===1?`${name(inc[0])} quiere ser tu amigo`:`Tienes ${inc.length} solicitudes de amistad`,4500);
   }
   try{localStorage.setItem(k,JSON.stringify({f:AMI.friends.map(f=>f.id),i:AMI.incoming.map(p=>p.id)}))}catch(e){}
-  const tb=document.querySelector('nav.tabs button[data-tab="inicio"]');if(tb)tb.classList.toggle("frdot",AMI.incoming.length>0);
+  const tb=document.querySelector('nav.tabs button[data-tab="inicio"]');if(tb)tb.classList.toggle("frdot",AMI.incoming.length>0||!!(SV.newLikes&&SV.newLikes.length));
 }
 function requestsCard(){
   if(!AMI.me||!AMI.incoming.length)return "";
@@ -4189,8 +4201,8 @@ function friendsSection(){
   const list=frSorted(), inc=AMI.incoming.length;
   const add=`<button class="frstory add" data-fropen aria-label="Añadir amigos"><span class="frav"><span class="avatar addav">${ICON.plus}</span></span><span class="n">Añadir</span></button>`;
   const meHas=svHas(AMI.me.id);
-  const me=`<button class="frstory${meHas?(svUnseen(AMI.me.id)?" story":" story seen"):""}" data-stme aria-label="${meHas?"Ver tu historia":"Subir una historia"}"><span class="frav">${avatarHTML(PROFILE&&PROFILE.photo,60)}${meHas?"":`<span class="stplus" aria-hidden="true">${ICON.plus}</span>`}</span><span class="n">Tu historia</span></button>`;
-  return `<section class="frsec"><div class="sechead"><h2>Amigos</h2><button class="link" data-fropen>${inc?`<span class="reddot" aria-hidden="true"></span>Solicitudes (${inc})`:"Ver todos"}</button></div><div class="recent frstories">${me}${list.map(f=>`<button class="frstory${f.st.live?" live":""}${svHas(f.id)?(svUnseen(f.id)?" story":" story seen"):""}" ${svHas(f.id)?`data-svuser="${esc(f.id)}"`:`data-friend="${esc(f.id)}"`} aria-label="${esc(f.username)}${svHas(f.id)?", tiene historias":""}${f.st.live?", escuchando "+esc(f.st.song.title):""}"><span class="frav">${avatarHTML(frPhoto(f.id),60,f.username)}${f.st.live?FR_EQ:""}</span><span class="n">${esc(f.username)}</span>${f.st.live?`<span class="w">${esc(f.st.song.title)}</span>`:""}</button>`).join("")}${add}</div></section>`;
+  const me=`<button class="frstory${meHas?(svUnseen(AMI.me.id)?" story":" story seen"):""}" data-stme aria-label="${meHas?"Ver tu historia"+(SV.newLikes&&SV.newLikes.length?`, ${SV.newLikes.length} me gusta nuevos`:""):"Subir una historia"}"><span class="frav">${avatarHTML(PROFILE&&PROFILE.photo,60)}${meHas?"":`<span class="stplus" aria-hidden="true">${ICON.plus}</span>`}${meHas&&SV.newLikes&&SV.newLikes.length?`<span class="stlk" aria-hidden="true">${ACT_HEART}${SV.newLikes.length}</span>`:""}</span><span class="n">Tu historia</span></button>`;
+  return `<section class="frsec"><div class="sechead"><h2>Amigos</h2><button class="link" data-fropen>${inc?`<span class="reddot" aria-hidden="true"></span>Solicitudes (${inc})`:"Ver todos"}</button></div><div class="recent frstories">${me}${list.map(f=>`<button class="frstory${f.st.live?" live":""}${svHas(f.id)?(svUnseen(f.id)?" story"+(SV.fresh&&SV.fresh.has(f.id)?" fresh":""):" story seen"):""}" ${svHas(f.id)?`data-svuser="${esc(f.id)}"`:`data-friend="${esc(f.id)}"`} aria-label="${esc(f.username)}${svHas(f.id)?", tiene historias":""}${f.st.live?", escuchando "+esc(f.st.song.title):""}"><span class="frav">${avatarHTML(frPhoto(f.id),60,f.username)}${f.st.live?FR_EQ:""}</span><span class="n">${esc(f.username)}</span>${f.st.live?`<span class="w">${esc(f.st.song.title)}</span>`:""}</button>`).join("")}${add}</div></section>`;
 }
 /* Página de amigos */
 function renderFriends(){
@@ -4355,7 +4367,8 @@ async function storiesLoad(){
     if(error)throw error;
     const m=new Map();for(const r of data||[]){if(!m.has(r.user_id))m.set(r.user_id,[]);m.get(r.user_id).push(r)}
     SV.stories=m;SV.mine=m.get(AMI.me.id)||[];
-  }catch(e){}
+  }catch(e){return}
+  stActivity();
 }
 const svHas=uid=>(SV.stories.get(uid)||[]).length>0;
 const svUnseen=uid=>(SV.stories.get(uid)||[]).some(s=>!SV.seen.has(s.id));
@@ -4468,7 +4481,7 @@ function storyOpen(uid){
   const order=[];if(svHas(AMI.me.id))order.push(AMI.me.id);
   frSorted().forEach(f=>{if(svHas(f.id))order.push(f.id)});
   if(!order.includes(uid))return;
-  SV.list=order;SV.ui=order.indexOf(uid);
+  SV.list=order;SV.ui=order.indexOf(uid);if(SV.fresh)SV.fresh.delete(uid);
   // Desbloquear el sonido dentro del toque (iPhone exige un toque para reproducir)
   if(!SV.audio){SV.audio=new Audio()}SV.audio.src=SILENT;SV.audio.play().catch(()=>{});
   if(!audio.paused){audio.pause();SV.resume=true}
@@ -4529,6 +4542,7 @@ async function svLike(id){
 }
 async function svViewsGet(id){const {data,error}=await SBC.from("story_views").select("viewer_id,liked,viewed_at").eq("story_id",id).order("viewed_at",{ascending:false});if(error)throw error;return data||[]}
 async function svCount(id){
+  actAck(id);
   try{const v=await svViewsGet(id),b=svBtn("data-svviews",id);if(!b)return;const k=v.filter(x=>x.liked).length;
     b.innerHTML=`${SV_EYE}<span class="n">${v.length}</span>${k?`<span class="k">${SV_HEART_ON}${k}</span>`:""}`;
     b.setAttribute("aria-label",`Vista por ${v.length}${k?`, ${k} me gusta`:""}. Ver quién la ha visto`)}
@@ -4541,7 +4555,7 @@ async function svNames(ids){
   return m;
 }
 async function svViewsOpen(id){
-  const w=document.querySelector(".sv-wrap");if(!w)return;svPause();
+  const w=document.querySelector(".sv-wrap");if(!w)return;svPause();actAck(id);
   w.querySelectorAll(".sv-views").forEach(x=>x.remove());
   const p=document.createElement("div");p.className="sv-views";p.setAttribute("role","dialog");p.setAttribute("aria-label","Quién ha visto tu historia");
   p.innerHTML=`<div class="sv-vhead"><b>Visto por</b><button class="fs-x" data-svvclose aria-label="Cerrar la lista">${ICON.x}</button></div><div class="sv-vlist"><p class="fs-hint">Cargando…</p></div>`;
@@ -4656,6 +4670,79 @@ document.addEventListener("input",e=>{if(e.target.id==="stStart"&&SV.draft){SV.d
 document.addEventListener("keydown",e=>{if(!document.querySelector(".sv-wrap"))return;if(document.querySelector(".sv-views")){if(e.key==="Escape")svViewsClose();return}if(e.key==="Escape")svClose();else if(e.key==="ArrowRight")svStep(1);else if(e.key==="ArrowLeft")svStep(-1)});
 function svFsClose(){SV.storyMode=false;svStopPrev();if(SV.resume&&!document.querySelector(".sv-wrap")){SV.resume=false;audio.play().catch(()=>{})}}
 
+
+/* ---------- Avisos de actividad: historias nuevas de amigos y me gusta en las tuyas ---------- */
+const ACT_HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 20s-7.2-4.4-9-8.9C1.8 7.8 3.9 4.6 7.2 4.6c2 0 3.5 1.1 4.8 2.8 1.3-1.7 2.8-2.8 4.8-2.8 3.3 0 5.4 3.2 4.2 6.5C19.2 15.6 12 20 12 20z"/></svg>';
+const ACT={q:[],busy:false};
+SV.fresh=new Set();SV.newLikes=[];
+function actGet(k){try{return JSON.parse(localStorage.getItem(k+":"+AMI.me.id)||"null")}catch(e){return null}}
+function actSet(k,v){try{localStorage.setItem(k+":"+AMI.me.id,JSON.stringify(v))}catch(e){}}
+async function stActivity(){
+  if(!AMI.me||ACT.running)return;ACT.running=true;const me=AMI.me.id;
+  try{
+    // 1) Historias nuevas de amigos
+    const fr=[...SV.stories.entries()].filter(([u])=>u!==me),ids=fr.flatMap(([,l])=>l.map(x=>x.id)),known=actGet("actSt");
+    if(known){
+      const kn=new Set(known),nu=fr.filter(([,l])=>l.some(x=>!kn.has(x.id)&&!SV.seen.has(x.id))).map(([u])=>u);
+      nu.forEach(u=>SV.fresh.add(u));
+      if(nu.length){const nm=u=>((AMI.friends||[]).find(f=>f.id===u)||{}).username||"Un amigo",u0=nu[0];
+        actPush({uid:u0,name:nm(u0),text:nu.length===1?`<b>@${esc(nm(u0))}</b> ha subido una historia`:`<b>${nu.length} amigos</b> han subido historias`,go:()=>{if(svHas(u0))storyOpen(u0)}})}
+    }
+    actSet("actSt",ids.slice(-300));
+    // 2) Me gusta en tus historias
+    if(!SV.mine.length){SV.newLikes=[];actBadge();return}
+    const {data,error}=await SBC.from("story_views").select("story_id,viewer_id,viewed_at").in("story_id",SV.mine.map(x=>x.id)).eq("liked",true).order("viewed_at",{ascending:false});
+    if(error)throw error;
+    const all=(data||[]).map(r=>({k:r.story_id+":"+r.viewer_id,...r})),told=actGet("actLk");
+    if(!told)actSet("actLkAck",all.map(r=>r.k));
+    const ack=new Set(actGet("actLkAck")||[]);
+    SV.newLikes=all.filter(r=>!ack.has(r.k));
+    if(told){
+      const t=new Set(told),nu=all.filter(r=>!t.has(r.k));
+      if(nu.length){
+        const names=await svNames(nu.map(r=>r.viewer_id)),v0=nu[0].viewer_id,n=names.get(v0)||"alguien",ppl=new Set(nu.map(r=>r.viewer_id)).size;
+        actPush({uid:v0,name:n,heart:true,text:ppl===1?`A <b>@${esc(n)}</b> le ha gustado tu historia`:`A <b>${ppl} personas</b> les ha gustado tu historia`,go:()=>{
+          if(!svHas(me))return;storyOpen(me);
+          setTimeout(()=>{const it=(SV.stories.get(me)||[])[SV.si];if(it&&document.querySelector(".sv-wrap"))svViewsOpen(it.id)},300);
+        }});
+      }
+    }
+    actSet("actLk",all.map(r=>r.k));
+    actBadge();
+  }catch(e){}finally{ACT.running=false}
+}
+function actAck(storyId){
+  if(!AMI.me||!SV.newLikes||!SV.newLikes.length)return;
+  const done=SV.newLikes.filter(r=>r.story_id===storyId);if(!done.length)return;
+  const ack=actGet("actLkAck")||[];actSet("actLkAck",ack.concat(done.map(r=>r.k)).slice(-500));
+  SV.newLikes=SV.newLikes.filter(r=>r.story_id!==storyId);actBadge();
+}
+function actBadge(){
+  const n=(SV.newLikes||[]).length,b=document.querySelector("[data-stme]");
+  if(b){const av=b.querySelector(".frav");let x=av&&av.querySelector(".stlk");
+    if(n&&av&&svHas(AMI.me.id)){if(!x){x=document.createElement("span");x.className="stlk";x.setAttribute("aria-hidden","true");av.appendChild(x)}x.innerHTML=ACT_HEART+n}
+    else if(x)x.remove();
+    b.setAttribute("aria-label",svHas(AMI.me.id)?"Ver tu historia"+(n?`, ${n} me gusta nuevos`:""):"Subir una historia");
+  }
+  const tb=document.querySelector('nav.tabs button[data-tab="inicio"]');if(tb)tb.classList.toggle("frdot",(AMI.incoming||[]).length>0||n>0);
+}
+function actPush(a){ACT.q.push(a);actNext()}
+function actNext(){
+  if(ACT.busy||!ACT.q.length)return;
+  if(document.hidden||document.querySelector(".sv-wrap,.fs-wrap,.welcome,.nw-wrap,#wstory")){clearTimeout(ACT.rt);ACT.rt=setTimeout(actNext,3000);return}
+  const a=ACT.q.shift();ACT.busy=true;
+  const el=document.createElement("button");el.className="actb";
+  el.setAttribute("aria-label",a.text.replace(/<[^>]+>/g,""));
+  el.innerHTML=`<span class="actav">${avatarHTML(frPhoto(a.uid),40,a.name||"")}${a.heart?`<span class="acth">${ACT_HEART}</span>`:""}</span><span class="actt">${a.text}</span>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("in")));
+  const hide=()=>{if(!el.isConnected)return;clearTimeout(ACT.ht);el.classList.remove("in");setTimeout(()=>{el.remove();ACT.busy=false;actNext()},380)};
+  el.addEventListener("click",e=>{e.stopPropagation();hide();a.go&&a.go()});
+  ACT.ht=setTimeout(hide,5000);
+}
+// Comprobar actividad también fuera de Inicio y al volver a la app
+setInterval(()=>{if(AMI.me&&SBC&&document.visibilityState==="visible"&&S.tab!=="inicio")storiesLoad()},45000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&AMI.me&&SBC)storiesLoad()});
 /* ---------- Aviso de novedad: historias (una vez por móvil, solo durante esta actualización) ---------- */
 const NEWS_KEY="news:historias",NEWS_UNTIL=Date.parse("2026-11-16T00:00:00");
 function newsArt(){
